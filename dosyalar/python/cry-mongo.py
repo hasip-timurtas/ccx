@@ -29,7 +29,7 @@ config = {
   "authDomain": "firem-b3432",
   "databaseURL": "https://firem-b3432.firebaseio.com",
   "storageBucket": "firem-b3432.appspot.com",
-  "serviceAccount": "firebase.json"
+  "serviceAccount": "../../dll/firebase.json"
 }
 
 firebase = pyrebase.initialize_app(config)
