@@ -1,7 +1,7 @@
 {
-  "name": "okex",
+  "name": "cry",
   "version": "1.0.0",
-  "description": "okex",
+  "description": "cry",
   "main": "index.js",
   "dependencies": {
     "ccxt": "^1.17.352",
@@ -16,12 +16,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hasip-timurtas/okex.git"
+    "url": "git+https://github.com/hasip-timurtas/cry.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/hasip-timurtas/okex/issues"
+    "url": "https://github.com/hasip-timurtas/cry/issues"
   },
-  "homepage": "https://github.com/hasip-timurtas/okex#readme"
+  "homepage": "https://github.com/hasip-timurtas/cry#readme"
 }

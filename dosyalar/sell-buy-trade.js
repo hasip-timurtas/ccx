@@ -101,7 +101,7 @@ class SellBuyTrade {
 
         const result = this.CheckTamUygun(d, rob)
         if(result)
-            this.ortak.db.ref('okex/sell-buy-trade').push(uygunMarket)
+            this.ortak.db.ref('cry/sell-buy-trade').push(uygunMarket)
             await this.BuySellBasla(uygunMarket)
     }
 
@@ -204,14 +204,14 @@ class SellBuyTrade {
                         'sellResult': sellResult,
                         'sellIptalResult': sellIptalResult,
                         'buyIptalResult': buyIptalResult}
-            this.ortak.db.ref('okex/sell-buy-trade-mailData').push(mailDatam)
+            this.ortak.db.ref('cry/sell-buy-trade-mailData').push(mailDatam)
             console.log('##############################     BİR İŞLEM OLDU     ##############################')
         }else{
             const mailDatam = {'firstMarket': firstMarketName,
                         'secondMarket': secondMarket['name'],
                         'uygunMarket': market,
                         'buyAmount': amount}
-            this.ortak.db.ref('okex/sell-buy-trade-mailData-buy-hata').push(mailDatam)
+            this.ortak.db.ref('cry/sell-buy-trade-mailData-buy-hata').push(mailDatam)
         }
     }
 
@@ -236,7 +236,7 @@ class SellBuyTrade {
     }
 
     WsBaslat(){
-        var wsApi = new WebSocket("wss://okexcomreal.bafang.com:10441/websocket");
+        var wsApi = new WebSocket("wss://crycomreal.bafang.com:10441/websocket");
         var message = "{event:'addChannel',parameters:{'binary':'0','type':'all_ticker_3s'}}"
         var pingMsg = `{'event':'ping'}`
 

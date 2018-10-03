@@ -1,4 +1,3 @@
-const errorCodes = require('./erors')
 const Ortak = require('./ortak')
 
 class EldeKalanCoinler {
@@ -10,7 +9,7 @@ class EldeKalanCoinler {
     async BaslaSell(){ // baseCoin hangi coinle alacağı
         this.balances = await this.ortak.GetBalance()
         const totalBalances = this.balances.filter(e=> e.Total > 0) // direk sell yapacağız.
-        let openOrders = await this.ortak.GetFbData(`okex/okex-sell-open-orders`) 
+        let openOrders = await this.ortak.GetFbData(`cry/sell-open-orders`) 
         openOrders = openOrders && Object.keys(openOrders).map(e=> ({
                 market: openOrders[e].market, 
                 orderId: openOrders[e].orderId,
@@ -96,10 +95,7 @@ class EldeKalanCoinler {
         await this.ortak.Submit(market.market, newPrice, balance.Available, 'sell'  ).then(async(e)=>{
             if(!e.id) return
             await this.ortak.InsertOrderFb(e, 'sell')
-        }).catch(e=>{
-            var errorCode = e.message.replace('okex {"error_code":','').replace('}','')
-            console.log(e, (errorCodes[errorCode]), balance.Symbol)
-        })
+        }).catch(e=> console.log(e))
     }
 
     async SellBoz(balance, openOrder){
@@ -108,13 +104,16 @@ class EldeKalanCoinler {
             console.log(`${openOrder.market} Cancel edildi'`)
             balance.Available = openOrder.amount
             await this.SellKur(balance)
-        }).catch(async (e) => {
-            var errorCode = e.message.replace('okex {"error_code":','').replace('}','')
+        }).catch(async (e) => { 
+            console.log(e)
+            /*
+            var errorCode = e.message.replace('cry {"error_code":','').replace('}','')
             if(errorCode == 1009){
                 await this.ortak.DeleteOrderFb(openOrder, 'sell')
             }else{
                 console.log(e, (errorCodes[errorCode]), openOrder.market)
-            }        
+            }     
+            */   
         })
     }
 

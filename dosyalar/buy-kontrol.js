@@ -1,4 +1,3 @@
-const errorCodes = require('./erors')
 const Ortak = require('./ortak')
 
 class EldeKalanCoinler {
@@ -8,7 +7,7 @@ class EldeKalanCoinler {
     }
 
     async BaslaBuy(){ // baseCoin hangi coinle alacağı
-        let openOrders = await this.ortak.GetFbData(`okex/okex-buy-open-orders`) 
+        let openOrders = await this.ortak.GetFbData(`cry/buy-open-orders`) 
         if(!openOrders) {
             console.log('openOrders boş. ÇIK.')
             return
@@ -56,13 +55,16 @@ class EldeKalanCoinler {
             const coin = openOrder.market.split('/')[0]
             await this.ortak.MinMaxKontrol(coin)
         }).catch(async (e) => {
-            var errorCode = e.message.replace('okex {"error_code":','').replace('}','')
+            console.log(e)
+            /*
+            var errorCode = e.message.replace('cry {"error_code":','').replace('}','')
             console.log(e, (errorCodes[errorCode]), openOrder.market)
             if(errorCode == 1009){
                 await this.ortak.DeleteOrderFb(openOrder, 'buy')
             }else{
                 console.log(e, (errorCodes[errorCode]), openOrder.market)
             }
+            */
         })
     }
 

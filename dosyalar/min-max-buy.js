@@ -16,7 +16,7 @@ class EldeKalanCoinler {
     }
 
     WsBaslat(){
-        var wsApi = new WebSocket("wss://okexcomreal.bafang.com:10441/websocket");
+        var wsApi = new WebSocket("wss://crycomreal.bafang.com:10441/websocket");
         var message = "{event:'addChannel',parameters:{'binary':'0','type':'all_ticker_3s'}}"
         var pingMsg = `{'event':'ping'}`
 

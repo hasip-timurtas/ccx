@@ -1,4 +1,3 @@
-const errorCodes = require('./erors')
 const mongodb = require('mongodb')
 const firebase = require('firebase-admin')
 const MhtCcxt = require('../dll/mhtCcxt')
@@ -12,16 +11,16 @@ const mongoUrl = "mongodb://209.250.238.100:27017/";
 
 class Ortak {
     async LoadVeriables(){
-        this.mainMarkets = ['USDT', 'BTC', 'ETH']
-        this.site = 'okex'
-        const key = "f4544544-67bd-4984-b26e-642a4951dedf" // abdullati56
-        const secret = "D90A009CB124702AF2FD382747909628"
+        this.mainMarkets = ['BTC', 'LTC', 'DOGE']
+        this.site = 'cryptopia'
+        const key = "dbec90fd39294e1fa90db54e404c2edc" // hasip4441 cry
+        const secret = "D3tx+b8gb3Me2z3T/D/gzMdRWfNbR9vfYyf/RiqdJzc="
         this.ccx = new MhtCcxt(key, secret, this.site, null)
         this.limits = { "BTC": 0.0006, "ETH": 0.011, "LTC": 0.051, "DOGE": 1250, "BNB":5.1, "USD": 5, "USDT": 5 }
         this.volumeLimtis = { "BTC": 0.5, "ETH": 10, "LTC": 50, "DOGE": 1000, "BNB":250, "USD":3250, "USDT":3250 }
         this.db = firebase.database();
         const connection = await mongodb.MongoClient.connect(mongoUrl, { useNewUrlParser: true });
-        const cnn = connection.db('okex')
+        const cnn = connection.db('cry')
         this.depths = cnn.collection('depths')
         this.marketsInfos = await this.ccx.exchange.load_markets().catch(async (e)=> await this.LoadVeriables())
         this.marketsInfos = Object.keys(this.marketsInfos).map(e=> this.marketsInfos[e])
@@ -42,7 +41,7 @@ class Ortak {
         const submitOrder = await this.ccx.exchange.createOrder(...orderParams).then(e=>{
             return e
         }).catch(e => {
-            console.log(e)
+            console.log(e, marketName)
         })
 
         if (submitOrder) {
@@ -55,7 +54,7 @@ class Ortak {
     }
 
     async OpenOrderVarMi(marketName, type){
-        let openOrders = await this.db.ref(`okex/${this.site}-${type}-open-orders`).once('value').then(snapshot => snapshot.val())
+        let openOrders = await this.db.ref(`cry/${type}-open-orders`).once('value').then(snapshot => snapshot.val())
         if(!openOrders) return false // hiç order yoksa false dönder.
         openOrders = Object.keys(openOrders).map(e=> openOrders[e])
         const order = openOrders.find(e=> e.market.includes(marketName))
@@ -78,8 +77,9 @@ class Ortak {
     async HangiMarketteEnPahali(coin){
         // marketler sırayla --> ADA/USDT, ADA/BTC, ADA/ETH ve BTC/USDT, ETH/USDT
         const { market1, market2, market3, market4, market5 } = await this.GetBesMarketTickers(coin)
-        
-        if(!market1) return false // eğer 1 market bile yoksa false dön, çünkü biz 3 markettede olanlarla iş yapıyoruz.
+        const depthsKontrol = !market1 || !market1.asks || !market2 || !market2.asks || !market3 || !market3.asks || !market4 || !market4.asks || !market5 || !market5.asks
+
+        if(depthsKontrol) return false // eğer 1 market bile yoksa ve depthleri yoksa false dön, çünkü biz 3 markettede olanlarla iş yapıyoruz.
 
         const coinMarket2Total = this.GetMarketTotal(market2)  // ADA/BTC
         const coinMarket3Total = this.GetMarketTotal(market3)  // ADA/ETH
@@ -161,7 +161,7 @@ class Ortak {
 
     SetPrices(marketName){
 
-        const basamak = this.marketsInfos.find(e=> e.id == marketName.replace('/','_').toLowerCase()).precision.price
+        const basamak = this.marketsInfos.find(e=> e.id.toLowerCase() == marketName.replace('/','_').toLowerCase()).precision.price
         switch (basamak) {
             case 1: return 0.1
             case 2: return 0.01
@@ -289,8 +289,7 @@ class Ortak {
             if(!e.id) return
             await this.InsertOrderFb(e, 'buy')
         }).catch(e=>{
-            var errorCode = e.message.replace('okex {"error_code":','').replace('}','')
-            console.log(e, (errorCodes[errorCode]), balance.Symbol)
+            console.log(e, balance.Symbol)
         })
     }
 
@@ -325,13 +324,13 @@ class Ortak {
 
     async DeleteOrderFb(order, type){
         const marketNameFb = order.market.replace('/','_') + '-' +  order.orderId
-        await this.db.ref(`okex/${this.site}-${type}-open-orders`).child(marketNameFb).set(null)
+        await this.db.ref(`cry/${type}-open-orders`).child(marketNameFb).set(null)
     }
 
     async InsertOrderFb(order, type){
         const marketNameFb = order.symbol.replace('/','_') + '-' +  order.id
         const total = order.price * order.amount
-        await this.db.ref(`okex/${this.site}-${type}-open-orders`).child(marketNameFb).set({
+        await this.db.ref(`cry/${type}-open-orders`).child(marketNameFb).set({
             orderId: order.id,
             market: order.symbol,
             price: order.price,

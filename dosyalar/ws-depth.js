@@ -1,17 +1,17 @@
 
 const MhtCcxt = require('../dll/mhtCcxt')
-const ccx = new MhtCcxt(null, null, 'okex', null)
+const ccx = new MhtCcxt(null, null, 'cryptopia', null)
 const WebSocket = require('ws');
 const mongodb = require('mongodb');
 
-class OkexWsDepth {
+class cryWsDepth {
 
     constructor(){
         this.uygunMarkets = []
         this.pingMsg = `{'event':'ping'}`
         this.sayac = 0
         this.limit = 200
-        //this.url = "mongodb://localhost:27017/okex-depths"; // production
+        //this.url = "mongodb://localhost:27017/cry-depths"; // production
         this.url = "mongodb://209.250.238.100:27017/"; // test
         this.mainMarkets = ['USDT', 'BTC', 'ETH', 'OKB']
         this.coins = []
@@ -19,7 +19,7 @@ class OkexWsDepth {
 
     async Basla(){
         this.connection = await mongodb.MongoClient.connect(this.url, { useNewUrlParser: true });
-        this.depths = this.connection.db('okex').collection('depths')
+        this.depths = this.connection.db('cry').collection('depths')
         await this.GetHerMarketteOlanlar()
         await this.InsertCoinsToDb()
         console.log(this.uygunMarkets.length + ' aded coin var')
@@ -63,7 +63,7 @@ class OkexWsDepth {
     }
 
     WsBaslat(){
-        var wsApi = new WebSocket("wss://real.okex.com:10440/websocket/okexapi");
+        var wsApi = new WebSocket("wss://real.cry.com:10440/websocket/cryapi");
         var depthMessage = ""
         var tickerMessage = ""
         wsApi.onmessage = (msg) => {
@@ -107,5 +107,5 @@ class OkexWsDepth {
     }
 }
 
-const okexWsDepth = new OkexWsDepth()
-okexWsDepth.Basla().catch(e=> console.log(e))
+const cryWsDepth = new cryWsDepth()
+cryWsDepth.Basla().catch(e=> console.log(e))
