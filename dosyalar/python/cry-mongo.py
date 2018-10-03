@@ -134,8 +134,13 @@ def UygunMarketEkle(rk, d, rob):
       BuySellBasla(uygunMarket)
  
 def GetOrderBookGroup(d):
-    marketList = [ d['firstMarketName'], d['secondMarketName'], d['thirdMarketName'] ]
+    marketList = [ d['firstMarketName'], d['secondMarketName'], d['thirdMarketName'], d['btcMarketName'] ]
     orderBooks = mycol.find( { 'market': { '$in': marketList } } )# orderBooku tekrar alıyoruz.
+    orderBooksCount = orderBooks.count()
+
+    if orderBooksCount < 4: # Eğer 4 dayıt yoksa false döndür
+      return False
+
     firstOrderBook = {}
     secondOrderBook = {}
     thirdOrderBook = {}
