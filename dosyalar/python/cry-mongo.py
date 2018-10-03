@@ -155,7 +155,7 @@ def GetOrderBookGroup(d):
         thirdOrderBook = i['depths']
       elif i['market'] == d['btcMarketName']:
         btcOrderBook = i['depths']
-    print(d['btcMarketName'], list(orderBooks))
+    print(d['btcMarketName'], orderBooks)
     # coinin btc değeri, sell 1 satoshi ise buy yoktur veya buy varsa ve 22 den küçükse boş dön.    
     if float(btcOrderBook['asks'][0][0]) == 0.00000001:
       return False
