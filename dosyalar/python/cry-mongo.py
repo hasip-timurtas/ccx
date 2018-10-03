@@ -157,10 +157,10 @@ def GetOrderBookGroup(d):
         btcOrderBook = i['depths']
 
     # coinin btc değeri, sell 1 satoshi ise buy yoktur veya buy varsa ve 22 den küçükse boş dön.    
-    btcAsk = float(btcOrderBook['bids'][0][0])
-    btcBid = float(btcOrderBook['asks'][0][0])
+    if float(btcOrderBook['asks'][0][0]) == 0.00000001:
+      return False
 
-    if btcAsk == 0.00000001 or btcBid < 0.00000022:
+    if float(btcOrderBook['bids'][0][0]) < 0.00000022:
       return False
 
     firstOrderBook = [{"Price": float(firstOrderBook['asks'][0][0]),"Total": float(firstOrderBook['asks'][0][0]) * float(firstOrderBook['asks'][0][1])}]
