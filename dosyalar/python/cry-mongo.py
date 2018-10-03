@@ -139,6 +139,7 @@ def GetOrderBookGroup(d):
     orderBooksCount = orderBooks.count()
 
     if orderBooksCount < 4: # Eğer 4 dayıt yoksa false döndür
+      print(orderBooksCount)
       print('Db de yeterince kayıt yok. coin:', d['coin'])
       return False
 
