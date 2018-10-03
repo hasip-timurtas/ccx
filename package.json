@@ -1,0 +1,27 @@
+{
+  "name": "okex",
+  "version": "1.0.0",
+  "description": "okex",
+  "main": "index.js",
+  "dependencies": {
+    "ccxt": "^1.17.352",
+    "firebase-admin": "^6.0.0",
+    "mongodb": "^3.1.6",
+    "request-promise": "^4.2.2",
+    "ws": "^6.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hasip-timurtas/okex.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hasip-timurtas/okex/issues"
+  },
+  "homepage": "https://github.com/hasip-timurtas/okex#readme"
+}
