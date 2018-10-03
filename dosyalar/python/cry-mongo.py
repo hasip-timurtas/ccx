@@ -77,7 +77,8 @@ def MarketeGir(coin, firstMainCoin, secondMainCoin, type):
       'type': type,
       'firstMarketName': coin + '/' + firstMainCoin,
       'secondMarketName': coin + '/' + secondMainCoin,
-      'thirdMarketName': firstMainCoin  + '/' + secondMainCoin if type == 'alt' else secondMainCoin + '/' + firstMainCoin
+      'thirdMarketName': firstMainCoin  + '/' + secondMainCoin if type == 'alt' else secondMainCoin + '/' + firstMainCoin,
+      'btcMarketName': coin + '/' + 'BTC'
     }
 
     MarketKontrolveEkle(dict)
@@ -138,7 +139,8 @@ def GetOrderBookGroup(d):
     firstOrderBook = {}
     secondOrderBook = {}
     thirdOrderBook = {}
-    
+    btcOrderBook = {}
+
     for i in orderBooks:
       if i['market'] == d['firstMarketName']:
         firstOrderBook = i['depths']
@@ -146,10 +148,13 @@ def GetOrderBookGroup(d):
         secondOrderBook = i['depths']
       elif i['market'] == d['thirdMarketName']:
         thirdOrderBook = i['depths']
-    print(firstOrderBook)
+      elif i['market'] == d['btcMarketName']:
+        btcOrderBook == i['depths']
+    
     firstOrderBook = [{"Price": float(firstOrderBook['asks'][0][0]),"Total": float(firstOrderBook['asks'][0][0]) * float(firstOrderBook['asks'][0][1])}]
     secondOrderBook = [{"Price": float(secondOrderBook['bids'][0][0]),"Total": float(secondOrderBook['bids'][0][0]) * float(secondOrderBook['bids'][0][1])}]
-    
+    btcOrderBook = [{"Price": float(btcOrderBook['bids'][0][0]),"Total": float(btcOrderBook['bids'][0][0]) * float(btcOrderBook['bids'][0][1])}]
+
     if d['type'] == 'alt':
         thirdOrderBook = [{"Price": float(thirdOrderBook['asks'][0][0]),"Total": float(thirdOrderBook['asks'][0][0]) * float(thirdOrderBook['asks'][0][1])}]
     else:
@@ -158,6 +163,9 @@ def GetOrderBookGroup(d):
         else:
           thirdOrderBook = [{"Price": float(thirdOrderBook['asks'][0][0]),"Total": float(thirdOrderBook['asks'][0][0]) * float(thirdOrderBook['asks'][0][1])}]
     
+    if btcOrderBook and btcOrderBook[0]['Price'] < 0.00000022:
+      return False
+
     return {'firstOrderBook': firstOrderBook, 'secondOrderBook': secondOrderBook, 'thirdOrderBook': thirdOrderBook}
 
 def CheckTamUygun(d, rob):
