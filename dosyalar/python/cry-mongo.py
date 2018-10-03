@@ -158,7 +158,7 @@ def GetOrderBookGroup(d):
     
     firstOrderBook = [{"Price": float(firstOrderBook['asks'][0][0]),"Total": float(firstOrderBook['asks'][0][0]) * float(firstOrderBook['asks'][0][1])}]
     secondOrderBook = [{"Price": float(secondOrderBook['bids'][0][0]),"Total": float(secondOrderBook['bids'][0][0]) * float(secondOrderBook['bids'][0][1])}]
-    btcOrderBook = [{"Price": float(btcOrderBook['bids'][0][0]),"Total": float(btcOrderBook['bids'][0][0]) * float(btcOrderBook['bids'][0][1])}]
+    btcOrderBook = [{"Price": float(btcOrderBook['asks'][0][0]),"Total": float(btcOrderBook['asks'][0][0]) * float(btcOrderBook['asks'][0][1])}]
 
     if d['type'] == 'alt':
         thirdOrderBook = [{"Price": float(thirdOrderBook['asks'][0][0]),"Total": float(thirdOrderBook['asks'][0][0]) * float(thirdOrderBook['asks'][0][1])}]
