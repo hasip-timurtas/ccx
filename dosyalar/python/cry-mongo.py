@@ -34,7 +34,7 @@ config = {
 
 firebase = pyrebase.initialize_app(config)
 
-minFark = 1 # ----> MİN FARK
+minFark = 2 # ----> MİN FARK
 auth = firebase.auth()
 db = firebase.database()
 mainMarkets = ["BTC", "LTC", "DOGE"]
