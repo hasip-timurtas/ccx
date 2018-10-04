@@ -10,6 +10,8 @@ try:
     import thread 
 except ImportError:
     import _thread as thread #Py3K changed it.
+import time
+
 
 myclient = pymongo.MongoClient("mongodb://209.250.238.100:27017/")
 mydb = myclient["cry"]
@@ -42,22 +44,30 @@ islemdekiCoinler = []
 limits = {"BTC": 0.0006, "ETH": 0.011, "LTC": 0.051, "DOGE": 1250, "BNB":5.1, "USD":100, "USDT":100}
 limitsForBuy = {"BTC": 0.0006, "ETH": 0.011, "LTC": 0.051, "DOGE": 1250, "BNB":5.1, "USD":40, "USDT":40}
 
+def BaslaWithAllCoins():
+    markets = list(ccx.load_markets())
+    markets = list(map(lambda x: x.split('/')[0], markets))
+    marketSet = set(markets)
+    while True:
+      for i in marketSet:
+        StartHandler(i)
+      time.sleep( 5 )
+
+def StartHandler(coin):
+    if coin not in mainMarkets and coin not in islemdekiCoinler:
+      FiyatFarkKontrolYeni(coin, 'BTC', 'LTC', 'DOGE')
+
 def stream_handler(message):
     coin = message["data"]
-    if coin not in mainMarkets and coin not in islemdekiCoinler:
-      thread.start_new_thread(FiyatFarkKontrolYeni, (coin, 'BTC', 'LTC', 'DOGE'))
-
-db.child('cry/ws').stream(stream_handler)
+    StartHandler(coin)
 
 def FiyatFarkKontrolYeni(coin, fmc, smc, tmc):
-    global islemdekiCoinler
-    islemdekiCoinler.append(coin)
-    print(coin + ' Girdi', islemdekiCoinler)
+    print(coin)
     MarketHazirla(coin, fmc, smc,'ust', tmc, 'ust') # BTC, LTC, DOGE
     MarketHazirla(coin, smc, fmc,'alt', tmc, 'ust') # LTC, BTC, DOGE
     MarketHazirla(coin, tmc, fmc,'alt', smc, 'alt') # DOGE, BTC, LTC
-    islemdekiCoinler = list(filter(lambda x : x != coin ,islemdekiCoinler))
-    print(coin + ' Çıktı', islemdekiCoinler)
+
+    
 
 def MarketHazirla(coin, fmc, smc, smct, tmc, tmct):
     MarketeGir(coin, fmc, smc, smct)
@@ -85,7 +95,6 @@ def MarketKontrolveEkle(d):
 
     #rk yani result kontrol
     rk = Kontrol(d, rob['firstOrderBook'][0]['Price'], rob['secondOrderBook'][0]['Price'], rob['thirdOrderBook'][0]['Price'])
-
     if rk['sonuc']:
       UygunMarketEkle(rk, d, rob)
 
@@ -240,7 +249,8 @@ def findInDepths(depths, market):
 # BUY SELL BAŞLA           ###############################
 
 def BuySellBasla(market):
-    #db.child("cry/tam-uygun-py").push(market)
+    db.child("cry/ccx-all-market-deneme").push(market)
+    return
     firstMarket = market['firstMarket']
     secondMarket = market['secondMarket']
     #thirdMarket = market['thirdMarket']
@@ -324,3 +334,6 @@ def OrderIptalEt(order):
     return result
 
 # ELDE KALANLAR
+
+
+BaslaWithAllCoins()
