@@ -263,7 +263,7 @@ def BuySellBasla(market):
       amount = secondAmount
       total = secondMarket['orderBook'][0]['Total']
     
-    barajTotal = limitsForBuy[firstCoin] * 3
+    barajTotal = limitsForBuy[firstCoin] * 10
 
     if total > barajTotal:
       amount = round(barajTotal / firstMarket['orderBook'][0]['Price'], 8)
