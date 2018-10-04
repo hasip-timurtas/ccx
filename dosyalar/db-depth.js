@@ -124,5 +124,9 @@ setInterval(()=> OkexDepthBasla(), 1000 * 60 * 60 * 1) // 1 saate bir yeniden ba
 function OkexDepthBasla(){
     console.log(sayac + '. kez başlatıldı..')
     okexWsDepth = new OkexWsDepth()
-    okexWsDepth.Basla().catch(e=> console.log(e))
+    okexWsDepth.Basla().catch(e=>{
+        console.log(e)
+        console.log('tekrardan başlatılıyor.')
+        OkexDepthBasla()
+    })
 }
