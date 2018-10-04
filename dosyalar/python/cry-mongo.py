@@ -34,7 +34,7 @@ config = {
 
 firebase = pyrebase.initialize_app(config)
 
-minFark = 2 # ----> MİN FARK
+minFark = 1 # ----> MİN FARK
 auth = firebase.auth()
 db = firebase.database()
 mainMarkets = ["BTC", "LTC", "DOGE"]
@@ -91,6 +91,7 @@ def MarketKontrolveEkle(d):
 
     #rk yani result kontrol
     rk = Kontrol(d, rob['firstOrderBook'][0]['Price'], rob['secondOrderBook'][0]['Price'], rob['thirdOrderBook'][0]['Price'])
+    print(rk['fark'])
     if rk['sonuc']:
       UygunMarketEkle(rk, d, rob)
 
@@ -262,7 +263,7 @@ def BuySellBasla(market):
       amount = secondAmount
       total = secondMarket['orderBook'][0]['Total']
     
-    barajTotal = limitsForBuy[firstCoin] * 8
+    barajTotal = limitsForBuy[firstCoin] * 3
 
     if total > barajTotal:
       amount = round(barajTotal / firstMarket['orderBook'][0]['Price'], 8)
