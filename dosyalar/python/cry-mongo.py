@@ -169,43 +169,6 @@ def CheckTamUygun(d, rob):
       return True
     else:
       return False
-
-'''
-def GetOrderBookGroup(d):
-    fullUrl = 'https://www.cryptopia.co.nz/api/GetMarketOrderGroups/{}-{}-{}/2'.format(d['firstMarketName'], d['secondMarketName'], d['thirdMarketName'])
-    r = requests.get(fullUrl)
-    result = r.json()
-    result = result['Data']
-    if not result or len(result) < 3:
-      return False
-    firstOrderBook = {}
-    secondOrderBook = {}
-    thirdOrderBook = {}
-
-    for i in result:
-      if i['Market'] == d['firstMarketName']:
-        firstOrderBook = i['Sell']
-      elif i['Market'] == d['secondMarketName']:
-        secondOrderBook = i['Buy']
-      elif i['Market'] == d['thirdMarketName']:
-        if d['type'] == 'alt':
-          thirdOrderBook = i['Sell']
-        else:
-          if 'DOGE' in d['thirdMarketName']:
-            thirdOrderBook = i['Buy']
-          else:
-            thirdOrderBook = i['Sell']
-    
-    return {'firstOrderBook': firstOrderBook, 'secondOrderBook': secondOrderBook, 'thirdOrderBook': thirdOrderBook}
-
-def CheckTamUygun(d, rob):
-    firstMarketUygun = rob['firstOrderBook'][0]['Total']  >= limits[d['firstMainCoin']]
-    secondMarketUygun = rob['secondOrderBook'][0]['Total'] >= limits[d['secondMainCoin']]
-    if firstMarketUygun and secondMarketUygun: # iki marketinde min tutarları uyuyorsa true döndür.
-      return True
-    else:
-      return False
-'''
 def findInDepths(depths, market):
   for i in depths:
     if i['market'] == market:
@@ -214,30 +177,7 @@ def findInDepths(depths, market):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# BUY SELL BAŞLA           ###############################
+# BUY SELL BAŞLA           ###############################           BUY SELL BAŞLA        ###############################
 
 def BuySellBasla(market):
     #db.child("cry/tam-uygun-py").push(market)
@@ -262,6 +202,13 @@ def BuySellBasla(market):
     if total > barajTotal:
       amount = round(barajTotal / firstMarket['orderBook'][0]['Price'], 8)
     
+    usdtOrderBook = mycol.find_one( { 'market': market['coin'] + '/USDT'} )
+    usdtPrice = float(usdtOrderBook['asks'][0][0])
+    balances = ccx.fetch_balance()
+
+    if balances[market['coin']]['total'] * usdtPrice > limits['USDT']:
+        return
+
     firstMarketName = firstMarket['name']
 
     buyResult = Submit(market, firstMarketName, firstMarket['orderBook'][0]['Price'], amount, 'Buy')
