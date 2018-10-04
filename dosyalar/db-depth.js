@@ -89,7 +89,7 @@ class OkexWsDepth {
             for (const i of d) {
                 this.depths.updateOne({market: i.market}, {$set: { depths: i.depths }})
             }
-            await this.sleep(100)
+            await this.sleep(500)
         }
     }
 
