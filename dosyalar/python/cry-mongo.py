@@ -29,7 +29,7 @@ config = {
   "authDomain": "firem-b3432",
   "databaseURL": "https://firem-b3432.firebaseio.com",
   "storageBucket": "firem-b3432.appspot.com",
-  "serviceAccount": "../../dll/firebase.json"
+  "serviceAccount": "firebase.json"
 }
 
 firebase = pyrebase.initialize_app(config)
@@ -137,25 +137,16 @@ def GetOrderBookGroup(d):
     marketList = [ d['firstMarketName'], d['secondMarketName'], d['thirdMarketName'], d['btcMarketName'] ]
     orderBooks = mycol.find( { 'market': { '$in': marketList } } )# orderBooku tekrar alıyoruz.
     orderBooksCount = orderBooks.count()
-
+    
     if orderBooksCount < 3: # Eğer 3 dayıt yoksa false döndür
       return False
+    orderBooks = list(orderBooks)
 
-    firstOrderBook = {}
-    secondOrderBook = {}
-    thirdOrderBook = {}
-    btcOrderBook = {}
+    firstOrderBook = findInDepths(orderBooks, d['firstMarketName'])
+    secondOrderBook = findInDepths(orderBooks, d['secondMarketName'])
+    thirdOrderBook = findInDepths(orderBooks, d['thirdMarketName'])
+    btcOrderBook = findInDepths(orderBooks, d['btcMarketName'])    
 
-    for i in orderBooks:
-      if i['market'] == d['firstMarketName']:
-        firstOrderBook = i['depths']
-      elif i['market'] == d['secondMarketName']:
-        secondOrderBook = i['depths']
-      elif i['market'] == d['thirdMarketName']:
-        thirdOrderBook = i['depths']
-      elif i['market'] == d['btcMarketName']:
-        btcOrderBook = i['depths']
-    print(d['btcMarketName'], orderBooks)
     # coinin btc değeri, sell 1 satoshi ise buy yoktur veya buy varsa ve 22 den küçükse boş dön.    
     if float(btcOrderBook['asks'][0][0]) == 0.00000001:
       return False
@@ -220,8 +211,10 @@ def CheckTamUygun(d, rob):
     else:
       return False
 '''
-
-
+def findInDepths(depths, market):
+  for i in depths:
+    if i['market'] == market:
+      return i['depths']
 
 
 
