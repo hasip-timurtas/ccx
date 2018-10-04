@@ -53,7 +53,7 @@ def stream_handler(message):
         print(sys.exc_info()[0])
       '''
 
-db.child('Abritage-in-site/cryptopia-ws').stream(stream_handler)
+db.child('cry/ws').stream(stream_handler)
 
 def FiyatFarkKontrolYeni(coin, fmc, smc, tmc):
     global islemdekiCoinler
@@ -245,7 +245,7 @@ def findInDepths(depths, market):
 # BUY SELL BAŞLA           ###############################
 
 def BuySellBasla(market):
-    #db.child("Abritage-in-site/cryptopia-tam-uygun-py").push(market)
+    #db.child("cry/tam-uygun-py").push(market)
     firstMarket = market['firstMarket']
     secondMarket = market['secondMarket']
     #thirdMarket = market['thirdMarket']
@@ -294,24 +294,24 @@ def BuySellBasla(market):
                   'sellIptalResult': sellIptalResult,
                   'buyIptalResult': buyIptalResult}
 
-      db.child('Abritage-in-site/cryptopia-mailDatam').push(mailDatam)
+      db.child('cry/mailDatam').push(mailDatam)
       print('##############################     BİR İŞLEM OLDU     ##############################')
     else:
       mailDatam = {'firstMarket': firstMarketName,
                   'secondMarket': secondMarket['name'],
                   'uygunMarket': market,
                   'buyAmount': amount}
-      db.child('Abritage-in-site/cryptopia-mailDatam-buy-hata').push(mailDatam)
+      db.child('cry/mailDatam-buy-hata').push(mailDatam)
 
 def Submit(market, marketName, rate, amount, type):
     submitOrder = None
     try:
       submitOrder = ccx.create_order(marketName, 'limit', type, amount, rate)
-      #db.child('Abritage-in-site/cryptopia-tam-uygun-py').push(market)
+      #db.child('cry/tam-uygun-py').push(market)
     except Exception as e:
       print(e)
       market['Hata'] = str(e)
-      db.child('Abritage-in-site/cryptopia-tam-uygun-hatali-py').push(market)
+      db.child('cry/tam-uygun-hatali-py').push(market)
 
     if submitOrder:
         print(marketName + ' için ' + type + ' Kuruldu.')
