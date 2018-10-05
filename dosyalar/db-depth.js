@@ -9,8 +9,8 @@ class OkexWsDepth {
     constructor(){
         this.uygunMarkets = []
         this.pingMsg = `{'event':'ping'}`
-        this.url = "mongodb://localhost:27017/"; // production
-        //this.url = "mongodb://209.250.238.100:27017/"; // test
+        //this.url = "mongodb://localhost:27017/"; // production
+        this.url = "mongodb://209.250.238.100:27017/"; // test
         this.mainMarkets = ['BTC', 'LTC', 'DOGE']
         this.marketsData = []
     }
@@ -74,10 +74,10 @@ class OkexWsDepth {
             
             const fullUrl = `https://www.cryptopia.co.nz/api/GetMarketOrderGroups/${urlString}/10`
             const result = await this.SendRequestOrderBook(fullUrl)
+            if(!result) continue
             if(result.length < 5 ){
                 console.log('5 kayıt yok çıkılıyor.')
             }
-
             // Eğer 5 markette bir güncelleme varsa güncellemeyi yaptırç
             var marketData = this.marketsData[urlString]
             if(JSON.stringify(result) != JSON.stringify(marketData)){
