@@ -6,6 +6,10 @@ import sys
 import uuid
 import ccxt
 import pymongo
+import json
+import websocket
+import time
+import urllib
 try:    
     import thread 
 except ImportError:
@@ -44,12 +48,18 @@ islemdekiCoinler = []
 limits = {"BTC": 0.0006, "ETH": 0.011, "LTC": 0.051, "DOGE": 1250, "BNB":5.1, "USD":100, "USDT":100}
 limitsForBuy = {"BTC": 0.0006, "ETH": 0.011, "LTC": 0.051, "DOGE": 1250, "BNB":5.1, "USD":40, "USDT":40}
 
-def stream_handler(message):
+'''
+def stream_handler(coin):
     coin = message["data"]
     if coin not in mainMarkets and coin not in islemdekiCoinler:
       thread.start_new_thread(FiyatFarkKontrolYeni, (coin, 'BTC', 'LTC', 'DOGE'))
 
 db.child('cry/ws').stream(stream_handler)
+'''
+
+def stream_handler(coin):
+    if coin not in mainMarkets and coin not in islemdekiCoinler:
+      thread.start_new_thread(FiyatFarkKontrolYeni, (coin, 'BTC', 'LTC', 'DOGE'))
 
 def FiyatFarkKontrolYeni(coin, fmc, smc, tmc):
     global islemdekiCoinler
@@ -284,4 +294,41 @@ def OrderIptalEt(order):
       pass
     return result
 
-# ELDE KALANLAR
+# WEBSOKET
+
+
+def WebSocketleBaslat():
+    timeMiliSecond = int(round(time.time() * 1000))
+    fullUrl = 'https://www.cryptopia.co.nz/signalr/negotiate?clientProtocol=1.5&connectionData=%5B%7B%22name%22%3A%22notificationhub%22%7D%5D&_=' + str(timeMiliSecond)
+    token = None
+    r = requests.get(fullUrl)
+    result = r.json()
+    token = result['ConnectionToken']
+    token = urllib.parse.quote_plus(token)
+
+    wsUrl = 'wss://www.cryptopia.co.nz/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionData=%5B%7B%22name%22%3A%22notificationhub%22%7D%5D&tid=7&connectionToken=' + token
+
+    def on_message(ws, msg):
+        data = json.loads(msg)
+        if not data:
+          return
+
+        if 'S' in data:
+          return
+        if data['M'][0]['M'] == 'SendTradeDataUpdate':
+          coin = data['M'][0]['A'][0]['Market'].split('_')[0]
+          stream_handler(coin)
+            
+    def on_error(ws, error):
+        print(error)
+
+    def on_close(ws):
+        print("### closed ###")
+
+    websocket.enableTrace(True)
+    ws = websocket.WebSocketApp(wsUrl, on_message = on_message, on_error = on_error, on_close = on_close)
+    ws.run_forever()
+    
+#stream_handler('ADA')
+WebSocketleBaslat()
+
