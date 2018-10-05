@@ -1,5 +1,7 @@
 const MhtCcxt = require('../dll/mhtCcxt')
 const rp = require('request-promise')
+const mongodb = require('mongodb');
+const mongoUrl = "mongodb://209.250.238.100:27017/";
 
 const firebase = require('firebase-admin');
 const serviceAccount = require("../dll/firebase.json")
@@ -26,9 +28,16 @@ class EldeKalanCoinler {
         this.db = db
     }
     
-    async Basla(){ // baseCoin hangi coinle alacağı
+    async fbBalancesUpdate(totalBalances){
+        await this.fbBalances.deleteMany({})
+        this.fbBalances.insertMany(totalBalances)
+    }
+
+    async Basla(connection){ // baseCoin hangi coinle alacağı
+        this.fbBalances = connection.collection('balances')
         await this.GetBalance()
         const totalBalances = this.balances.filter(e=> e.Total > 0) // direk sell yapacağız.
+        await this.fbBalancesUpdate(totalBalances)
         let openOrders = await this.db.ref(`Abritage-in-site/${this.site}-open-orders`).once('value').then(snapshot => snapshot.val())
         this.marketsInfos = await this.ccx.exchange.load_markets()
 
@@ -330,9 +339,12 @@ module.exports = EldeKalanCoinler
 
 async function Basla() {
     var eldeKalanCoinler = new EldeKalanCoinler('cryptopia')
+    const connection = await mongodb.MongoClient.connect(mongoUrl, { useNewUrlParser: true });
+    const cnn = connection.db('cry')
     while(true){
-        await eldeKalanCoinler.Basla().catch(e=> console.log(e))
+        await eldeKalanCoinler.Basla(cnn).catch(e=> console.log(e))
     }
 }
+
 
 Basla()

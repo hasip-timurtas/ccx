@@ -140,7 +140,7 @@ def UygunMarketEkle(rk, d, rob):
 
     if result:
       print('Buy Sell Başla')
-      BuySellBasla(uygunMarket)
+      #BuySellBasla(uygunMarket)
  
 def GetOrderBookGroup(d):
     marketList = [ d['firstMarketName'], d['secondMarketName'], d['thirdMarketName'], d['btcMarketName'] ]
@@ -331,9 +331,9 @@ def WebSocketleBaslat():
     
 
 def MethodCalismaSuresi(fun, *args):
-  baslat = time.clock()
+  baslat = time.process_time()
   fun(*args)
-  bitis = time.clock()
+  bitis = time.process_time()
   return bitis - baslat # farkı saniye cinsinden döndürür.
 
 
@@ -348,7 +348,6 @@ def denemeGetToken():
 
 def denemeMongoDataCek():
     orderBooks = mycol.find( { 'market': { '$in': ['ADA/BTC', 'ADA/LTC', 'ADA/DOGE'] } } )# orderBooku tekrar alıyoruz.
-    orderBooksCount = orderBooks.count()
 
 def DenemeGetFbData():
   data = db.child('cry/mailDatam').get()
@@ -356,13 +355,16 @@ def DenemeGetFbData():
 
 def PerformansDenemeleri():
   cryTokenCS = MethodCalismaSuresi(denemeGetToken)
-  fetchBalanceCS = MethodCalismaSuresi(ccx.fetch_balance)
-  mongoDataCS = MethodCalismaSuresi(denemeMongoDataCek)
-  fbDataCS = MethodCalismaSuresi(DenemeGetFbData)
-
   print('cry Post: ', cryTokenCS)
+
+  fetchBalanceCS = MethodCalismaSuresi(ccx.fetch_balance)
   print('ccx fetch balance: ', fetchBalanceCS)
+
+  mongoDataCS = MethodCalismaSuresi(denemeMongoDataCek)
   print('Mongo get 3 marget depths: ', mongoDataCS)
+
+  fbDataCS = MethodCalismaSuresi(DenemeGetFbData)
   print('Firebase get mailDatam: ', fbDataCS)
+  
 
 PerformansDenemeleri()
