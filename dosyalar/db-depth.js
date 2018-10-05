@@ -95,14 +95,7 @@ class OkexWsDepth {
 
 
     async SendRequestOrderBook(url){
-        let orderBooks
-        await rp(url).then(e=> JSON.parse(e)).then(e=> {
-            orderBooks = e
-        }).catch(e=> {
-            console.log(e)
-            orderBooks = null
-        })
-
+        const orderBooks = await rp(url).then(e=> JSON.parse(e)).catch(e=> console.log(e))
         if(!orderBooks){
             return await this.SendRequestOrderBook(url)
         }else{
