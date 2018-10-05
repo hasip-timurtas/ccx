@@ -207,7 +207,9 @@ def BuySellBasla(market):
     balances = ccx.fetch_balance()
 
     if balances[market['coin']]['total'] * usdtPrice > limits['USDT']:
-        return
+      return
+    else:
+      print('Yeterince buy alındı. ÇIK.')
 
     firstMarketName = firstMarket['name']
 
