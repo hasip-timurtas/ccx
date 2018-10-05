@@ -330,9 +330,9 @@ def WebSocketleBaslat():
     ws.run_forever()
     
 
-def MethodCalismaSuresi(metot):
+def MethodCalismaSuresi(fun, *args):
   baslat = time.clock()
-  metot()
+  fun(*args)
   bitis = time.clock()
   return bitis - baslat # farkı saniye cinsinden döndürür.
 
@@ -350,13 +350,19 @@ def denemeMongoDataCek():
     orderBooks = mycol.find( { 'market': { '$in': ['ADA/BTC', 'ADA/LTC', 'ADA/DOGE'] } } )# orderBooku tekrar alıyoruz.
     orderBooksCount = orderBooks.count()
 
+def DenemeGetFbData():
+  data = db.child('cry/mailDatam').get()
+  print(data.val())
+
 def PerformansDenemeleri():
   cryTokenCS = MethodCalismaSuresi(denemeGetToken)
   fetchBalanceCS = MethodCalismaSuresi(ccx.fetch_balance)
   mongoDataCS = MethodCalismaSuresi(denemeMongoDataCek)
+  fbDataCS = MethodCalismaSuresi(DenemeGetFbData)
 
   print('cry Post: ', cryTokenCS)
   print('ccx fetch balance: ', fetchBalanceCS)
   print('Mongo get 3 marget depths: ', mongoDataCS)
+  print('Firebase get mailDatam: ', fbDataCS)
 
 PerformansDenemeleri()
