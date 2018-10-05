@@ -92,7 +92,41 @@ class Ortak {
         market3.total = market5.asks[0][0] * coinMarket3Total  // ETH/USDT  değeri
 
         const markets = [market1, market2, market3].sort((a,b)=> b.total - a.total) // b-a büyükten küçüğe
+        markets[0].type = 'asks' // sell kurarken priceyi buydanmı sell denmi alsın diye kontrol
         return markets[0] || false // sıraya dizdikten sonra ilk en BÜYÜK marketi döndürüyoruz.
+    }
+
+    async HangiMarketteEnPahaliBuy(coin){ // Buy için en pahalı market
+        // marketler sırayla --> ADA/USDT, ADA/BTC, ADA/ETH ve BTC/USDT, ETH/USDT
+        const { market1, market2, market3, market4, market5 } = await this.GetBesMarketTickers(coin)
+        const depthsKontrol = !market1 || !market1.asks || !market2 || !market2.asks || !market3 || !market3.asks || !market4 || !market4.asks || !market5 || !market5.asks
+
+        if(depthsKontrol) return false // eğer 1 market bile yoksa ve depthleri yoksa false dön, çünkü biz 3 markettede olanlarla iş yapıyoruz.
+        const coinMarket2Total = this.GetMarketTotal(market2, 'buy')  // ADA/BTC
+        const coinMarket3Total = this.GetMarketTotal(market3, 'buy')  // ADA/ETH
+        
+
+        market1.total = this.GetMarketTotal(market1, 'buy')  // ADA/USDT  değeri  -> bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
+        market2.total = market4.bids[0][0] * coinMarket2Total // BTC/USDT  değeri
+        market3.total = market5.bids[0][0] * coinMarket3Total  // ETH/USDT  değeri
+
+        const history = await this.GetHistory(coin) // coinin en son alındığı fiyatı verir.
+        if(!history) return false // history yoksa direk false döndür.
+        const testAmount = 100
+        const historyTotal = history.btcPrice * testAmount
+
+        const uygunBuyMarkets = [market1, market2, market3].filter(e=> { // aldığım fiyattan büyük olacak ama en az %1 yoksa zarar ederiz. 
+            const yuzde = (e.total - historyTotal) / historyTotal * 100
+            return yuzde > 1
+        })
+
+        if(uygunBuyMarkets.length > 0){
+            const marketsSort = [market1, market2, market3].sort((a,b)=> b.total - a.total) // buyların arasında en büyüğünü alıyoruz eğer 1 den fazla market varsa.
+            marketsSort[0].type = 'asks' // sell kurarken priceyi buydanmı sell denmi alsın diye kontrol
+            return marketsSort[0]
+        }else{
+            return false
+        }
 
     }
 
@@ -113,6 +147,7 @@ class Ortak {
         const markets = [market1, market2, market3].sort((a,b)=> a.total - b.total) // a-b küçükten büğüğe
         return markets[0] || false // sıraya dizdikten sonra ilk en KÜÇÜK marketi döndürüyoruz.
     }
+
 
     GetMarketTotal(market, type = 'sell'){
         if(!market) return 0
@@ -238,6 +273,11 @@ class Ortak {
         let marketOrders = await this.depths.findOne({ market: marketName } )
         marketOrders = marketOrders.depths
         return marketOrders
+    }
+
+    async GetHistory(coin){
+        let marketHistory = await this.history.findOne({ coin } )
+        return marketHistory
     }
 
     sleep (saniye) {

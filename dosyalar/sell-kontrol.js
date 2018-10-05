@@ -73,25 +73,24 @@ class EldeKalanCoinler {
     }
 
     async SellKur(balance){
+        HangiMarketteEnPahaliBuy
         const market = await this.ortak.HangiMarketteEnPahali(balance.Symbol)
         if(!market) return
         const baseMarket = market.market.split('/')[1]
         const ondalikliSayi = this.ortak.SetPrices(market.market)
         const limit = this.ortak.limits[baseMarket] / 2
-        const totalSell = balance.Available * market.asks[0][0]
+        const total = balance.Available * market[market.type][0][0]
         //const totalBuy = balance.Available * market.sell
-        if(totalSell < limit) return
-        const sellPrice = market.asks[0][0]
+        if(total < limit) return
+        const price = market[market.type][0][0]
         //const buyPrice = market.buy
-        let newPrice = sellPrice - ondalikliSayi // -1 fiyatını belirliyoruz sell de en öne koymak için
 
-        /*
-        // Eğer koyacağımız sell fiyatı ile buy fiyatı arasında % 1 fark varsa. buydan ver gitsin aq.
-        const buySellFarki = (newPrice - buyPrice) / buyPrice * 100
-        if(buySellFarki <= 1 && totalBuy < limit){  // eğer buy ve sell arasında % 1 fark varsa buya sat. Tabi amount ta varsa.
-            newPrice = buyPrice
+        let newPrice
+        if(market.type == 'asks'){
+            newPrice = price - ondalikliSayi // -1 fiyatını belirliyoruz sell de en öne koymak için
+        }else{
+            newPrice = price
         }
-        */
         
         await this.ortak.Submit(market.market, newPrice, balance.Available, 'sell'  ).then(async(e)=>{
             if(!e.id) return

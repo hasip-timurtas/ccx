@@ -212,8 +212,15 @@ def BuySellBasla(market):
     if total > barajTotal:
       amount = round(barajTotal / firstMarket['orderBook'][0]['Price'], 8)
     
-    balanceVar = BalanceKontrol(btcMarket['askPrice'], altCoin)
-    
+    #balanceVar = BalanceKontrol(btcMarket['askPrice'], altCoin)
+    balance = myColBalances.find_one( { 'Symbol': altCoin })# orderBooku tekrar alıyoruz.
+    if not balance:
+      return False # yani balance yok demek.
+
+    altCoinTotal = balance['Total']
+    altCoinBtcDegeri = altCoinTotal * btcMarket['askPrice']
+    balanceVar = altCoinBtcDegeri > limits['BTC']
+
     if balanceVar:
       print('Yeterince balance var. ÇIK')
       return
@@ -228,7 +235,7 @@ def BuySellBasla(market):
 
       if buyResult['filled'] > 0:
         sellResult = Submit(market, secondMarket['name'], secondMarket['orderBook'][0]['Price'], buyResult['filled'], 'Sell')
-        myColHistory.insert_one({'market': firstMarketName, 'amount': buyResult['filled'], 'price': secondMarket['orderBook'][0]['Price'] })
+        myColHistory.insert_one({'coin': altCoin, 'btcPrice': btcMarket['askPrice'], 'market': firstMarketName })
         if sellResult and sellResult['filled'] < buyResult['filled']:
           sellIptalResult = OrderIptalEt(sellResult)
       
