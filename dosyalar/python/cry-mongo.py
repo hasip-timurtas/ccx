@@ -202,11 +202,11 @@ def BuySellBasla(market):
     if total > barajTotal:
       amount = round(barajTotal / firstMarket['orderBook'][0]['Price'], 8)
     
-    usdtOrderBook = mycol.find_one( { 'market': market['coin'] + '/USDT'} )
+    usdtOrderBook = mycol.find_one( { 'market': firstCoin + '/USDT'} )
     usdtPrice = float(usdtOrderBook['asks'][0][0])
     balances = ccx.fetch_balance()
 
-    if balances[market['coin']]['total'] * usdtPrice > limits['USDT']:
+    if balances[firstCoin]['total'] * usdtPrice > limits['USDT']:
       return
     else:
       print('Yeterince buy alındı. ÇIK.')
