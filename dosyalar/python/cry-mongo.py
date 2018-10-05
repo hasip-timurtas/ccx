@@ -10,6 +10,7 @@ import json
 import websocket
 import time
 import urllib
+from datetime import datetime
 try:    
     import thread 
 except ImportError:
@@ -235,7 +236,7 @@ def BuySellBasla(market):
 
       if buyResult['filled'] > 0:
         sellResult = Submit(market, secondMarket['name'], secondMarket['orderBook'][0]['Price'], buyResult['filled'], 'Sell')
-        myColHistory.insert_one({'coin': altCoin, 'btcPrice': btcMarket['askPrice'], 'market': firstMarketName })
+        myColHistory.insert_one({'coin': altCoin, 'btcPrice': btcMarket['askPrice'], 'market': firstMarketName, 'date': datetime.now() })
         if sellResult and sellResult['filled'] < buyResult['filled']:
           sellIptalResult = OrderIptalEt(sellResult)
       

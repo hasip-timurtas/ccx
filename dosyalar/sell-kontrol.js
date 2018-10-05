@@ -73,8 +73,17 @@ class EldeKalanCoinler {
     }
 
     async SellKur(balance){
-        HangiMarketteEnPahaliBuy
-        const market = await this.ortak.HangiMarketteEnPahali(balance.Symbol)
+        if(balance.Symbol == 'TPAY'){
+            this.dur = 1
+        }
+        const uygunBuyMarket = await this.ortak.HangiMarketteEnPahaliBuy(balance.Symbol)
+        let market
+        if(uygunBuyMarket){
+            market = uygunBuyMarket
+        }else{
+            market = await this.ortak.HangiMarketteEnPahali(balance.Symbol)
+        }
+
         if(!market) return
         const baseMarket = market.market.split('/')[1]
         const ondalikliSayi = this.ortak.SetPrices(market.market)
