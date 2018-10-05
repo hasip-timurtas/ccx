@@ -22,6 +22,8 @@ class Ortak {
         const connection = await mongodb.MongoClient.connect(mongoUrl, { useNewUrlParser: true });
         const cnn = connection.db('cry')
         this.depths = cnn.collection('depths')
+        this.fbBalances = cnn.collection('depths')
+        this.history = cnn.collection('history')
         this.marketsInfos = await this.ccx.exchange.load_markets().catch(async (e)=> await this.LoadVeriables())
         this.marketsInfos = Object.keys(this.marketsInfos).map(e=> this.marketsInfos[e])
         this.islemdekiCoinler = []
@@ -216,6 +218,11 @@ class Ortak {
         }
         balances = balances.Data.filter(e=> e.Status == 'OK')
         return balances
+    }
+
+    async fbBalancesUpdate(totalBalances){
+        await this.fbBalances.deleteMany({})
+        this.fbBalances.insertMany(totalBalances)
     }
 
     async GetTickers(marketler){
