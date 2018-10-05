@@ -35,6 +35,7 @@ config = {
 firebase = pyrebase.initialize_app(config)
 
 minFark = 1 # ----> MİN FARK
+islemKati = 5
 #minFark = -10 # TEST
 auth = firebase.auth()
 db = firebase.database()
@@ -203,7 +204,7 @@ def BuySellBasla(market):
       amount = secondAmount
       total = secondMarket['orderBook'][0]['Total']
     
-    barajTotal = limitsForBuy[baseCoin] * 5
+    barajTotal = limitsForBuy[baseCoin] * islemKati
 
     if total > barajTotal:
       amount = round(barajTotal / firstMarket['orderBook'][0]['Price'], 8)
