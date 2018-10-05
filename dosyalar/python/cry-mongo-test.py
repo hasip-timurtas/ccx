@@ -352,7 +352,7 @@ def denemeMongoDataCek():
 
 def DenemeGetFbData():
   data = db.child('cry/mailDatam').get()
-  print(data.val())
+  abc = data.val()
 
 def PerformansDenemeleri():
   cryTokenCS = MethodCalismaSuresi(denemeGetToken)
