@@ -19,6 +19,7 @@ myclient = pymongo.MongoClient("mongodb://209.250.238.100:27017/")
 mydb = myclient["cry"]
 myColDepths = mydb["depths"]
 myColBalances = mydb["balances"]
+myColHistory = mydb["history"]
 
 ''' hasip4441
     'apiKey': 'aa903e0b70544955b414d33d987bfe2f',
@@ -227,6 +228,7 @@ def BuySellBasla(market):
 
       if buyResult['filled'] > 0:
         sellResult = Submit(market, secondMarket['name'], secondMarket['orderBook'][0]['Price'], buyResult['filled'], 'Sell')
+        myColHistory.insert_one({'market': firstMarketName, 'amount': buyResult['filled'] })
         if sellResult and sellResult['filled'] < buyResult['filled']:
           sellIptalResult = OrderIptalEt(sellResult)
       

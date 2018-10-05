@@ -362,6 +362,10 @@ def DenemeGetFbData():
   data = db.child('cry/mailDatam').get()
   abc = data.val()
 
+def DenemeFbPush():
+  db.child('cry/deneme').push(['ADA/BTC', 'ADA/LTC', 'ADA/DOGE'] )
+
+
 def PerformansDenemeleri():
   cryTokenCS = MethodCalismaSuresi(denemeGetToken)
   print('cry Post: ', cryTokenCS)
@@ -379,18 +383,8 @@ def PerformansDenemeleri():
   balanceKontrolFbCS = MethodCalismaSuresi(BalanceKontrolFb, 0.00008696, 'ANON')
   print('balanceKontrol MONGO: ', balanceKontrolFbCS)
 
-  ## Manuel Deneme
-  baslat = time.process_time()
-  balance = myColBalances.find_one( { 'Symbol': 'ANON' })# orderBooku tekrar alıyoruz.
-  if not balance:
-    return False # yani balance yok demek.
-
-  altCoinTotal = balance['Total']
-  altCoinBtcDegeri = altCoinTotal * 0.00008696
-  deger = altCoinBtcDegeri > limits['BTC']
-  bitir = time.process_time()
-  print('Manuel balanceKontrol MONGO süresi: ' + str(bitir - baslat))
-
+  fbPushCS = MethodCalismaSuresi(DenemeFbPush)
+  print('DenemeFbPush: ', fbPushCS)
   
 
 PerformansDenemeleri()
