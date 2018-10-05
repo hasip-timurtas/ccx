@@ -366,18 +366,18 @@ def PerformansDenemeleri():
   cryTokenCS = MethodCalismaSuresi(denemeGetToken)
   print('cry Post: ', cryTokenCS)
 
-  balanceKontrolCS = MethodCalismaSuresi(BalanceKontrol, 0.00008696, 'ANON')
-  print('balanceKontrol CCX: ', balanceKontrolCS)
-
-  balanceKontrolFbCS = MethodCalismaSuresi(BalanceKontrolFb, 0.00008696, 'ANON')
-  print('balanceKontrol MONGO: ', balanceKontrolFbCS)
-
   mongoDataCS = MethodCalismaSuresi(denemeMongoDataCek)
   print('Mongo get 3 marget depths: ', mongoDataCS)
 
   fbDataCS = MethodCalismaSuresi(DenemeGetFbData)
   print('Firebase get mailDatam: ', fbDataCS)
 
+
+  balanceKontrolCS = MethodCalismaSuresi(BalanceKontrol, 0.00008696, 'ANON')
+  print('balanceKontrol CCX: ', balanceKontrolCS)
+
+  balanceKontrolFbCS = MethodCalismaSuresi(BalanceKontrolFb, 0.00008696, 'ANON')
+  print('balanceKontrol MONGO: ', balanceKontrolFbCS)
 
   
 
