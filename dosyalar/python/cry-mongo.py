@@ -228,7 +228,7 @@ def BuySellBasla(market):
 
       if buyResult['filled'] > 0:
         sellResult = Submit(market, secondMarket['name'], secondMarket['orderBook'][0]['Price'], buyResult['filled'], 'Sell')
-        myColHistory.insert_one({'market': firstMarketName, 'amount': buyResult['filled'] })
+        myColHistory.insert_one({'market': firstMarketName, 'amount': buyResult['filled'], 'price': secondMarket['orderBook'][0]['Price'] })
         if sellResult and sellResult['filled'] < buyResult['filled']:
           sellIptalResult = OrderIptalEt(sellResult)
       
