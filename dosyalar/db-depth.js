@@ -12,6 +12,7 @@ class OkexWsDepth {
         this.url = "mongodb://localhost:27017/"; // production
         //this.url = "mongodb://209.250.238.100:27017/"; // test
         this.mainMarkets = ['BTC', 'LTC', 'DOGE']
+        this.marketsData = []
     }
 
     async Basla(){
@@ -75,9 +76,20 @@ class OkexWsDepth {
             const result = await this.SendRequestOrderBook(fullUrl)
             if(!result) return await this.GetOrderBookGroup(d);
             if(result.length < 5 ) return false
-    
-            d.filter(e=> {
-                
+
+            // Eğer 5 markette bir güncelleme varsa güncellemeyi yaptırç
+            var marketData = this.marketsData[urlString]
+            if(JSON.stringify(result) != JSON.stringify(marketData)){
+                await this.DepthUpdateFb(d, result)
+                this.marketsData[urlString] = result
+            }
+
+            await this.sleep(500)
+        }
+    }
+
+    async DepthUpdateFb(besMarket, result){ // d: markets
+        var uygunFormat = besMarket.filter(e=> {    
                 var market = result.find(x => x.Market == e.market.replace('/', '_'))
                 e.depths =  { 
                     bids : market.Buy.map(e=> ([e.Price, e.Total / e.Price ])), 
@@ -85,14 +97,11 @@ class OkexWsDepth {
                 }
                 return true
             })
-    
-            for (const i of d) {
-                this.depths.updateOne({market: i.market}, {$set: { depths: i.depths }})
-            }
-            await this.sleep(500)
+
+        for (const i of uygunFormat) {
+            this.depths.updateOne({market: i.market}, {$set: { depths: i.depths }})
         }
     }
-
 
     async SendRequestOrderBook(url){
         const orderBooks = await rp(url).then(e=> JSON.parse(e)).catch(e=> console.log(e))
