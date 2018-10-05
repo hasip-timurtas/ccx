@@ -81,6 +81,8 @@ class OkexWsDepth {
             if(JSON.stringify(result) != JSON.stringify(marketData)){
                 await this.DepthUpdateFb(d, result)
                 this.marketsData[urlString] = result
+            }else{
+                console.log('kayıt zaten var.', result, marketData)
             }
 
             await this.sleep(500)
