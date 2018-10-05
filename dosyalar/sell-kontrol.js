@@ -9,7 +9,7 @@ class EldeKalanCoinler {
     async BaslaSell(){ // baseCoin hangi coinle alacağı
         this.balances = await this.ortak.GetBalance()
         const totalBalances = this.balances.filter(e=> e.Total > 0) // direk sell yapacağız.
-        await this.fbBalancesUpdate(totalBalances)
+        await this.ortak.fbBalancesUpdate(totalBalances)
         let openOrders = await this.ortak.GetFbData(`cry/sell-open-orders`) 
         openOrders = openOrders && Object.keys(openOrders).map(e=> ({
                 market: openOrders[e].market, 
