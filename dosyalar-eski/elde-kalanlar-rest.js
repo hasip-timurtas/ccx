@@ -42,10 +42,6 @@ class EldeKalanCoinler {
 
         await this.BalanceEsitle()
 
-
-
-
-
         for (const balance of totalBalances) {
             if(balance.Symbol=="SPANK"){
                 this.dur = 1
@@ -320,8 +316,8 @@ class EldeKalanCoinler {
             this.Submit('LTC/BTC', sellPrice, satilacakBalance, 'Sell')
         }
 
-        if(dogeBalance > 100000 ){
-            const satilacakBalance = dogeBalance - 100000
+        if(dogeBalance > 25000 ){
+            const satilacakBalance = dogeBalance - 25000
             await this.GetOrderBook('DOGE_LTC')
             const sellPrice = this.marketOrders.Sell[0].Price - this.ondalikliSayi
             this.Submit('DOGE/LTC', sellPrice, satilacakBalance, 'Sell')

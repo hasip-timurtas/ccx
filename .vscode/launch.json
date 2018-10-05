@@ -35,11 +35,11 @@
         {"type": "node", "request": "launch", "skipFiles": ["<node_internals>/**", "/node_modules/**"],
             "name": "db-depth", 
             "program": "${workspaceFolder}\\dosyalar\\db-depth.js", },
-        {"type": "node", "request": "launch", "skipFiles": ["<node_internals>/**", "/node_modules/**"],
-            "name": "elde-kalanlar-rest", 
-            "program": "${workspaceFolder}\\dosyalar\\elde-kalanlar-rest.js", },
          {"type": "node", "request": "launch", "skipFiles": ["<node_internals>/**", "/node_modules/**"],
             "name": "sell-buy-trade", 
             "program": "${workspaceFolder}\\dosyalar\\sell-buy-trade.js", },
+        {"type": "node", "request": "launch", "skipFiles": ["<node_internals>/**", "/node_modules/**"],
+            "name": "elde-kalanlar-rest", 
+            "program": "${workspaceFolder}\\dosyalar-eski\\elde-kalanlar-rest.js", },
     ]
 }
