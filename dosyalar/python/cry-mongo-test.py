@@ -17,7 +17,9 @@ except ImportError:
 
 myclient = pymongo.MongoClient("mongodb://209.250.238.100:27017/")
 mydb = myclient["cry"]
-mycol = mydb["depths"]
+myColDepths = mydb["depths"]
+myColBalances = mydb["balances"]
+
 
 ''' hasip4441
     'apiKey': 'aa903e0b70544955b414d33d987bfe2f',
@@ -144,7 +146,7 @@ def UygunMarketEkle(rk, d, rob):
  
 def GetOrderBookGroup(d):
     marketList = [ d['firstMarketName'], d['secondMarketName'], d['thirdMarketName'], d['btcMarketName'] ]
-    orderBooks = mycol.find( { 'market': { '$in': marketList } } )# orderBooku tekrar alıyoruz.
+    orderBooks = myColDepths.find( { 'market': { '$in': marketList } } )# orderBooku tekrar alıyoruz.
     orderBooksCount = orderBooks.count()
     
     if orderBooksCount < 3: # Eğer 3 dayıt yoksa false döndür
@@ -261,12 +263,19 @@ def BuySellBasla(market):
                   'buyAmount': amount}
       db.child('cry/mailDatam-buy-hata').push(mailDatam)
 
-def BalanceKontrol(btcMarket, altCoin):
-    btcPrice = float(btcMarket['askPrice'])
+def BalanceKontrol(anaCoinPrice, altCoin):
     balances = ccx.fetch_balance()
     altCoinTotal = balances[altCoin]['total']
-    altCoinBtcDegeri = altCoinTotal * btcPrice
+    altCoinBtcDegeri = altCoinTotal * anaCoinPrice
+    return altCoinBtcDegeri > limits['BTC']
 
+def BalanceKontrolFb(anaCoinPrice, altCoin):
+    balance = myColBalances.find_one( { 'Symbol': altCoin })# orderBooku tekrar alıyoruz.
+    if not balance:
+      return False # yani balance yok demek.
+
+    altCoinTotal = balance['Total']
+    altCoinBtcDegeri = altCoinTotal * anaCoinPrice
     return altCoinBtcDegeri > limits['BTC']
 
 def Submit(market, marketName, rate, amount, type):
@@ -347,7 +356,7 @@ def denemeGetToken():
     token = urllib.parse.quote_plus(token)
 
 def denemeMongoDataCek():
-    orderBooks = mycol.find( { 'market': { '$in': ['ADA/BTC', 'ADA/LTC', 'ADA/DOGE'] } } )# orderBooku tekrar alıyoruz.
+    orderBooks = myColDepths.find( { 'market': { '$in': ['ADA/BTC', 'ADA/LTC', 'ADA/DOGE'] } } )# orderBooku tekrar alıyoruz.
 
 def DenemeGetFbData():
   data = db.child('cry/mailDatam').get()
@@ -357,14 +366,19 @@ def PerformansDenemeleri():
   cryTokenCS = MethodCalismaSuresi(denemeGetToken)
   print('cry Post: ', cryTokenCS)
 
-  fetchBalanceCS = MethodCalismaSuresi(ccx.fetch_balance)
-  print('ccx fetch balance: ', fetchBalanceCS)
+  balanceKontrolCS = MethodCalismaSuresi(BalanceKontrol, 0.00008696, 'ANON')
+  print('balanceKontrol CCX: ', balanceKontrolCS)
+
+  balanceKontrolFbCS = MethodCalismaSuresi(BalanceKontrolFb, 0.00008696, 'ANON')
+  print('balanceKontrol MONGO: ', balanceKontrolFbCS)
 
   mongoDataCS = MethodCalismaSuresi(denemeMongoDataCek)
   print('Mongo get 3 marget depths: ', mongoDataCS)
 
   fbDataCS = MethodCalismaSuresi(DenemeGetFbData)
   print('Firebase get mailDatam: ', fbDataCS)
+
+
   
 
 PerformansDenemeleri()
