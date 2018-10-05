@@ -74,8 +74,9 @@ class OkexWsDepth {
             
             const fullUrl = `https://www.cryptopia.co.nz/api/GetMarketOrderGroups/${urlString}/10`
             const result = await this.SendRequestOrderBook(fullUrl)
-            if(!result) return await this.GetOrderBookGroup(d);
-            if(result.length < 5 ) return false
+            if(result.length < 5 ){
+                console.log('5 kayıt yok çıkılıyor.')
+            }
 
             // Eğer 5 markette bir güncelleme varsa güncellemeyi yaptırç
             var marketData = this.marketsData[urlString]
