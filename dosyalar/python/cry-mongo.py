@@ -35,6 +35,7 @@ config = {
 firebase = pyrebase.initialize_app(config)
 
 minFark = 1 # ----> MİN FARK
+#minFark = -10 # TEST
 auth = firebase.auth()
 db = firebase.database()
 mainMarkets = ["BTC", "LTC", "DOGE"]
@@ -119,7 +120,9 @@ def UygunMarketEkle(rk, d, rob):
           'askPrice': rob['thirdOrderBook'][0]['Price'], 
           'orderBook': rob['thirdOrderBook'], 
           'amount': rk['thirdMarketTotal'], 
-          'type': d['type'] }
+          'type': d['type'] },
+      'btcMarket': {
+          'askPrice': rob['btcOrderBook'][0]['Price'] }
     }
 
     result = CheckTamUygun(d, rob)
@@ -151,6 +154,7 @@ def GetOrderBookGroup(d):
 
     firstOrderBook = [{"Price": float(firstOrderBook['asks'][0][0]),"Total": float(firstOrderBook['asks'][0][0]) * float(firstOrderBook['asks'][0][1])}]
     secondOrderBook = [{"Price": float(secondOrderBook['bids'][0][0]),"Total": float(secondOrderBook['bids'][0][0]) * float(secondOrderBook['bids'][0][1])}]
+    btcOrderBook = [{"Price": float(btcOrderBook['asks'][0][0]),"Total": float(btcOrderBook['asks'][0][0]) * float(btcOrderBook['asks'][0][1])}]
 
     if d['type'] == 'alt':
         thirdOrderBook = [{"Price": float(thirdOrderBook['asks'][0][0]),"Total": float(thirdOrderBook['asks'][0][0]) * float(thirdOrderBook['asks'][0][1])}]
@@ -160,7 +164,7 @@ def GetOrderBookGroup(d):
         else:
           thirdOrderBook = [{"Price": float(thirdOrderBook['asks'][0][0]),"Total": float(thirdOrderBook['asks'][0][0]) * float(thirdOrderBook['asks'][0][1])}]
   
-    return {'firstOrderBook': firstOrderBook, 'secondOrderBook': secondOrderBook, 'thirdOrderBook': thirdOrderBook}
+    return {'firstOrderBook': firstOrderBook, 'secondOrderBook': secondOrderBook, 'thirdOrderBook': thirdOrderBook, 'btcOrderBook': btcOrderBook }
 
 def CheckTamUygun(d, rob):
     firstMarketUygun = rob['firstOrderBook'][0]['Total']  >= limits[d['firstMainCoin']]
@@ -183,8 +187,10 @@ def BuySellBasla(market):
     #db.child("cry/tam-uygun-py").push(market)
     firstMarket = market['firstMarket']
     secondMarket = market['secondMarket']
+    btcMarket = market['btcMarket']
     #thirdMarket = market['thirdMarket']
-    firstCoin = firstMarket['name'].split('/')[1]
+    baseCoin = firstMarket['name'].split('/')[1]
+    altCoin = firstMarket['name'].split('/')[0]
     amount = 0
     total = 0
     firstAmount = round(firstMarket['orderBook'][0]['Total'] / firstMarket['orderBook'][0]['Price'], 8) # tofixed yerine round
@@ -197,19 +203,16 @@ def BuySellBasla(market):
       amount = secondAmount
       total = secondMarket['orderBook'][0]['Total']
     
-    barajTotal = limitsForBuy[firstCoin] * 5
+    barajTotal = limitsForBuy[baseCoin] * 5
 
     if total > barajTotal:
       amount = round(barajTotal / firstMarket['orderBook'][0]['Price'], 8)
     
-    usdtOrderBook = mycol.find_one( { 'market': firstCoin + '/USDT'} )
-    usdtPrice = float(usdtOrderBook['asks'][0][0])
-    balances = ccx.fetch_balance()
-
-    if balances[firstCoin]['total'] * usdtPrice > limits['USDT']:
+    balanceVar = BalanceKontrol(btcMarket, altCoin)
+    
+    if balanceVar:
+      print('Yeterince balance var. ÇIK')
       return
-    else:
-      print('Yeterince buy alındı. ÇIK.')
 
     firstMarketName = firstMarket['name']
 
@@ -246,6 +249,14 @@ def BuySellBasla(market):
                   'uygunMarket': market,
                   'buyAmount': amount}
       db.child('cry/mailDatam-buy-hata').push(mailDatam)
+
+def BalanceKontrol(btcMarket, altCoin):
+    btcPrice = float(btcMarket['askPrice'])
+    balances = ccx.fetch_balance()
+    altCoinTotal = balances[altCoin]['total']
+    altCoinBtcDegeri = altCoinTotal * btcPrice
+
+    return altCoinBtcDegeri > limits['BTC']
 
 def Submit(market, marketName, rate, amount, type):
     submitOrder = None
