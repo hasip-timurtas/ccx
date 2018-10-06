@@ -110,8 +110,10 @@ class Ortak {
         market2.total = market4.bids[0][0] * coinMarket2Total // BTC/USDT  değeri
         market3.total = market5.bids[0][0] * coinMarket3Total  // ETH/USDT  değeri
 
-        const history = await this.GetHistory(coin) // coinin en son alındığı fiyatı verir.
+        let history = await this.GetHistory(coin) // coinin en son alındığı fiyatı verir.
         if(!history) return false // history yoksa direk false döndür.
+        history = history.sort((a,b)=> b.date - a.date) // en son history kaydını alıyoruz.
+
         const testAmount = 100
         const historyTotal = history.btcPrice * testAmount
 
@@ -270,8 +272,13 @@ class Ortak {
     }
 
     async GetOrderBook(marketName){
+        
         let marketOrders = await this.depths.findOne({ market: marketName } )
+        if(!marketOrders){
+            return null
+        }
         marketOrders = marketOrders.depths
+        
         return marketOrders
     }
 

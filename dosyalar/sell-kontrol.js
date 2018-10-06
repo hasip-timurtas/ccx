@@ -28,7 +28,7 @@ class EldeKalanCoinler {
         // await this.BalanceEsitle() // Şimdilik kapalı. Hangi coin en az gidiyorsa ona çevrilecek.
 
         for (const balance of totalBalances) {
-            if(balance.Symbol == "EVX"){
+            if(balance.Symbol == "REP"){
                 var dur = 1
             }
             if(this.ortak.mainMarkets.includes(balance.Symbol)) continue  // Ana market kontrolü
