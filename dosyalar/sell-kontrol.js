@@ -25,7 +25,7 @@ class EldeKalanCoinler {
         this.HangiMarketteEnPahali(balance.Symbol)
         return
         */
-        // await this.BalanceEsitle() // Şimdilik kapalı. Hangi coin en az gidiyorsa ona çevrilecek.
+        await this.BalanceEsitle(this.balances) // Şimdilik kapalı. Hangi coin en az gidiyorsa ona çevrilecek.
 
         for (const balance of totalBalances) {
             if(balance.Symbol == "REP"){
@@ -146,31 +146,26 @@ class EldeKalanCoinler {
         }
     }
     
-/*
-    async BalanceEsitle(){
-        //const btcBalance = this.balances.find(e.Symbol == 'BTC').Available
-        const ltcBalance = this.balances.find(e=> e.Symbol == 'LTC').Available
-        const dogeBalance = this.balances.find(e=> e.Symbol == 'DOGE').Available
-        this.SetPrices('LTC/BTC') //ondalikliSayi için BTC LTC DOGE aynı
+    async BalanceEsitle(balances){
+        //const btcBalance = balances.find(e.Symbol == 'BTC').Available
+        const ltcBalance = balances.find(e=> e.Symbol == 'LTC').Available
+        const dogeBalance = balances.find(e=> e.Symbol == 'DOGE').Available
+        const ondalikliSayi = this.ortak.SetPrices('LTC/BTC') //ondalikliSayi için BTC LTC DOGE aynı
         if(ltcBalance > 1 ){
             const satilacakBalance = ltcBalance - 1
-            await this.GetOrderBook('LTC/BTC')
-            const sellPrice = marketOrders.asks[0][0] - this.ondalikliSayi
-            const total = sellPrice * satilacakBalance
-            if(total < this.limits["BTC"]) return
-            this.Submit('LTC/BTC', sellPrice, satilacakBalance, 'Sell')
+            const marketOrders = await this.ortak.GetOrderBook('LTC/BTC')
+            const sellPrice = marketOrders.asks[0][0] - ondalikliSayi
+
+            this.ortak.Submit('LTC/BTC', sellPrice, satilacakBalance, 'Sell')
         }
 
-        if(dogeBalance > 100000 ){
-            const satilacakBalance = dogeBalance - 100000
-            await this.GetOrderBook('DOGE/LTC')
-            const sellPrice = marketOrders.asks[0][0] - this.ondalikliSayi
-            const total = sellPrice * satilacakBalance
-            if(total < this.limits["LTC"]) return
-            this.Submit('DOGE/LTC', sellPrice, satilacakBalance, 'Sell')
+        if(dogeBalance > 25000 ){
+            const satilacakBalance = dogeBalance - 25000
+            const marketOrders = await this.ortak.GetOrderBook('DOGE/LTC')
+            const sellPrice = marketOrders.asks[0][0] - ondalikliSayi
+            this.ortak.Submit('DOGE/LTC', sellPrice, satilacakBalance, 'Sell')
         }
     }
-    */
 }
 
 module.exports = EldeKalanCoinler
