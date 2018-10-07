@@ -31,6 +31,9 @@ class EldeKalanCoinler {
             if(balance.Symbol == "REP"){
                 var dur = 1
             }
+            var coinMarkets = this.ortak.marketsInfos.filter(e=> e.baseId == balance.Symbol && e.active == true)
+            if(coinMarkets.length < 3) continue
+            
             if(this.ortak.mainMarkets.includes(balance.Symbol)) continue  // Ana market kontrolü
 
             if(balance.Total == balance.Available){
@@ -62,7 +65,6 @@ class EldeKalanCoinler {
 
         this.bizimTutarin3te1i = openOrder.total // 3te birini tamamı yaptık. / 3 * 1
         const marketOrders = await this.ortak.GetOrderBook(openOrder.market) // bunu önce geçen kontrolü için alıyoruz. burda alıyoruz çünkü awaiti var.
-        if(!marketOrders) return //de datası yoksa dön. 
         //const marketOrderPrice = marketOrder.Sell[0].Price
         const result = await this.OneGecenVarmiKontrolSell(marketOrders, openOrder)
 
@@ -113,16 +115,12 @@ class EldeKalanCoinler {
             console.log(`${openOrder.market} Cancel edildi'`)
             balance.Available = openOrder.amount
             await this.SellKur(balance)
-        }).catch(async (e) => { 
-            console.log(e)
-            /*
-            var errorCode = e.message.replace('cry {"error_code":','').replace('}','')
-            if(errorCode == 1009){
+        }).catch(async (e) => {
+            if(e.message.includes('No matching trades found')){
                 await this.ortak.DeleteOrderFb(openOrder, 'sell')
             }else{
-                console.log(e, (errorCodes[errorCode]), openOrder.market)
-            }     
-            */   
+                console.log(e, openOrder.market)
+            }  
         })
     }
 
@@ -165,6 +163,33 @@ class EldeKalanCoinler {
             const sellPrice = marketOrders.asks[0][0] - ondalikliSayi
             this.ortak.Submit('DOGE/LTC', sellPrice, satilacakBalance, 'Sell')
         }
+    }
+
+
+
+    async GetOrderBooks(marketler){
+        let orderBooks = await this.depths.find( { 'market': { '$in': marketler } } ).toArray()
+        orderBooks = orderBooks.map(e=> {
+            if(!e.depths){
+                return e
+            }
+            e.depths.market = e.market
+            return e.depths
+        }) //  içinde market ismi olan depths gönderiyoruz. orjinalinde yok.
+        return orderBooks
+    }
+
+
+
+    async GetOrderBook(marketName){
+        
+        let marketOrders = await this.depths.findOne({ market: marketName } )
+        if(!marketOrders){
+            return null
+        }
+        marketOrders = marketOrders.depths
+        
+        return marketOrders
     }
 }
 

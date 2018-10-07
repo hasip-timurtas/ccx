@@ -1,5 +1,6 @@
 const mongodb = require('mongodb')
 const firebase = require('firebase-admin')
+const rp = require('request-promise')
 const MhtCcxt = require('../dll/mhtCcxt')
 const serviceAccount = require("../dll/firebase.json")
 firebase.initializeApp({
@@ -153,6 +154,7 @@ class Ortak {
 
     GetMarketTotal(market, type = 'sell'){
         if(!market) return 0
+        if(market.bids.length == 0) return 0
         const baseCoin = market.market.split('/')[1]
         const testAmount = 100
         const ondalikliSayi = this.SetPrices(market.market) // base market price giriyoruz ondalık sayı için
@@ -175,7 +177,10 @@ class Ortak {
             this.mainMarkets[1] + "/" + this.mainMarkets[0], 
             this.mainMarkets[2] + "/" + this.mainMarkets[0]
         ]
-        const orderBooks = await this.GetOrderBooks(marketler)
+        let orderBooks = await this.GetOrderBooks(marketler)
+        if(orderBooks.length < 5){
+            orderBooks = await this.GetOrderBookGroupRest(coin)
+        }
 
         return { 
             market1: orderBooks.find(e => e.market == marketler[0]),
@@ -195,6 +200,7 @@ class Ortak {
             e.depths.market = e.market
             return e.depths
         }) //  içinde market ismi olan depths gönderiyoruz. orjinalinde yok.
+        
         return orderBooks
     }
 
@@ -275,7 +281,7 @@ class Ortak {
         
         let marketOrders = await this.depths.findOne({ market: marketName } )
         if(!marketOrders){
-            return null
+            return await this.GetOrderBooksRest(marketName) 
         }
         marketOrders = marketOrders.depths
         
@@ -397,6 +403,46 @@ class Ortak {
         return await this.db.ref(path).once('value').then(e => e.val())
     }
     
+    async GetOrderBookGroupRest(coin){
+        const marketler = [
+            coin + "/" + this.mainMarkets[0], 
+            coin + "/" + this.mainMarkets[1], 
+            coin + "/" + this.mainMarkets[2], 
+            this.mainMarkets[1] + "/" + this.mainMarkets[0], 
+            this.mainMarkets[2] + "/" + this.mainMarkets[0]
+        ]
+
+        const marketlerString = marketler.map(e=> e.replace('/','_')).join('-')//coin + "_BTC-" + coin + "_LTC-"+ coin + "_DOGE-" + "DOGE_BTC-LTC_BTC"
+        const fullUrl = `https://www.cryptopia.co.nz/api/GetMarketOrderGroups/${marketlerString}/10`
+        const result = await rp(fullUrl).then(e=> JSON.parse(e)).catch(e=> console.log(e))
+        if(!result.Data) return await this.GetOrderBookGroupRest(coin);
+        if(result.length < 5 ) return false
+
+        let uygunFormat = marketler.map(e=> {
+            var market = result.Data.find(x => x.Market == e.replace('/','_')) //  içinde market ismi olan depths gönderiyoruz. orjinalinde yok.
+            return { 
+                bids: market.Buy ? market.Buy.map(a=> ([a.Price, a.Total / a.Price ])) : [], 
+                asks: market.Sell.map(a=> ([a.Price, a.Total / a.Price ])),
+                market: e
+            }
+        })
+
+       return uygunFormat   
+    }
+
+    async GetOrderBooksRest(marketName){
+        const fullUrl = `https://www.cryptopia.co.nz/api/GetMarketOrders/${marketName.replace('/','_')}`
+        const result = await rp(fullUrl).then(e=> JSON.parse(e)).catch(e=> console.log(e))
+        if(!result.Data) return await this.GetOrderBooksRest(marketName);
+
+        var market = result.Data //  içinde market ismi olan depths gönderiyoruz. orjinalinde yok.
+        var data =  { 
+            bids: market.Buy.map(a=> ([a.Price, a.Total / a.Price ])), 
+            asks: market.Sell.map(a=> ([a.Price, a.Total / a.Price ])),
+            market: marketName
+        }
+        return data  
+    }
 }
 
 module.exports = Ortak
