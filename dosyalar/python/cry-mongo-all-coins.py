@@ -106,9 +106,6 @@ def MarketKontrolveEkle(d):
     #rk yani result kontrol
     rk = Kontrol(d, rob['firstOrderBook'][0]['Price'], rob['secondOrderBook'][0]['Price'], rob['thirdOrderBook'][0]['Price'])
     
-    if rk['fark'] > 0:
-      print(rk['fark'])
-
     if rk['sonuc']:
       UygunMarketEkle(rk, d, rob)
 
