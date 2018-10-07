@@ -79,6 +79,8 @@ class Ortak {
 
     async HangiMarketteEnPahali(coin){
         // marketler sırayla --> ADA/USDT, ADA/BTC, ADA/ETH ve BTC/USDT, ETH/USDT
+        const besTickers = await this.GetBesMarketTickers(coin)
+        if(!besTickers) return false
         const { market1, market2, market3, market4, market5 } = await this.GetBesMarketTickers(coin)
         const depthsKontrol = !market1 || !market1.asks || !market2 || !market2.asks || !market3 || !market3.asks || !market4 || !market4.asks || !market5 || !market5.asks
 
@@ -181,6 +183,8 @@ class Ortak {
         if(orderBooks.length < 5){
             orderBooks = await this.GetOrderBookGroupRest(coin)
         }
+
+        if(!orderBooks) return false
 
         return { 
             market1: orderBooks.find(e => e.market == marketler[0]),
@@ -418,7 +422,7 @@ class Ortak {
         const fullUrl = `https://www.cryptopia.co.nz/api/GetMarketOrderGroups/${marketlerString}/10`
         const result = await rp(fullUrl).then(e=> JSON.parse(e)).catch(e=> console.log(e))
         if(!result.Data) return await this.GetOrderBookGroupRest(coin);
-        if(result.length < 5 ) return false
+        if(result.Data.length < 5 ) return false
 
         let uygunFormat = marketler.map(e=> {
             var market = result.Data.find(x => x.Market == e.replace('/','_')) //  içinde market ismi olan depths gönderiyoruz. orjinalinde yok.

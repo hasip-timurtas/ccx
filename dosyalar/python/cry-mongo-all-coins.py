@@ -50,10 +50,11 @@ def BaslaWithAllCoins():
     allmarketsFilter = list(filter(lambda x: allmarkets[x]['quoteVolume'] > 0.1, list(allmarkets)))
     allMarketsMap = list(map(lambda x: x.split('/')[0], allmarketsFilter))
     marketSet = set(allMarketsMap)
-    print(len(marketSet))
+
     while True:
       for i in marketSet:
         StartHandler(i)
+      print(str(len(marketSet)+ ' Coinle girdi işlem bitti.'))
       time.sleep( 5 )
 
 def StartHandler(coin):
