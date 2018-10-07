@@ -227,7 +227,8 @@ def BuySellBasla(market):
       if balanceVar:
         print('Yeterince balance var. ÇIK', altCoin)
         return
-
+    db.child('cry/' + app + '-mailDatam').push(market)
+    return
     firstMarketName = firstMarket['name']
     buyResult = Submit(market, firstMarketName, firstMarket['orderBook'][0]['Price'], amount, 'Buy')
 

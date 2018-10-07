@@ -241,15 +241,14 @@ def BuySellBasla(market):
 
     if total > barajTotal:
       amount = round(barajTotal / firstMarket['orderBook'][0]['Price'], 8)
-    
-    #balanceVar = BalanceKontrol(btcMarket['askPrice'], altCoin)
+  
     balanceVar = BalanceKontrol(btcMarket['askPrice'], altCoin)
     if balanceVar:
       print('Yeterince balance var. ÇIK', altCoin)
       return
 
     db.child('cry/' + app + '-mailDatam').push(market)
-    return
+  
     firstMarketName = firstMarket['name']
     buyResult = Submit(market, firstMarketName, firstMarket['orderBook'][0]['Price'], amount, 'Buy')
 
