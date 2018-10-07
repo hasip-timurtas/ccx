@@ -54,7 +54,7 @@ def BaslaWithAllCoins():
     while True:
       for i in marketSet:
         StartHandler(i)
-      print(str(len(marketSet)+ ' Coinle girdi işlem bitti.'))
+      print(str(len(marketSet))+ ' Coinle girdi işlem bitti.')
       time.sleep( 5 )
 
 def StartHandler(coin):
