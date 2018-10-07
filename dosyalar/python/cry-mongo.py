@@ -246,8 +246,7 @@ def BuySellBasla(market):
       if buyResult['filled'] < amount:
         buyIptalResult = OrderIptalEt(buyResult)
         
-        mailDatam = {'file' : 'cry-mongo',
-                    'firstMarket': firstMarketName,
+        mailDatam = {'firstMarket': firstMarketName,
                     'secondMarket': secondMarket['name'],
                     'uygunMarket': market,
                     'buyAmount': amount,
@@ -260,8 +259,7 @@ def BuySellBasla(market):
         #db.child('cry/' + app + '-mailDatam').push(mailDatam)
         print('##############################     BİR İŞLEM OLDU     ##############################')
       else:
-        mailDatam = {'file' : 'cry-mongo',
-                    'firstMarket': firstMarketName,
+        mailDatam = {'firstMarket': firstMarketName,
                     'secondMarket': secondMarket['name'],
                     'uygunMarket': market,
                     'buyAmount': amount}
@@ -295,7 +293,6 @@ def Submit(market, marketName, rate, amount, type):
       submitOrder = ccx.create_order(marketName, 'limit', type, amount, rate)
     except Exception as e:
       print(e)
-      market['file'] = 'cry-mongo'
       market['Hata'] = str(e)
       mydb["mailData-hata"].insert_one(market)
       #db.child('cry/' + app + '-tam-uygun-hatali-py').push(market)
