@@ -83,7 +83,7 @@ class OkexWsDepth {
                 this.marketsData[urlString] = result
             }
 
-            await this.sleep(500)
+            await this.sleep(100)
         }
     }
 
