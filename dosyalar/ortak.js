@@ -117,8 +117,7 @@ class Ortak {
         if(!history) return false // history yoksa direk false döndür.
         //history = history.sort((a,b)=> b.date - a.date) // en son history kaydını alıyoruz.
 
-        const testAmount = 100
-        const historyTotal = history.btcPrice * testAmount
+        const historyTotal = history.btcPrice * history.amount
 
         const uygunBuyMarkets = [market1, market2, market3].filter(e=> { // aldığım fiyattan büyük olacak ama en az %1 yoksa zarar ederiz. 
             const yuzde = (e.total - historyTotal) / historyTotal * 100
