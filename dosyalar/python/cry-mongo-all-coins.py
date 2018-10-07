@@ -54,23 +54,27 @@ islemdekiCoinler = []
 limits = {"BTC": 0.0006, "ETH": 0.011, "LTC": 0.051, "DOGE": 1250, "BNB":5.1, "USD":100, "USDT":100}
 limitsForBuy = {"BTC": 0.0006, "ETH": 0.011, "LTC": 0.051, "DOGE": 1250, "BNB":5.1, "USD":40, "USDT":40}
 threadlerim = []
+balances = []
 def BaslaWithAllCoins():
+    global threadlerim, balances
+    while True:
+      threadlerim = []
+      balances = ccx.fetch_balance()
+      coins = GetAllCoins()
+      for i in coins:
+        stream_handler(i)
+      
+      for th in threadlerim:
+        th.join()
+
+      print(str(len(coins))+ ' Coinle girdi işlem bitti.')
+
+def GetAllCoins():
     allmarkets = ccx.fetch_tickers()
     print(len(list(allmarkets)))
     allmarketsFilter = list(filter(lambda x: allmarkets[x]['quoteVolume'] > 0.1, list(allmarkets)))
     allMarketsMap = list(map(lambda x: x.split('/')[0], allmarketsFilter))
-    marketSet = set(allMarketsMap)
-    global threadlerim
-
-    while True:
-      threadlerim = []
-      for i in marketSet:
-        stream_handler(i)
-      print(str(len(marketSet))+ ' Coinle girdi işlem bitti.')
-      for th in threadlerim:
-        th.join()
-
-      #time.sleep( 5 )
+    return set(allMarketsMap)
 
 def stream_handler(coin):
     global threadlerim
@@ -239,14 +243,10 @@ def BuySellBasla(market):
       amount = round(barajTotal / firstMarket['orderBook'][0]['Price'], 8)
     
     #balanceVar = BalanceKontrol(btcMarket['askPrice'], altCoin)
-    balance = myColBalances.find_one( { 'Symbol': altCoin })# orderBooku tekrar alıyoruz.
-    if balance: # BALANCE VARSA kontrol et yeterince varsa dön.
-      altCoinTotal = balance['Total']
-      altCoinBtcDegeri = altCoinTotal * btcMarket['askPrice']
-      balanceVar = altCoinBtcDegeri > limits['BTC']
-      if balanceVar:
-        print('Yeterince balance var. ÇIK', altCoin)
-        return
+    balanceVar = BalanceKontrol(anaCoinPrice, altCoin)
+    if balanceVar:
+      print('Yeterince balance var. ÇIK', altCoin)
+      return
 
     db.child('cry/' + app + '-mailDatam').push(market)
     return
@@ -287,7 +287,7 @@ def BuySellBasla(market):
       db.child('cry/' + app + '-mailDatam-buy-hata').push(mailDatam)
 
 def BalanceKontrol(anaCoinPrice, altCoin):
-    balances = ccx.fetch_balance()
+    global balances
     altCoinTotal = balances[altCoin]['total']
     altCoinBtcDegeri = altCoinTotal * anaCoinPrice
     return altCoinBtcDegeri > limits['BTC']
