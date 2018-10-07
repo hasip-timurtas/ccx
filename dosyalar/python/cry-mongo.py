@@ -215,8 +215,8 @@ def BuySellBasla(market):
     
     barajTotal = limitsForBuy[baseCoin] * islemKati
 
-    if total > barajTotal:
-      amount = round(barajTotal / firstMarket['orderBook'][0]['Price'], 8)
+    #if total > barajTotal:
+    amount = round(barajTotal / firstMarket['orderBook'][0]['Price'], 8)
     
     #balanceVar = BalanceKontrol(btcMarket['askPrice'], altCoin)
     balance = myColBalances.find_one( { 'Symbol': altCoin })# orderBooku tekrar alıyoruz.
