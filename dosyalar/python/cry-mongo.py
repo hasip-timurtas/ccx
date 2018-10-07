@@ -45,6 +45,7 @@ firebase = pyrebase.initialize_app(config)
 islemKati = 5
 minFark = 1 # ----> MİN FARK
 #minFark = -10 # TEST
+app = ''
 auth = firebase.auth()
 db = firebase.database()
 mainMarkets = ["BTC", "LTC", "DOGE"]
@@ -194,7 +195,6 @@ def findInDepths(depths, market):
 # BUY SELL BAŞLA           ###############################           BUY SELL BAŞLA        ###############################
 
 def BuySellBasla(market):
-    #db.child("cry/tam-uygun-py").push(market)
     firstMarket = market['firstMarket']
     secondMarket = market['secondMarket']
     btcMarket = market['btcMarket']
@@ -255,14 +255,14 @@ def BuySellBasla(market):
                   'sellIptalResult': sellIptalResult,
                   'buyIptalResult': buyIptalResult}
 
-      db.child('cry/mailDatam').push(mailDatam)
+      db.child('cry/' + app + '-mailDatam').push(mailDatam)
       print('##############################     BİR İŞLEM OLDU     ##############################')
     else:
       mailDatam = {'firstMarket': firstMarketName,
                   'secondMarket': secondMarket['name'],
                   'uygunMarket': market,
                   'buyAmount': amount}
-      db.child('cry/mailDatam-buy-hata').push(mailDatam)
+      db.child('cry/' + app + '-mailDatam-buy-hata').push(mailDatam)
 
 def BalanceKontrol(anaCoinPrice, altCoin):
     balances = ccx.fetch_balance()
@@ -284,11 +284,10 @@ def Submit(market, marketName, rate, amount, type):
     submitOrder = None
     try:
       submitOrder = ccx.create_order(marketName, 'limit', type, amount, rate)
-      #db.child('cry/tam-uygun-py').push(market)
     except Exception as e:
       print(e)
       market['Hata'] = str(e)
-      db.child('cry/tam-uygun-hatali-py').push(market)
+      db.child('cry/' + app + '-mailDatam-tam-uygun-hatali-py').push(market)
 
     if submitOrder:
         print(marketName + ' için ' + type + ' Kuruldu.')
