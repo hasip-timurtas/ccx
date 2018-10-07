@@ -280,7 +280,8 @@ def BuySellBasla(market):
       #db.child('cry/' + app + '-mailDatam').push(mailDatam)
       print('##############################     BİR İŞLEM OLDU     ##############################')
     else:
-      mailDatam = {'firstMarket': firstMarketName,
+      mailDatam = {'file' : 'cry-all-coins',
+                  'firstMarket': firstMarketName,
                   'secondMarket': secondMarket['name'],
                   'uygunMarket': market,
                   'buyAmount': amount}
