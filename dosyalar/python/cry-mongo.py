@@ -238,9 +238,10 @@ def BuySellBasla(market):
 
       if buyResult['filled'] > 0:
         sellResult = Submit(market, secondMarket['name'], secondMarket['orderBook'][0]['Price'], buyResult['filled'], 'Sell')
-        myColHistory.insert_one({'coin': altCoin, 'btcPrice': btcMarket['askPrice'], 'market': firstMarketName, 'date': datetime.now() })
         if sellResult and sellResult['filled'] < buyResult['filled']:
           sellIptalResult = OrderIptalEt(sellResult)
+          kalanAmount = buyResult['filled'] - sellResult['filled']
+          HistoryEkle(altCoin, kalanAmount, btcMarket['askPrice'])
       
       buyIptalResult = None
       if buyResult['filled'] < amount:
@@ -264,6 +265,11 @@ def BuySellBasla(market):
                   'uygunMarket': market,
                   'buyAmount': amount}
       db.child('cry/' + app + '-mailDatam-buy-hata').push(mailDatam)
+
+def HistoryEkle(altCoin, amount, btcAskPrice ):
+    myColHistory.delete_many({'coin': altCoin})
+    myColHistory.insert_one({'coin': altCoin, 'amount': amount, 'btcPrice': btcAskPrice, 'date': datetime.now() })
+
 
 def BalanceKontrol(anaCoinPrice, altCoin):
     balances = ccx.fetch_balance()
