@@ -11,6 +11,7 @@ import websocket
 import time
 import urllib
 from datetime import datetime
+import threading
 try:    
     import thread 
 except ImportError:
@@ -52,23 +53,32 @@ mainMarkets = ["BTC", "LTC", "DOGE"]
 islemdekiCoinler = []
 limits = {"BTC": 0.0006, "ETH": 0.011, "LTC": 0.051, "DOGE": 1250, "BNB":5.1, "USD":100, "USDT":100}
 limitsForBuy = {"BTC": 0.0006, "ETH": 0.011, "LTC": 0.051, "DOGE": 1250, "BNB":5.1, "USD":40, "USDT":40}
-
+threadlerim = []
 def BaslaWithAllCoins():
     allmarkets = ccx.fetch_tickers()
     print(len(list(allmarkets)))
     allmarketsFilter = list(filter(lambda x: allmarkets[x]['quoteVolume'] > 0.1, list(allmarkets)))
     allMarketsMap = list(map(lambda x: x.split('/')[0], allmarketsFilter))
     marketSet = set(allMarketsMap)
+    global threadlerim
 
     while True:
+      threadlerim = []
       for i in marketSet:
         stream_handler(i)
       print(str(len(marketSet))+ ' Coinle girdi işlem bitti.')
+      for th in threadlerim:
+        th.join()
+
       time.sleep( 5 )
 
 def stream_handler(coin):
+    global threadlerim
     if coin not in mainMarkets and coin not in islemdekiCoinler:
-      thread.start_new_thread(FiyatFarkKontrolYeni, (coin, 'BTC', 'LTC', 'DOGE'))
+      th = threading.Thread(target=FiyatFarkKontrolYeni, args=(coin, 'BTC', 'LTC', 'DOGE'))
+      threadlerim.append(th)
+      th.start()
+
 
 def FiyatFarkKontrolYeni(coin, fmc, smc, tmc):
     global islemdekiCoinler
