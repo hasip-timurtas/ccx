@@ -91,6 +91,9 @@ def MarketKontrolveEkle(d):
 
     #rk yani result kontrol
     rk = Kontrol(d, rob['firstOrderBook'][0]['Price'], rob['secondOrderBook'][0]['Price'], rob['thirdOrderBook'][0]['Price'])
+    
+    if rk['fark'] > 0:
+      print(rk['fark'])
 
     if rk['sonuc']:
       UygunMarketEkle(rk, d, rob)
@@ -178,6 +181,7 @@ def CheckTamUygun(d, rob):
       return True
     else:
       return False
+
 def findInDepths(depths, market):
   for i in depths:
     if i['market'] == market:
@@ -215,7 +219,7 @@ def BuySellBasla(market):
     
     #balanceVar = BalanceKontrol(btcMarket['askPrice'], altCoin)
     balance = myColBalances.find_one( { 'Symbol': altCoin })# orderBooku tekrar alıyoruz.
-    if not balance:
+    if balance: # BALANCE VARSA return
       return False # yani balance yok demek.
 
     altCoinTotal = balance['Total']
