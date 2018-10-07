@@ -11,6 +11,7 @@ class EldeKalanCoinler {
         const totalBalances = this.balances.filter(e=> e.Total > 0) // direk sell yapacağız.
         await this.ortak.fbBalancesUpdate(totalBalances)
         let openOrders = await this.ortak.GetFbData(`cry/sell-open-orders`) 
+        /*
         openOrders = openOrders && Object.keys(openOrders).map(e=> ({
                 market: openOrders[e].market, 
                 orderId: openOrders[e].orderId,
@@ -18,7 +19,7 @@ class EldeKalanCoinler {
                 amount: openOrders[e].amount,
                 total: openOrders[e].total
             })) // object to array
-
+*/
         // TEST
         /*
         var balance = this.balances.find(x=> x.Symbol=="XAS")

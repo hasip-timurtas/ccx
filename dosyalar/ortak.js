@@ -17,7 +17,7 @@ class Ortak {
         const key = "dbec90fd39294e1fa90db54e404c2edc" // hasip4441 cry
         const secret = "D3tx+b8gb3Me2z3T/D/gzMdRWfNbR9vfYyf/RiqdJzc="
         this.ccx = new MhtCcxt(key, secret, this.site, null)
-        this.limits = { "BTC": 0.0006, "ETH": 0.011, "LTC": 0.051, "DOGE": 1250, "BNB":5.1, "USD": 5, "USDT": 5 }
+        this.limits = { "BTC": 0.0006, "ETH": 0.011, "LTC": 0.06, "DOGE": 1250, "BNB":5.1, "USD": 5, "USDT": 5 }
         this.volumeLimtis = { "BTC": 0.5, "ETH": 10, "LTC": 50, "DOGE": 1000, "BNB":250, "USD":3250, "USDT":3250 }
         this.db = firebase.database();
         const connection = await mongodb.MongoClient.connect(mongoUrl, { useNewUrlParser: true });
@@ -25,8 +25,10 @@ class Ortak {
         this.depths = cnn.collection('depths')
         this.fbBalances = cnn.collection('balances')
         this.history = cnn.collection('history')
-        this.marketsInfos = await this.ccx.exchange.load_markets().catch(async (e)=> await this.LoadVeriables())
+        this.openOrders = cnn.collection('openOrders')
+        this.marketsInfos = await this.ccx.exchange.load_markets().catch(e=> console.log(e) )
         this.marketsInfos = Object.keys(this.marketsInfos).map(e=> this.marketsInfos[e])
+        this.marketTickers = await this.ccx.GetMarkets().catch(e=> console.log(e))
         this.islemdekiCoinler = []
     }
 
@@ -94,9 +96,20 @@ class Ortak {
         market2.total = market4.asks[0][0] * coinMarket2Total // BTC/USDT  değeri
         market3.total = market5.asks[0][0] * coinMarket3Total  // ETH/USDT  değeri
 
-        const markets = [market1, market2, market3].sort((a,b)=> b.total - a.total) // b-a büyükten küçüğe
-        markets[0].type = 'asks' // sell kurarken priceyi buydanmı sell denmi alsın diye kontrol
-        return markets[0] || false // sıraya dizdikten sonra ilk en BÜYÜK marketi döndürüyoruz.
+        const markets = [market1, market2, market3].filter(e=> {
+            const volumeUygun = this.marketTickers.Data.find(a=> a.Label == e.market && a.Volume > 0)
+            return volumeUygun
+        })
+        if(markets.length < 3){
+            var dur = 2
+        }
+        const marketSort = markets.sort((a,b)=> b.total - a.total) // b-a büyükten küçüğe
+        if(marketSort.length == 0){
+            console.log("Manuel satılması gereken coin: >>>>> " + coin)
+            return false
+        }
+        marketSort[0].type = 'asks' // sell kurarken priceyi buydanmı sell denmi alsın diye kontrol
+        return marketSort[0] || false // sıraya dizdikten sonra ilk en BÜYÜK marketi döndürüyoruz.
     }
 
     async HangiMarketteEnPahaliBuy(coin){ // Buy için en pahalı market
@@ -388,13 +401,28 @@ class Ortak {
     }
 
     async DeleteOrderFb(order, type){
+        await this.openOrders.deleteOne({orderId: order.orderId})
+        /*
         const marketNameFb = order.market.replace('/','_') + '-' +  order.orderId
         await this.db.ref(`cry/${type}-open-orders`).child(marketNameFb).set(null)
+        */
     }
 
     async InsertOrderFb(order, type){
-        const marketNameFb = order.symbol.replace('/','_') + '-' +  order.id
+        
         const total = order.price * order.amount
+        const data = {
+            orderId: order.id,
+            market: order.symbol,
+            price: order.price,
+            amount: order.amount,
+            total: total
+        }
+
+        await this.openOrders.insertOne(data)
+
+        /*
+        const marketNameFb = order.symbol.replace('/','_') + '-' +  order.id
         await this.db.ref(`cry/${type}-open-orders`).child(marketNameFb).set({
             orderId: order.id,
             market: order.symbol,
@@ -402,10 +430,13 @@ class Ortak {
             amount: order.amount,
             total: total
         });
+        */
+        
     }
 
     async GetFbData(path){
-        return await this.db.ref(path).once('value').then(e => e.val())
+        return await this.openOrders.find().toArray()
+        //return await this.db.ref(path).once('value').then(e => e.val())
     }
     
     async GetOrderBookGroupRest(coin){
