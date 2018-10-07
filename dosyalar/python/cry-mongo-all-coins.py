@@ -246,7 +246,7 @@ def BuySellBasla(market):
       altCoinBtcDegeri = altCoinTotal * btcMarket['askPrice']
       balanceVar = altCoinBtcDegeri > limits['BTC']
       if balanceVar:
-        print('Yeterince balance var. ÇIK')
+        print('Yeterince balance var. ÇIK', altCoin)
         return
 
     firstMarketName = firstMarket['name']
