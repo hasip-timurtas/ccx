@@ -125,7 +125,7 @@ class Ortak {
         })
 
         if(uygunBuyMarkets.length > 0){
-            const marketsSort = [market1, market2, market3].sort((a,b)=> b.total - a.total) // buyların arasında en büyüğünü alıyoruz eğer 1 den fazla market varsa.
+            const marketsSort = uygunBuyMarkets.sort((a,b)=> b.total - a.total) // buyların arasında en büyüğünü alıyoruz eğer 1 den fazla market varsa.
             marketsSort[0].type = 'bids' // sell kurarken priceyi buydanmı sell denmi alsın diye kontrol
             return marketsSort[0]
         }else{
