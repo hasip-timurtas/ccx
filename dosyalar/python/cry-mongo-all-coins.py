@@ -266,7 +266,8 @@ def BuySellBasla(market):
       if buyResult['filled'] < amount:
         buyIptalResult = OrderIptalEt(buyResult)
         
-      mailDatam = {'firstMarket': firstMarketName,
+        mailDatam = {'file' : 'cry-all-coins',
+                  'firstMarket': firstMarketName,
                   'secondMarket': secondMarket['name'],
                   'uygunMarket': market,
                   'buyAmount': amount,
@@ -275,15 +276,16 @@ def BuySellBasla(market):
                   'sellResult': sellResult,
                   'sellIptalResult': sellIptalResult,
                   'buyIptalResult': buyIptalResult}
-
-      db.child('cry/' + app + '-mailDatam').push(mailDatam)
+      mydb["mailData"].insert_one(mailDatam)
+      #db.child('cry/' + app + '-mailDatam').push(mailDatam)
       print('##############################     BİR İŞLEM OLDU     ##############################')
     else:
       mailDatam = {'firstMarket': firstMarketName,
                   'secondMarket': secondMarket['name'],
                   'uygunMarket': market,
                   'buyAmount': amount}
-      db.child('cry/' + app + '-mailDatam-buy-hata').push(mailDatam)
+      mydb["mailData"].insert_one(mailDatam)
+      #db.child('cry/' + app + '-mailDatam-buy-hata').push(mailDatam)
 
 def HistoryEkle(altCoin, amount, btcAskPrice ):
     myColHistory.delete_many({'coin': altCoin})
@@ -311,8 +313,10 @@ def Submit(market, marketName, rate, amount, type):
       submitOrder = ccx.create_order(marketName, 'limit', type, amount, rate)
     except Exception as e:
       print(e)
+      market['file'] = 'all-coins'
       market['Hata'] = str(e)
-      db.child('cry/' + app + '-tam-uygun-hatali-py').push(market)
+      mydb["mailData-hata"].insert_one(market)
+      #db.child('cry/' + app + '-tam-uygun-hatali-py').push(market)
 
     if submitOrder:
         print(marketName + ' için ' + type + ' Kuruldu.')
