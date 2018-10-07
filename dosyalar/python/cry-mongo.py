@@ -229,7 +229,6 @@ def BuySellBasla(market):
         return
 
     firstMarketName = firstMarket['name']
-    return
     buyResult = Submit(market, firstMarketName, firstMarket['orderBook'][0]['Price'], amount, 'Buy')
 
     if buyResult:
