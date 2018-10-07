@@ -42,7 +42,7 @@ config = {
 firebase = pyrebase.initialize_app(config)
 
 
-islemKati = 5
+islemKati = 1
 minFark = 1 # ----> MİN FARK
 #minFark = -10 # TEST
 app = ''
@@ -227,8 +227,8 @@ def BuySellBasla(market):
       if balanceVar:
         print('Yeterince balance var. ÇIK', altCoin)
         return
-    db.child('cry/' + app + '-mailDatam').push(market)
-    return
+    #db.child('cry/' + app + '-mailDatam').push(market)
+    
     firstMarketName = firstMarket['name']
     buyResult = Submit(market, firstMarketName, firstMarket['orderBook'][0]['Price'], amount, 'Buy')
 
