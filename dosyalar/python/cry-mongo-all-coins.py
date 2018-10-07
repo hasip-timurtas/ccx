@@ -276,17 +276,17 @@ def BuySellBasla(market):
                   'sellResult': sellResult,
                   'sellIptalResult': sellIptalResult,
                   'buyIptalResult': buyIptalResult}
-      mydb["mailData"].insert_one(mailDatam)
-      #db.child('cry/' + app + '-mailDatam').push(mailDatam)
-      print('##############################     BİR İŞLEM OLDU     ##############################')
-    else:
-      mailDatam = {'file' : 'cry-all-coins',
-                  'firstMarket': firstMarketName,
-                  'secondMarket': secondMarket['name'],
-                  'uygunMarket': market,
-                  'buyAmount': amount}
-      mydb["mailData"].insert_one(mailDatam)
-      #db.child('cry/' + app + '-mailDatam-buy-hata').push(mailDatam)
+        mydb["mailData"].insert_one(mailDatam)
+        #db.child('cry/' + app + '-mailDatam').push(mailDatam)
+        print('##############################     BİR İŞLEM OLDU     ##############################')
+      else:
+        mailDatam = {'file' : 'cry-all-coins',
+                    'firstMarket': firstMarketName,
+                    'secondMarket': secondMarket['name'],
+                    'uygunMarket': market,
+                    'buyAmount': amount}
+        mydb["mailData"].insert_one(mailDatam)
+        #db.child('cry/' + app + '-mailDatam-buy-hata').push(mailDatam)
 
 def HistoryEkle(altCoin, amount, btcAskPrice ):
     myColHistory.delete_many({'coin': altCoin})

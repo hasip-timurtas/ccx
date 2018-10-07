@@ -246,27 +246,27 @@ def BuySellBasla(market):
       if buyResult['filled'] < amount:
         buyIptalResult = OrderIptalEt(buyResult)
         
-      mailDatam = {'file' : 'cry-mongo',
-                  'firstMarket': firstMarketName,
-                  'secondMarket': secondMarket['name'],
-                  'uygunMarket': market,
-                  'buyAmount': amount,
-                  'sellAmount': buyResult['filled'] if buyResult['filled'] else 0,
-                  'buyResult': buyResult,
-                  'sellResult': sellResult,
-                  'sellIptalResult': sellIptalResult,
-                  'buyIptalResult': buyIptalResult}
-      mydb["mailData"].insert_one(mailDatam)
-      #db.child('cry/' + app + '-mailDatam').push(mailDatam)
-      print('##############################     BİR İŞLEM OLDU     ##############################')
-    else:
-      mailDatam = {'file' : 'cry-mongo',
-                  'firstMarket': firstMarketName,
-                  'secondMarket': secondMarket['name'],
-                  'uygunMarket': market,
-                  'buyAmount': amount}
-      mydb["mailData"].insert_one(mailDatam)
-      #db.child('cry/' + app + '-mailDatam-buy-hata').push(mailDatam)
+        mailDatam = {'file' : 'cry-mongo',
+                    'firstMarket': firstMarketName,
+                    'secondMarket': secondMarket['name'],
+                    'uygunMarket': market,
+                    'buyAmount': amount,
+                    'sellAmount': buyResult['filled'] if buyResult['filled'] else 0,
+                    'buyResult': buyResult,
+                    'sellResult': sellResult,
+                    'sellIptalResult': sellIptalResult,
+                    'buyIptalResult': buyIptalResult}
+        mydb["mailData"].insert_one(mailDatam)
+        #db.child('cry/' + app + '-mailDatam').push(mailDatam)
+        print('##############################     BİR İŞLEM OLDU     ##############################')
+      else:
+        mailDatam = {'file' : 'cry-mongo',
+                    'firstMarket': firstMarketName,
+                    'secondMarket': secondMarket['name'],
+                    'uygunMarket': market,
+                    'buyAmount': amount}
+        mydb["mailData"].insert_one(mailDatam)
+        #db.child('cry/' + app + '-mailDatam-buy-hata').push(mailDatam)
 
 def HistoryEkle(altCoin, amount, btcAskPrice ):
     myColHistory.delete_many({'coin': altCoin})
