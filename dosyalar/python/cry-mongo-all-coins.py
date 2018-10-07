@@ -243,7 +243,7 @@ def BuySellBasla(market):
       amount = round(barajTotal / firstMarket['orderBook'][0]['Price'], 8)
     
     #balanceVar = BalanceKontrol(btcMarket['askPrice'], altCoin)
-    balanceVar = BalanceKontrol(anaCoinPrice, altCoin)
+    balanceVar = BalanceKontrol(btcMarket['askPrice'], altCoin)
     if balanceVar:
       print('Yeterince balance var. ÇIK', altCoin)
       return
