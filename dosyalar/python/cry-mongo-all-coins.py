@@ -76,8 +76,8 @@ def FiyatFarkKontrolYeni(coin, fmc, smc, tmc):
     MarketHazirla(coin, fmc, smc,'ust', tmc, 'ust') # BTC, LTC, DOGE
     MarketHazirla(coin, smc, fmc,'alt', tmc, 'ust') # LTC, BTC, DOGE
     MarketHazirla(coin, tmc, fmc,'alt', smc, 'alt') # DOGE, BTC, LTC
-    #islemdekiCoinler = list(filter(lambda x : x != coin ,islemdekiCoinler))
-    print(coin + ' Çıktı', islemdekiCoinler)
+    islemdekiCoinler = list(filter(lambda x : x != coin ,islemdekiCoinler))
+    #print(coin + ' Çıktı', islemdekiCoinler)
 
 def MarketHazirla(coin, fmc, smc, smct, tmc, tmct):
     MarketeGir(coin, fmc, smc, smct)
