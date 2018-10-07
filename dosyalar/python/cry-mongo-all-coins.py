@@ -6,16 +6,21 @@ import sys
 import uuid
 import ccxt
 import pymongo
+import json
+import websocket
+import time
+import urllib
+from datetime import datetime
 try:    
     import thread 
 except ImportError:
     import _thread as thread #Py3K changed it.
-import time
-
 
 myclient = pymongo.MongoClient("mongodb://209.250.238.100:27017/")
 mydb = myclient["cry"]
-mycol = mydb["depths"]
+myColDepths = mydb["depths"]
+myColBalances = mydb["balances"]
+myColHistory = mydb["history"]
 
 ''' hasip4441
     'apiKey': 'aa903e0b70544955b414d33d987bfe2f',
@@ -36,7 +41,10 @@ config = {
 
 firebase = pyrebase.initialize_app(config)
 
+
+islemKati = 5
 minFark = 1 # ----> MİN FARK
+#minFark = -10 # TEST
 auth = firebase.auth()
 db = firebase.database()
 mainMarkets = ["BTC", "LTC", "DOGE"]
@@ -53,28 +61,23 @@ def BaslaWithAllCoins():
 
     while True:
       for i in marketSet:
-        StartHandler(i)
+        stream_handler(i)
       print(str(len(marketSet))+ ' Coinle girdi işlem bitti.')
       time.sleep( 5 )
 
-def StartHandler(coin):
+def stream_handler(coin):
     if coin not in mainMarkets and coin not in islemdekiCoinler:
       thread.start_new_thread(FiyatFarkKontrolYeni, (coin, 'BTC', 'LTC', 'DOGE'))
-      #FiyatFarkKontrolYeni(coin, 'BTC', 'LTC', 'DOGE')
-
-def stream_handler(message):
-    coin = message["data"]
-    StartHandler(coin)
 
 def FiyatFarkKontrolYeni(coin, fmc, smc, tmc):
     global islemdekiCoinler
     islemdekiCoinler.append(coin)
+    #print(coin + ' Girdi', islemdekiCoinler)
     MarketHazirla(coin, fmc, smc,'ust', tmc, 'ust') # BTC, LTC, DOGE
     MarketHazirla(coin, smc, fmc,'alt', tmc, 'ust') # LTC, BTC, DOGE
     MarketHazirla(coin, tmc, fmc,'alt', smc, 'alt') # DOGE, BTC, LTC
-    islemdekiCoinler = list(filter(lambda x : x != coin ,islemdekiCoinler))
-
-    
+    #islemdekiCoinler = list(filter(lambda x : x != coin ,islemdekiCoinler))
+    print(coin + ' Çıktı', islemdekiCoinler)
 
 def MarketHazirla(coin, fmc, smc, smct, tmc, tmct):
     MarketeGir(coin, fmc, smc, smct)
@@ -102,6 +105,10 @@ def MarketKontrolveEkle(d):
 
     #rk yani result kontrol
     rk = Kontrol(d, rob['firstOrderBook'][0]['Price'], rob['secondOrderBook'][0]['Price'], rob['thirdOrderBook'][0]['Price'])
+    
+    if rk['fark'] > 0:
+      print(rk['fark'])
+
     if rk['sonuc']:
       UygunMarketEkle(rk, d, rob)
 
@@ -135,7 +142,9 @@ def UygunMarketEkle(rk, d, rob):
           'askPrice': rob['thirdOrderBook'][0]['Price'], 
           'orderBook': rob['thirdOrderBook'], 
           'amount': rk['thirdMarketTotal'], 
-          'type': d['type'] }
+          'type': d['type'] },
+      'btcMarket': {
+          'askPrice': rob['btcOrderBook'][0]['Price'] }
     }
 
     result = CheckTamUygun(d, rob)
@@ -146,7 +155,7 @@ def UygunMarketEkle(rk, d, rob):
  
 def GetOrderBookGroup(d):
     marketList = [ d['firstMarketName'], d['secondMarketName'], d['thirdMarketName'], d['btcMarketName'] ]
-    orderBooks = mycol.find( { 'market': { '$in': marketList } } )# orderBooku tekrar alıyoruz.
+    orderBooks = myColDepths.find( { 'market': { '$in': marketList } } )# orderBooku tekrar alıyoruz.
     orderBooksCount = orderBooks.count()
     
     if orderBooksCount < 3: # Eğer 3 dayıt yoksa false döndür
@@ -167,6 +176,7 @@ def GetOrderBookGroup(d):
 
     firstOrderBook = [{"Price": float(firstOrderBook['asks'][0][0]),"Total": float(firstOrderBook['asks'][0][0]) * float(firstOrderBook['asks'][0][1])}]
     secondOrderBook = [{"Price": float(secondOrderBook['bids'][0][0]),"Total": float(secondOrderBook['bids'][0][0]) * float(secondOrderBook['bids'][0][1])}]
+    btcOrderBook = [{"Price": float(btcOrderBook['asks'][0][0]),"Total": float(btcOrderBook['asks'][0][0]) * float(btcOrderBook['asks'][0][1])}]
 
     if d['type'] == 'alt':
         thirdOrderBook = [{"Price": float(thirdOrderBook['asks'][0][0]),"Total": float(thirdOrderBook['asks'][0][0]) * float(thirdOrderBook['asks'][0][1])}]
@@ -176,7 +186,7 @@ def GetOrderBookGroup(d):
         else:
           thirdOrderBook = [{"Price": float(thirdOrderBook['asks'][0][0]),"Total": float(thirdOrderBook['asks'][0][0]) * float(thirdOrderBook['asks'][0][1])}]
   
-    return {'firstOrderBook': firstOrderBook, 'secondOrderBook': secondOrderBook, 'thirdOrderBook': thirdOrderBook}
+    return {'firstOrderBook': firstOrderBook, 'secondOrderBook': secondOrderBook, 'thirdOrderBook': thirdOrderBook, 'btcOrderBook': btcOrderBook }
 
 def CheckTamUygun(d, rob):
     firstMarketUygun = rob['firstOrderBook'][0]['Total']  >= limits[d['firstMainCoin']]
@@ -186,42 +196,6 @@ def CheckTamUygun(d, rob):
     else:
       return False
 
-'''
-def GetOrderBookGroup(d):
-    fullUrl = 'https://www.cryptopia.co.nz/api/GetMarketOrderGroups/{}-{}-{}/2'.format(d['firstMarketName'], d['secondMarketName'], d['thirdMarketName'])
-    r = requests.get(fullUrl)
-    result = r.json()
-    result = result['Data']
-    if not result or len(result) < 3:
-      return False
-    firstOrderBook = {}
-    secondOrderBook = {}
-    thirdOrderBook = {}
-
-    for i in result:
-      if i['Market'] == d['firstMarketName']:
-        firstOrderBook = i['Sell']
-      elif i['Market'] == d['secondMarketName']:
-        secondOrderBook = i['Buy']
-      elif i['Market'] == d['thirdMarketName']:
-        if d['type'] == 'alt':
-          thirdOrderBook = i['Sell']
-        else:
-          if 'DOGE' in d['thirdMarketName']:
-            thirdOrderBook = i['Buy']
-          else:
-            thirdOrderBook = i['Sell']
-    
-    return {'firstOrderBook': firstOrderBook, 'secondOrderBook': secondOrderBook, 'thirdOrderBook': thirdOrderBook}
-
-def CheckTamUygun(d, rob):
-    firstMarketUygun = rob['firstOrderBook'][0]['Total']  >= limits[d['firstMainCoin']]
-    secondMarketUygun = rob['secondOrderBook'][0]['Total'] >= limits[d['secondMainCoin']]
-    if firstMarketUygun and secondMarketUygun: # iki marketinde min tutarları uyuyorsa true döndür.
-      return True
-    else:
-      return False
-'''
 def findInDepths(depths, market):
   for i in depths:
     if i['market'] == market:
@@ -230,38 +204,16 @@ def findInDepths(depths, market):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# BUY SELL BAŞLA           ###############################
+# BUY SELL BAŞLA           ###############################           BUY SELL BAŞLA        ###############################
 
 def BuySellBasla(market):
-    db.child("cry/ccx-all-market-deneme").push(market)
-    return
+    #db.child("cry/tam-uygun-py").push(market)
     firstMarket = market['firstMarket']
     secondMarket = market['secondMarket']
+    btcMarket = market['btcMarket']
     #thirdMarket = market['thirdMarket']
-    firstCoin = firstMarket['name'].split('/')[1]
+    baseCoin = firstMarket['name'].split('/')[1]
+    altCoin = firstMarket['name'].split('/')[0]
     amount = 0
     total = 0
     firstAmount = round(firstMarket['orderBook'][0]['Total'] / firstMarket['orderBook'][0]['Price'], 8) # tofixed yerine round
@@ -274,13 +226,22 @@ def BuySellBasla(market):
       amount = secondAmount
       total = secondMarket['orderBook'][0]['Total']
     
-    barajTotal = limitsForBuy[firstCoin] * 10
+    barajTotal = limitsForBuy[baseCoin] * islemKati
 
     if total > barajTotal:
       amount = round(barajTotal / firstMarket['orderBook'][0]['Price'], 8)
     
-    firstMarketName = firstMarket['name']
+    #balanceVar = BalanceKontrol(btcMarket['askPrice'], altCoin)
+    balance = myColBalances.find_one( { 'Symbol': altCoin })# orderBooku tekrar alıyoruz.
+    if balance: # BALANCE VARSA kontrol et yeterince varsa dön.
+      altCoinTotal = balance['Total']
+      altCoinBtcDegeri = altCoinTotal * btcMarket['askPrice']
+      balanceVar = altCoinBtcDegeri > limits['BTC']
+      if balanceVar:
+        print('Yeterince balance var. ÇIK')
+        return
 
+    firstMarketName = firstMarket['name']
     buyResult = Submit(market, firstMarketName, firstMarket['orderBook'][0]['Price'], amount, 'Buy')
 
     if buyResult:
@@ -289,6 +250,7 @@ def BuySellBasla(market):
 
       if buyResult['filled'] > 0:
         sellResult = Submit(market, secondMarket['name'], secondMarket['orderBook'][0]['Price'], buyResult['filled'], 'Sell')
+        myColHistory.insert_one({'coin': altCoin, 'btcPrice': btcMarket['askPrice'], 'market': firstMarketName, 'date': datetime.now() })
         if sellResult and sellResult['filled'] < buyResult['filled']:
           sellIptalResult = OrderIptalEt(sellResult)
       
@@ -315,6 +277,22 @@ def BuySellBasla(market):
                   'buyAmount': amount}
       db.child('cry/mailDatam-buy-hata').push(mailDatam)
 
+def BalanceKontrol(anaCoinPrice, altCoin):
+    balances = ccx.fetch_balance()
+    altCoinTotal = balances[altCoin]['total']
+    altCoinBtcDegeri = altCoinTotal * anaCoinPrice
+    return altCoinBtcDegeri > limits['BTC']
+
+def BalanceKontrolFb(anaCoinPrice, altCoin):
+    balance = myColBalances.find_one( { 'Symbol': altCoin })# orderBooku tekrar alıyoruz.
+    if not balance:
+      return False # yani balance yok demek.
+
+    altCoinTotal = balance['Total']
+    altCoinBtcDegeri = altCoinTotal * anaCoinPrice
+    return altCoinBtcDegeri > limits['BTC']
+
+
 def Submit(market, marketName, rate, amount, type):
     submitOrder = None
     try:
@@ -340,7 +318,43 @@ def OrderIptalEt(order):
       pass
     return result
 
-# ELDE KALANLAR
+# WEBSOKET
 
+
+def WebSocketleBaslat():
+    timeMiliSecond = int(round(time.time() * 1000))
+    fullUrl = 'https://www.cryptopia.co.nz/signalr/negotiate?clientProtocol=1.5&connectionData=%5B%7B%22name%22%3A%22notificationhub%22%7D%5D&_=' + str(timeMiliSecond)
+    token = None
+    r = requests.get(fullUrl)
+    result = r.json()
+    token = result['ConnectionToken']
+    token = urllib.parse.quote_plus(token)
+
+    wsUrl = 'wss://www.cryptopia.co.nz/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionData=%5B%7B%22name%22%3A%22notificationhub%22%7D%5D&tid=7&connectionToken=' + token
+
+    def on_message(ws, msg):
+        data = json.loads(msg)
+        if not data:
+          return
+
+        if 'S' in data:
+          return
+        if data['M'][0]['M'] == 'SendTradeDataUpdate':
+          coin = data['M'][0]['A'][0]['Market'].split('_')[0]
+          stream_handler(coin)
+            
+    def on_error(ws, error):
+        print(error)
+
+    def on_close(ws):
+        print("### closed ###")
+
+    websocket.enableTrace(True)
+    ws = websocket.WebSocketApp(wsUrl, on_message = on_message, on_error = on_error, on_close = on_close)
+    ws.run_forever()
+    
+#stream_handler('ADA')
+#WebSocketleBaslat()
 
 BaslaWithAllCoins()
+
