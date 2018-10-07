@@ -48,8 +48,9 @@ def BaslaWithAllCoins():
     allmarkets = ccx.fetch_tickers()
     print(len(list(allmarkets)))
     allmarketsFilter = list(filter(lambda x: allmarkets[x]['quoteVolume'] > 0.1, list(allmarkets)))
-    marketSet = set(markets)
-
+    allMarketsMap = list(map(lambda x: x.split('/')[0], allmarketsFilter))
+    marketSet = set(allMarketsMap)
+    print(len(marketSet))
     while True:
       for i in marketSet:
         StartHandler(i)
@@ -57,17 +58,20 @@ def BaslaWithAllCoins():
 
 def StartHandler(coin):
     if coin not in mainMarkets and coin not in islemdekiCoinler:
-      FiyatFarkKontrolYeni(coin, 'BTC', 'LTC', 'DOGE')
+      thread.start_new_thread(FiyatFarkKontrolYeni, (coin, 'BTC', 'LTC', 'DOGE'))
+      #FiyatFarkKontrolYeni(coin, 'BTC', 'LTC', 'DOGE')
 
 def stream_handler(message):
     coin = message["data"]
     StartHandler(coin)
 
 def FiyatFarkKontrolYeni(coin, fmc, smc, tmc):
-    print(coin)
+    global islemdekiCoinler
+    islemdekiCoinler.append(coin)
     MarketHazirla(coin, fmc, smc,'ust', tmc, 'ust') # BTC, LTC, DOGE
     MarketHazirla(coin, smc, fmc,'alt', tmc, 'ust') # LTC, BTC, DOGE
     MarketHazirla(coin, tmc, fmc,'alt', smc, 'alt') # DOGE, BTC, LTC
+    islemdekiCoinler = list(filter(lambda x : x != coin ,islemdekiCoinler))
 
     
 
