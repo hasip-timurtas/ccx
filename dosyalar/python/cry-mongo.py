@@ -41,8 +41,9 @@ config = {
 
 firebase = pyrebase.initialize_app(config)
 
-minFark = 1 # ----> MİN FARK
+
 islemKati = 5
+minFark = 1 # ----> MİN FARK
 #minFark = -10 # TEST
 auth = firebase.auth()
 db = firebase.database()
@@ -219,19 +220,16 @@ def BuySellBasla(market):
     
     #balanceVar = BalanceKontrol(btcMarket['askPrice'], altCoin)
     balance = myColBalances.find_one( { 'Symbol': altCoin })# orderBooku tekrar alıyoruz.
-    if balance: # BALANCE VARSA return
-      return False # yani balance yok demek.
-
-    altCoinTotal = balance['Total']
-    altCoinBtcDegeri = altCoinTotal * btcMarket['askPrice']
-    balanceVar = altCoinBtcDegeri > limits['BTC']
-
-    if balanceVar:
-      print('Yeterince balance var. ÇIK')
-      return
+    if balance: # BALANCE VARSA kontrol et yeterince varsa dön.
+      altCoinTotal = balance['Total']
+      altCoinBtcDegeri = altCoinTotal * btcMarket['askPrice']
+      balanceVar = altCoinBtcDegeri > limits['BTC']
+      if balanceVar:
+        print('Yeterince balance var. ÇIK')
+        return
 
     firstMarketName = firstMarket['name']
-
+    return
     buyResult = Submit(market, firstMarketName, firstMarket['orderBook'][0]['Price'], amount, 'Buy')
 
     if buyResult:

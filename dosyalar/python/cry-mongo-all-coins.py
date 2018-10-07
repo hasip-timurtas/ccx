@@ -45,8 +45,8 @@ limits = {"BTC": 0.0006, "ETH": 0.011, "LTC": 0.051, "DOGE": 1250, "BNB":5.1, "U
 limitsForBuy = {"BTC": 0.0006, "ETH": 0.011, "LTC": 0.051, "DOGE": 1250, "BNB":5.1, "USD":40, "USDT":40}
 
 def BaslaWithAllCoins():
-    markets = list(ccx.load_markets())
-    markets = list(map(lambda x: x.split('/')[0], markets))
+    allmarkets = ccx.fetch_tickers()
+    markets = list(map(lambda x: x.split('/')[0], list(allmarkets)))
     marketSet = set(markets)
     while True:
       for i in marketSet:
