@@ -17,7 +17,7 @@ try:
 except ImportError:
     import _thread as thread #Py3K changed it.
 
-myclient = pymongo.MongoClient("mongodb://209.250.238.100:27017/")
+myclient = pymongo.MongoClient("mongodb://207.154.206.65:1453/")
 mydb = myclient["cry"]
 myColDepths = mydb["depths"]
 myColBalances = mydb["balances"]
