@@ -46,8 +46,10 @@ limitsForBuy = {"BTC": 0.0006, "ETH": 0.011, "LTC": 0.051, "DOGE": 1250, "BNB":5
 
 def BaslaWithAllCoins():
     allmarkets = ccx.fetch_tickers()
-    markets = list(map(lambda x: x.split('/')[0], list(allmarkets)))
+    print(len(list(allmarkets)))
+    allmarketsFilter = list(filter(lambda x: allmarkets[x]['quoteVolume'] > 0.1, list(allmarkets)))
     marketSet = set(markets)
+
     while True:
       for i in marketSet:
         StartHandler(i)

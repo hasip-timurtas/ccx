@@ -75,7 +75,7 @@ class EldeKalanCoinler {
     }
 
     async SellKur(balance){
-        if(balance.Symbol == 'TPAY'){
+        if(balance.Symbol == 'MINEX'){
             this.dur = 1
         }
         const uygunBuyMarket = await this.ortak.HangiMarketteEnPahaliBuy(balance.Symbol)
@@ -89,7 +89,7 @@ class EldeKalanCoinler {
         if(!market) return
         const baseMarket = market.market.split('/')[1]
         const ondalikliSayi = this.ortak.SetPrices(market.market)
-        const limit = this.ortak.limits[baseMarket] / 2
+        const limit = this.ortak.limits[baseMarket]
         const total = balance.Available * market[market.type][0][0]
         //const totalBuy = balance.Available * market.sell
         if(total < limit) return
@@ -151,17 +151,21 @@ class EldeKalanCoinler {
         const ondalikliSayi = this.ortak.SetPrices('LTC/BTC') //ondalikliSayi için BTC LTC DOGE aynı
         if(ltcBalance > 1 ){
             const satilacakBalance = ltcBalance - 1
-            const marketOrders = await this.ortak.GetOrderBook('LTC/BTC')
-            const sellPrice = marketOrders.asks[0][0] - ondalikliSayi
-
-            this.ortak.Submit('LTC/BTC', sellPrice, satilacakBalance, 'Sell')
+            if(satilacakBalance >= this.ortak.limits['LTC']){
+                const marketOrders = await this.ortak.GetOrderBook('LTC/BTC')
+                const sellPrice = marketOrders.asks[0][0] - ondalikliSayi
+                this.ortak.Submit('LTC/BTC', sellPrice, satilacakBalance, 'Sell')
+            }
+            
         }
 
         if(dogeBalance > 25000 ){
             const satilacakBalance = dogeBalance - 25000
-            const marketOrders = await this.ortak.GetOrderBook('DOGE/LTC')
-            const sellPrice = marketOrders.asks[0][0] - ondalikliSayi
-            this.ortak.Submit('DOGE/LTC', sellPrice, satilacakBalance, 'Sell')
+            if(satilacakBalance >= this.ortak.limits['DOGE']){
+                const marketOrders = await this.ortak.GetOrderBook('DOGE/LTC')
+                const sellPrice = marketOrders.asks[0][0] - ondalikliSayi
+                this.ortak.Submit('DOGE/LTC', sellPrice, satilacakBalance, 'Sell')
+            }
         }
     }
 

@@ -113,7 +113,7 @@ class Ortak {
 
         let history = await this.GetHistory(coin) // coinin en son alındığı fiyatı verir.
         if(!history) return false // history yoksa direk false döndür.
-        history = history.sort((a,b)=> b.date - a.date) // en son history kaydını alıyoruz.
+        //history = history.sort((a,b)=> b.date - a.date) // en son history kaydını alıyoruz.
 
         const testAmount = 100
         const historyTotal = history.btcPrice * testAmount
@@ -289,8 +289,10 @@ class Ortak {
     }
 
     async GetHistory(coin){
-        let marketHistory = await this.history.findOne({ coin } )
-        return marketHistory
+        let marketHistory = await this.history.find({ coin } ).toArray()
+        const history = marketHistory.sort((a,b)=> b.date - a.date) // en son history kaydını alıyoruz.
+
+        return history[0] // son eklenen historiyi verir. güncel data.
     }
 
     sleep (saniye) {
