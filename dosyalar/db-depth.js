@@ -10,7 +10,7 @@ class OkexWsDepth {
         this.uygunMarkets = []
         this.pingMsg = `{'event':'ping'}`
         //this.url = "mongodb://localhost:27017/"; // production
-        this.url = "mongodb://209.250.238.100:27017/"; // test
+        this.url = "mongodb://207.154.206.65:1453/" // test
         this.mainMarkets = ['BTC', 'LTC', 'DOGE']
         this.marketsData = []
     }
