@@ -71,7 +71,6 @@ def BaslaWithAllCoins():
 
 def GetAllCoins():
     allmarkets = ccx.fetch_tickers()
-    print(len(list(allmarkets)))
     allmarketsFilter = list(filter(lambda x: allmarkets[x]['quoteVolume'] > 0.1, list(allmarkets)))
     allMarketsMap = list(map(lambda x: x.split('/')[0], allmarketsFilter))
     return set(allMarketsMap)
