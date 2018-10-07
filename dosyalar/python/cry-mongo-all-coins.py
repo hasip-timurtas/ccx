@@ -70,7 +70,7 @@ def BaslaWithAllCoins():
       for th in threadlerim:
         th.join()
 
-      time.sleep( 5 )
+      #time.sleep( 5 )
 
 def stream_handler(coin):
     global threadlerim
