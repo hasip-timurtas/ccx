@@ -215,8 +215,6 @@ def findInDepths(depths, market):
 # BUY SELL BAŞLA           ###############################           BUY SELL BAŞLA        ###############################
 
 def BuySellBasla(market):
-    db.child('cry/' + app + '-mailDatam').push(market)
-    return
     firstMarket = market['firstMarket']
     secondMarket = market['secondMarket']
     btcMarket = market['btcMarket']
@@ -250,6 +248,8 @@ def BuySellBasla(market):
         print('Yeterince balance var. ÇIK', altCoin)
         return
 
+    db.child('cry/' + app + '-mailDatam').push(market)
+    return
     firstMarketName = firstMarket['name']
     buyResult = Submit(market, firstMarketName, firstMarket['orderBook'][0]['Price'], amount, 'Buy')
 
