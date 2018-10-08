@@ -29,7 +29,7 @@ class EldeKalanCoinler {
         await this.BalanceEsitle(this.balances) // Şimdilik kapalı. Hangi coin en az gidiyorsa ona çevrilecek.
 
         for (const balance of totalBalances) {
-            if(balance.Symbol == "$PAC"){
+            if(balance.Symbol == "FROST"){
                 var dur = 1
             }
             var coinMarkets = this.ortak.marketsInfos.filter(e=> e.baseId == balance.Symbol && e.active == true)
@@ -76,7 +76,7 @@ class EldeKalanCoinler {
     }
 
     async SellKur(balance){
-        if(balance.Symbol == '$PAC'){
+        if(balance.Symbol == 'FROST'){
             this.dur = 1
         }
         const uygunBuyMarket = await this.ortak.HangiMarketteEnPahaliBuy(balance.Symbol)

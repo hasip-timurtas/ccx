@@ -83,7 +83,7 @@ class Ortak {
         // marketler sırayla --> ADA/USDT, ADA/BTC, ADA/ETH ve BTC/USDT, ETH/USDT
         const besTickers = await this.GetBesMarketTickers(coin)
         if(!besTickers) return false
-        const { market1, market2, market3, market4, market5 } = await this.GetBesMarketTickers(coin)
+        const { market1, market2, market3, market4, market5 } = besTickers //await this.GetBesMarketTickers(coin)
         const depthsKontrol = !market1 || !market1.asks || !market2 || !market2.asks || !market3 || !market3.asks || !market4 || !market4.asks || !market5 || !market5.asks
 
         if(depthsKontrol) return false // eğer 1 market bile yoksa ve depthleri yoksa false dön, çünkü biz 3 markettede olanlarla iş yapıyoruz.
