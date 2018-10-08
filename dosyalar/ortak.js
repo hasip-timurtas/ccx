@@ -8,7 +8,7 @@ firebase.initializeApp({
     databaseURL: "https://firem-b3432.firebaseio.com"
 })
 
-const mongoUrl = "mongodb://207.154.206.65:1453/";
+const mongoUrl = "mongodb://209.250.238.100:1453/";
 
 class Ortak {
     async LoadVeriables(){
