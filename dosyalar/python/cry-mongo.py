@@ -296,6 +296,7 @@ def Submit(market, marketName, rate, amount, type):
     except Exception as e:
       print(e)
       market['Hata'] = str(e)
+      market['date'] = datetime.now()
       mydb["mailData-hata"].insert_one(market)
       #db.child('cry/' + app + '-tam-uygun-hatali-py').push(market)
 
