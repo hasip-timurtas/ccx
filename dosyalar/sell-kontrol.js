@@ -150,8 +150,8 @@ class EldeKalanCoinler {
         const ltcBalance = balances.find(e=> e.Symbol == 'LTC').Available
         const dogeBalance = balances.find(e=> e.Symbol == 'DOGE').Available
         const ondalikliSayi = this.ortak.SetPrices('LTC/BTC') //ondalikliSayi için BTC LTC DOGE aynı
-        if(ltcBalance > 1.5 ){
-            const satilacakBalance = ltcBalance - 1.5
+        if(ltcBalance > 2 ){
+            const satilacakBalance = ltcBalance - 2
             if(satilacakBalance >= this.ortak.limits['LTC']){
                 const marketOrders = await this.ortak.GetOrderBook('LTC/BTC')
                 const sellPrice = marketOrders.asks[0][0] - ondalikliSayi
