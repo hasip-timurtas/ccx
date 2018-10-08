@@ -17,7 +17,7 @@ class Ortak {
         const key = "dbec90fd39294e1fa90db54e404c2edc" // hasip4441 cry
         const secret = "D3tx+b8gb3Me2z3T/D/gzMdRWfNbR9vfYyf/RiqdJzc="
         this.ccx = new MhtCcxt(key, secret, this.site, null)
-        this.limits = { "BTC": 0.0006, "ETH": 0.011, "LTC": 0.06, "DOGE": 1250, "BNB":5.1, "USD": 5, "USDT": 5 }
+        this.limits = { "BTC": 0.0006, "ETH": 0.011, "LTC": 0.06, "DOGE": 700, "BNB":5.1, "USD": 5, "USDT": 5 }
         this.volumeLimtis = { "BTC": 0.5, "ETH": 10, "LTC": 50, "DOGE": 1000, "BNB":250, "USD":3250, "USDT":3250 }
         this.db = firebase.database();
         const connection = await mongodb.MongoClient.connect(mongoUrl, { useNewUrlParser: true });

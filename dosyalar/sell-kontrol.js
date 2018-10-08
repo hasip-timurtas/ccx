@@ -29,7 +29,7 @@ class EldeKalanCoinler {
         await this.BalanceEsitle(this.balances) // Şimdilik kapalı. Hangi coin en az gidiyorsa ona çevrilecek.
 
         for (const balance of totalBalances) {
-            if(balance.Symbol == "FROST"){
+            if(balance.Symbol == "DEV"){
                 var dur = 1
             }
             var coinMarkets = this.ortak.marketsInfos.filter(e=> e.baseId == balance.Symbol && e.active == true)
