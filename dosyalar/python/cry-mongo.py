@@ -50,8 +50,8 @@ auth = firebase.auth()
 db = firebase.database()
 mainMarkets = ["BTC", "LTC", "DOGE"]
 islemdekiCoinler = []
-limits = {"BTC": 0.0006, "ETH": 0.011, "LTC": 0.051, "DOGE": 1250, "BNB":5.1, "USD":100, "USDT":100}
-limitsForBuy = {"BTC": 0.0006, "ETH": 0.011, "LTC": 0.051, "DOGE": 1250, "BNB":5.1, "USD":40, "USDT":40}
+limits = {"BTC": 0.0006, "ETH": 0.011, "LTC": 0.06, "DOGE": 1250, "BNB":5.1, "USD":100, "USDT":100}
+limitsForBuy = {"BTC": 0.0006, "ETH": 0.011, "LTC": 0.06, "DOGE": 1250, "BNB":5.1, "USD":40, "USDT":40}
 
 def stream_handler(coin):
     if coin not in mainMarkets and coin not in islemdekiCoinler:
