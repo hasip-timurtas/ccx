@@ -42,7 +42,7 @@ config = {
 firebase = pyrebase.initialize_app(config)
 
 
-islemKati = 1
+islemKati = 15
 minFark = 1 # ----> MİN FARK
 #minFark = -10 # TEST
 app = ''
@@ -215,8 +215,8 @@ def BuySellBasla(market):
     
     barajTotal = limitsForBuy[baseCoin] * islemKati
 
-    #if total > barajTotal:
-    amount = round(barajTotal / firstMarket['orderBook'][0]['Price'], 8)
+    if total > barajTotal:
+      amount = round(barajTotal / firstMarket['orderBook'][0]['Price'], 8)
     
     #balanceVar = BalanceKontrol(btcMarket['askPrice'], altCoin)
     balance = myColBalances.find_one( { 'Symbol': altCoin })# orderBooku tekrar alıyoruz.
