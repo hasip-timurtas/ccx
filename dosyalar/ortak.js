@@ -96,20 +96,23 @@ class Ortak {
         market2.total = market4.asks[0][0] * coinMarket2Total // BTC/USDT  değeri
         market3.total = market5.asks[0][0] * coinMarket3Total  // ETH/USDT  değeri
 
-        const markets = [market1, market2, market3].filter(e=> {
+        const markets = [market1, market2, market3]
+        const volumeliMarkets = markets.filter(e=> {
             const volumeUygun = this.marketTickers.Data.find(a=> a.Label == e.market && a.Volume > 0)
             return volumeUygun
         })
-        if(markets.length < 3){
+
+        if(volumeliMarkets.length < 3){
             var dur = 2
         }
-        const marketSort = markets.sort((a,b)=> b.total - a.total) // b-a büyükten küçüğe
-        if(marketSort.length == 0){
-            console.log("Manuel satılması gereken coin: >>>>> " + coin)
+        const volumeliUygunMarket = volumeliMarkets.sort((a,b)=> b.total - a.total)[0] // b-a büyükten küçüğe
+        if(!volumeliUygunMarket){
+            const vsizUygunMarket = markets.sort((a,b)=> b.total - a.total)[0]
+            console.log(`Manuel satılması gereken coin: >>>>> ${coin}   market: >>>>> ${vsizUygunMarket.market} `)
             return false
         }
-        marketSort[0].type = 'asks' // sell kurarken priceyi buydanmı sell denmi alsın diye kontrol
-        return marketSort[0] || false // sıraya dizdikten sonra ilk en BÜYÜK marketi döndürüyoruz.
+        volumeliUygunMarket.type = 'asks' // sell kurarken priceyi buydanmı sell denmi alsın diye kontrol
+        return volumeliUygunMarket || false // sıraya dizdikten sonra ilk en BÜYÜK marketi döndürüyoruz.
     }
 
     async HangiMarketteEnPahaliBuy(coin){ // Buy için en pahalı market
