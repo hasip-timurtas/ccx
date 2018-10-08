@@ -38,7 +38,7 @@ class EldeKalanCoinler {
             if(this.ortak.mainMarkets.includes(balance.Symbol)) continue  // Ana market kontrolü
 
             if(balance.Total == balance.Available){
-                 await this.SellKur(balance)
+                this.SellKur(balance)
             }else{
                 this.balance = balance
                 const openOrder = openOrders && openOrders.find(e=> e.market.split('/')[0] == balance.Symbol)
@@ -46,12 +46,15 @@ class EldeKalanCoinler {
                 if(!openOrder) continue
                 // buy kontrol
                 //await this.BuyaKoyKontrol() 
-                await this.SelleKoyKontrol(balance, openOrder)
+                this.SelleKoyKontrol(balance, openOrder)
             }
 
             // History Kaydet
             //await this.SaveHistory(balance.Symbol)
+            var a = 1
         }
+
+        await this.ortak.sleep(5)
     }
 
     async SelleKoyKontrol(balance, openOrder){
