@@ -274,7 +274,8 @@ def BuySellBasla(market):
                   'buyResult': buyResult,
                   'sellResult': sellResult,
                   'sellIptalResult': sellIptalResult,
-                  'buyIptalResult': buyIptalResult}
+                  'buyIptalResult': buyIptalResult,
+                  'date': datetime.now() }
         mydb["mailData-all-coins"].insert_one(mailDatam)
         #db.child('cry/' + app + '-mailDatam').push(mailDatam)
         print('##############################     BİR İŞLEM OLDU     ##############################')
@@ -282,7 +283,8 @@ def BuySellBasla(market):
         mailDatam = {'firstMarket': firstMarketName,
                     'secondMarket': secondMarket['name'],
                     'uygunMarket': market,
-                    'buyAmount': amount}
+                    'buyAmount': amount,
+                    'date': datetime.now()}
         mydb["mailData-all-coins"].insert_one(mailDatam)
         #db.child('cry/' + app + '-mailDatam-buy-hata').push(mailDatam)
 
