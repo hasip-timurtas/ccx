@@ -42,7 +42,7 @@ config = {
 firebase = pyrebase.initialize_app(config)
 
 
-islemKati = 10
+islemKati = 15
 minFark = 1 # ----> MİN FARK
 #minFark = -10 # TEST
 app = ''
