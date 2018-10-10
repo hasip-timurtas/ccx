@@ -7,6 +7,7 @@
     "ccxt": "^1.17.352",
     "firebase-admin": "^6.0.0",
     "mongodb": "^3.1.6",
+    "pm2": "^3.2.2",
     "request-promise": "^4.2.2",
     "ws": "^6.0.0"
   },

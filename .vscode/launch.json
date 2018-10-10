@@ -41,5 +41,8 @@
         {"type": "node", "request": "launch", "skipFiles": ["<node_internals>/**", "/node_modules/**"],
             "name": "elde-kalanlar-rest", 
             "program": "${workspaceFolder}\\dosyalar-eski\\elde-kalanlar-rest.js", },
+        {"type": "node", "request": "launch", "skipFiles": ["<node_internals>/**", "/node_modules/**"],
+            "name": "pm2manage", 
+            "program": "${workspaceFolder}\\pm2docs\\pm2manage.js", },
     ]
 }
