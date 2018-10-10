@@ -25,7 +25,7 @@ function sleep (saniye) {
   return new Promise(resolve => setTimeout(resolve, saniye * 1000))
 }
 
-
+Basla()
 setInterval(() => {
   Basla()
 }, 1000 * 60 * 60 ); // 1 saatte bir çalışır.
