@@ -79,7 +79,7 @@ class EldeKalanCoinler {
     }
 
     async SellKur(balance){
-        if(balance.Symbol == 'FROST'){
+        if(balance.Symbol == 'UMO'){
             this.dur = 1
         }
         const uygunBuyMarket = await this.ortak.HangiMarketteEnPahaliBuy(balance.Symbol)

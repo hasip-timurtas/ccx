@@ -59,9 +59,8 @@ class Ortak {
     }
 
     async OpenOrderVarMi(marketName, type){
-        let openOrders = await this.db.ref(`cry/${type}-open-orders`).once('value').then(snapshot => snapshot.val())
-        if(!openOrders) return false // hiç order yoksa false dönder.
-        openOrders = Object.keys(openOrders).map(e=> openOrders[e])
+        const openOrders = await this.openOrders.find().toArray()
+        if(openOrders.length == 0) return false // hiç order yoksa false dönder.
         const order = openOrders.find(e=> e.market.includes(marketName))
         return order || false 
     }
