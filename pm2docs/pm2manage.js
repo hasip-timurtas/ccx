@@ -1,13 +1,14 @@
 var pm2     = require('pm2')
 
-var prcesNames = ['cry-db-depth', 'cry-mongo', 'cry-sell-kontrol']
+var prcesNames = ['deneme']
 
 
 function Basla(){
   pm2.connect(async (err) => {
     if (err) throw err
     for (const prces of prcesNames) {
-      pm2.restart(prces, function() {});
+      pm2.stop(prces, function() {});
+      pm2.start(process, function(){})
       console.log(prces + ' Başladı.')
     }
     //var list = pm2.list((err2, list) => {})
