@@ -128,6 +128,6 @@ function OkexDepthBasla(){
     okexWsDepth.Basla().catch(e=>{
         console.log(e)
         console.log('tekrardan başlatılıyor.')
-        OkexDepthBasla()
+        //OkexDepthBasla()
     })
 }
