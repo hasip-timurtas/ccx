@@ -266,26 +266,26 @@ def BuySellBasla(market):
       if buyResult['filled'] < amount:
         buyIptalResult = OrderIptalEt(buyResult)
         
-        mailDatam = {'firstMarket': firstMarketName,
-                  'secondMarket': secondMarket['name'],
-                  'uygunMarket': market,
-                  'buyAmount': amount,
-                  'sellAmount': buyResult['filled'] if buyResult['filled'] else 0,
-                  'buyResult': buyResult,
-                  'sellResult': sellResult,
-                  'sellIptalResult': sellIptalResult,
-                  'buyIptalResult': buyIptalResult,
-                  'date': datetime.now() }
-        mydb["mailData-all-coins"].insert_one(mailDatam)
-        #db.child('cry/' + app + '-mailDatam').push(mailDatam)
-        print('##############################     BİR İŞLEM OLDU     ##############################')
-      else:
-        mailDatam = {'firstMarket': firstMarketName,
+      mailDatam = {'firstMarket': firstMarketName,
+                'secondMarket': secondMarket['name'],
+                'uygunMarket': market,
+                'buyAmount': amount,
+                'sellAmount': buyResult['filled'] if buyResult['filled'] else 0,
+                'buyResult': buyResult,
+                'sellResult': sellResult,
+                'sellIptalResult': sellIptalResult,
+                'buyIptalResult': buyIptalResult,
+                'date': datetime.now() }
+      mydb["mailData-all-coins"].insert_one(mailDatam)
+      #db.child('cry/' + app + '-mailDatam').push(mailDatam)
+      print('##############################     BİR İŞLEM OLDU     ##############################')
+    else:
+      mailDatam = {'firstMarket': firstMarketName,
                     'secondMarket': secondMarket['name'],
                     'uygunMarket': market,
                     'buyAmount': amount,
                     'date': datetime.now()}
-        mydb["mailData-all-coins"].insert_one(mailDatam)
+      mydb["mailData-all-coins"].insert_one(mailDatam)
         #db.child('cry/' + app + '-mailDatam-buy-hata').push(mailDatam)
 
 def HistoryEkle(altCoin, amount, btcAskPrice ):

@@ -246,7 +246,7 @@ def BuySellBasla(market):
       if buyResult['filled'] < amount:
         buyIptalResult = OrderIptalEt(buyResult)
         
-        mailDatam = {'firstMarket': firstMarketName,
+      mailDatam = {'firstMarket': firstMarketName,
                     'secondMarket': secondMarket['name'],
                     'uygunMarket': market,
                     'buyAmount': amount,
@@ -256,17 +256,18 @@ def BuySellBasla(market):
                     'sellIptalResult': sellIptalResult,
                     'buyIptalResult': buyIptalResult,
                     'date': datetime.now() }
-        mydb["mailData"].insert_one(mailDatam)
-        #db.child('cry/' + app + '-mailDatam').push(mailDatam)
-        print('##############################     BİR İŞLEM OLDU     ##############################')
-      else:
-        mailDatam = {'firstMarket': firstMarketName,
+      mydb["mailData"].insert_one(mailDatam)
+      #db.child('cry/' + app + '-mailDatam').push(mailDatam)
+      print('##############################     BİR İŞLEM OLDU     ##############################')
+    else:
+      mailDatam = {'firstMarket': firstMarketName,
                     'secondMarket': secondMarket['name'],
                     'uygunMarket': market,
                     'buyAmount': amount,
                     'date': datetime.now() }
-        mydb["mailData"].insert_one(mailDatam)
-        #db.child('cry/' + app + '-mailDatam-buy-hata').push(mailDatam)
+      mydb["mailData"].insert_one(mailDatam)
+      #db.child('cry/' + app + '-mailDatam-buy-hata').push(mailDatam)
+
 
 def HistoryEkle(altCoin, amount, btcAskPrice ):
     myColHistory.delete_many({'coin': altCoin})
