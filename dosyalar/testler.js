@@ -20,16 +20,15 @@ class Testler {
             return sonuc
         })
         this.ortak.allData = allData
-        this.ortak.allCoins = this.ortak.depths.filter(e=> e.market.split('/')[1]=='BTC').map(e=> e.market.split('/')[0])
-        var a = 1
+        this.allCoins = this.ortak.depths.filter(e=> e.market.split('/')[1]=='BTC').map(e=> e.market.split('/')[0])
+        this.ortak.allActiveCoins = this.allCoins
     }
 
     Basla(){
         this.SetAllData()
         const karliMarketler = []
-        const allCoins = this.ortak.allActiveCoins
         //const balancemdekiCoinler = ['FROST', 'DRC', 'LGS', 'UNO', 'CEFS', 'PRJ', 'GRFT', 'PASL', 'GRWI', 'UNIT', 'ABC'] // test
-        for (const coin of allCoins) { // allCoins
+        for (const coin of this.allCoins) { // allCoins
             const enKarliMarket = this.ortak.MarketTotalleriGetir(coin)
 
             if(enKarliMarket && enKarliMarket.fark >= 1){
