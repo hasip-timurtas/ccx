@@ -16,8 +16,8 @@ try:
     import thread 
 except ImportError:
     import _thread as thread #Py3K changed it.
-
-myclient = pymongo.MongoClient("mongodb://209.250.238.100:1453/")
+#pip3 install websocket-client pyrebase numpy ccxt pymongo
+myclient = pymongo.MongoClient("mongodb://45.76.71.83:1453/")
 mydb = myclient["cry"]
 myColDepths = mydb["depths"]
 myColBalances = mydb["balances"]

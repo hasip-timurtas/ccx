@@ -15,10 +15,14 @@ try:
     import thread 
 except ImportError:
     import _thread as thread #Py3K changed it.
+
+import threading
+
 #pip3 install websocket-client pyrebase numpy ccxt pymongo
 myclient = pymongo.MongoClient("mongodb://45.76.71.83:1453/")
 mydb = myclient["cry"]
-myColDepths = mydb["depths"]
+myColDepths = mydb["ws-depths"]
+myColWsDepths = mydb["ws-depths"]
 myColBalances = mydb["balances"]
 myColHistory = mydb["history"]
 
@@ -43,7 +47,7 @@ firebase = pyrebase.initialize_app(config)
 
 
 islemKati = 10
-minFark = 1 # ----> MİN FARK
+minFark = 2 # ----> MİN FARK
 #minFark = -10 # TEST
 app = ''
 auth = firebase.auth()
@@ -52,8 +56,12 @@ mainMarkets = ["BTC", "LTC", "DOGE"]
 islemdekiCoinler = []
 limits = {"BTC": 0.0006, "ETH": 0.011, "LTC": 0.06, "DOGE": 700, "BNB":5.1, "USD":100, "USDT":100}
 limitsForBuy = {"BTC": 0.0006, "ETH": 0.011, "LTC": 0.06, "DOGE": 1250, "BNB":5.1, "USD":40, "USDT":40}
-
+cryWsToken = ''
+ws = None
+uygunMarkets = []
+steamBasla = False
 def stream_handler(coin):
+    global islemdekiCoinler, mainMarkets
     if coin not in mainMarkets and coin not in islemdekiCoinler:
       thread.start_new_thread(FiyatFarkKontrolYeni, (coin, 'BTC', 'LTC', 'DOGE'))
 
@@ -65,7 +73,7 @@ def FiyatFarkKontrolYeni(coin, fmc, smc, tmc):
     MarketHazirla(coin, smc, fmc,'alt', tmc, 'ust') # LTC, BTC, DOGE
     MarketHazirla(coin, tmc, fmc,'alt', smc, 'alt') # DOGE, BTC, LTC
     islemdekiCoinler = list(filter(lambda x : x != coin ,islemdekiCoinler))
-    print(coin + ' Çıktı', islemdekiCoinler)
+    #print(coin + ' Çıktı', islemdekiCoinler)
 
 def MarketHazirla(coin, fmc, smc, smct, tmc, tmct):
     MarketeGir(coin, fmc, smc, smct)
@@ -155,24 +163,29 @@ def GetOrderBookGroup(d):
     thirdOrderBook = findInDepths(orderBooks, d['thirdMarketName'])
     btcOrderBook = findInDepths(orderBooks, d['btcMarketName'])    
 
+    if not firstOrderBook or not secondOrderBook or not thirdOrderBook or not btcOrderBook:
+      return False
+
     # coinin btc değeri, sell 1 satoshi ise buy yoktur veya buy varsa ve 22 den küçükse boş dön.    
-    if float(btcOrderBook['asks'][0][0]) == 0.00000001:
+    if float(btcOrderBook['asks'][0]['rate']) == 0.00000001:
       return False
 
-    if float(btcOrderBook['bids'][0][0]) < 0.00000022:
+    if float(btcOrderBook['bids'][0]['rate']) < 0.00000022:
       return False
 
-    firstOrderBook = [{"Price": float(firstOrderBook['asks'][0][0]),"Total": float(firstOrderBook['asks'][0][0]) * float(firstOrderBook['asks'][0][1])}]
-    secondOrderBook = [{"Price": float(secondOrderBook['bids'][0][0]),"Total": float(secondOrderBook['bids'][0][0]) * float(secondOrderBook['bids'][0][1])}]
-    btcOrderBook = [{"Price": float(btcOrderBook['asks'][0][0]),"Total": float(btcOrderBook['asks'][0][0]) * float(btcOrderBook['asks'][0][1])}]
+    
+       
+    firstOrderBook = [{"Price": float(firstOrderBook['asks'][0]['rate']),"Total": float(firstOrderBook['asks'][0]['rate']) * float(firstOrderBook['asks'][0]['amount'])}]
+    secondOrderBook = [{"Price": float(secondOrderBook['bids'][0]['rate']),"Total": float(secondOrderBook['bids'][0]['rate']) * float(secondOrderBook['bids'][0]['amount'])}]
+    btcOrderBook = [{"Price": float(btcOrderBook['asks'][0]['rate']),"Total": float(btcOrderBook['asks'][0]['rate']) * float(btcOrderBook['asks'][0]['amount'])}]
 
     if d['type'] == 'alt':
-        thirdOrderBook = [{"Price": float(thirdOrderBook['asks'][0][0]),"Total": float(thirdOrderBook['asks'][0][0]) * float(thirdOrderBook['asks'][0][1])}]
+        thirdOrderBook = [{"Price": float(thirdOrderBook['asks'][0]['rate']),"Total": float(thirdOrderBook['asks'][0]['rate']) * float(thirdOrderBook['asks'][0]['amount'])}]
     else:
         if 'DOGE' in d['thirdMarketName']:
-          thirdOrderBook = [{"Price": float(thirdOrderBook['bids'][0][0]),"Total": float(thirdOrderBook['bids'][0][0]) * float(thirdOrderBook['bids'][0][1])}]
+          thirdOrderBook = [{"Price": float(thirdOrderBook['bids'][0]['rate']),"Total": float(thirdOrderBook['bids'][0]['rate']) * float(thirdOrderBook['bids'][0]['amount'])}]
         else:
-          thirdOrderBook = [{"Price": float(thirdOrderBook['asks'][0][0]),"Total": float(thirdOrderBook['asks'][0][0]) * float(thirdOrderBook['asks'][0][1])}]
+          thirdOrderBook = [{"Price": float(thirdOrderBook['asks'][0]['rate']),"Total": float(thirdOrderBook['asks'][0]['rate']) * float(thirdOrderBook['asks'][0]['amount'])}]
   
     return {'firstOrderBook': firstOrderBook, 'secondOrderBook': secondOrderBook, 'thirdOrderBook': thirdOrderBook, 'btcOrderBook': btcOrderBook }
 
@@ -207,18 +220,23 @@ def BuySellBasla(market):
     secondAmount = round(secondMarket['orderBook'][0]['Total'] / secondMarket['orderBook'][0]['Price'], 8) # tofixed yerine round
 
     if firstAmount < secondAmount:
-      amount = firstAmount
-      total = secondMarket['orderBook'][0]['Total']
+        amount = firstAmount
+        total = secondMarket['orderBook'][0]['Total']
     else:
-      amount = secondAmount
-      total = secondMarket['orderBook'][0]['Total']
+        amount = secondAmount
+        total = secondMarket['orderBook'][0]['Total']
     
     barajTotal = limitsForBuy[baseCoin] * islemKati
 
     if total > barajTotal:
-      amount = round(barajTotal / firstMarket['orderBook'][0]['Price'], 8)
+        amount = round(barajTotal / firstMarket['orderBook'][0]['Price'], 8)
     
-    #balanceVar = BalanceKontrol(btcMarket['askPrice'], altCoin)
+    balanceVar = BalanceKontrol(btcMarket['askPrice'], altCoin)
+    if balanceVar:
+        print('Yeterince balance var. ÇIK', altCoin)
+        return
+
+    '''
     balance = myColBalances.find_one( { 'Symbol': altCoin })# orderBooku tekrar alıyoruz.
     if balance: # BALANCE VARSA kontrol et yeterince varsa dön.
       altCoinTotal = balance['Total']
@@ -227,6 +245,7 @@ def BuySellBasla(market):
       if balanceVar:
         print('Yeterince balance var. ÇIK', altCoin)
         return
+    '''
 
     firstMarketName = firstMarket['name']
     buyResult = Submit(market, firstMarketName, firstMarket['orderBook'][0]['Price'], amount, 'Buy')
@@ -351,5 +370,319 @@ def WebSocketleBaslat():
     ws.run_forever()
     
 #stream_handler('ADA')
-WebSocketleBaslat()
+#WebSocketleBaslat()
+
+def PrepareDbAndGetUygunMarkets():
+    allmarkets = []
+    try:
+      allmarkets = ccx.fetch_tickers()
+    except:
+      PrepareDbAndGetUygunMarkets()
+      return
+    
+    
+    def allMarketsFilter(x):
+        coin = x.split('/')[0]
+        marketBtc = coin + '/BTC'
+        marketLtc = coin + '/LTC'
+        marketDoge = coin + '/DOGE'
+        allmarkets[x]['TradePairId'] = allmarkets[x]['info']['TradePairId']
+        allmarkets[x]['info'] = None
+        mainMarkets = ['LTC/BTC', 'DOGE/LTC', 'DOGE/BTC']
+        if x in mainMarkets:
+          return True
+
+        if marketBtc in allmarkets and marketLtc in allmarkets and marketDoge in allmarkets and allmarkets[x]['quoteVolume'] > 0.1:
+            return True
+        else:
+            return False
+
+    def allMarketsMap(x):
+        return allmarkets[x]
+
+    umFilter = list(filter(allMarketsFilter, allmarkets))
+    umMap = list(map(allMarketsMap, umFilter))
+    '''
+    def depthsMap (x):
+        dict = {
+            'tradePairId': x['TradePairId'],
+            'market': x['symbol'],
+            'depths': { 'bids': [], 'asks': []}
+        }
+        return dict
+
+
+    depths = list(map(depthsMap, umMap))
+    myColWsDepths.delete_many({})
+    myColWsDepths.insert_many(depths)
+    '''
+    return umMap
+
+'''
+def WebSocketleBaslatWsDepth(tradePairId, symbol):
+    global cryWsToken
+
+    DbOrderbookDoldur(tradePairId)
+    wsUrl = 'wss://www.cryptopia.co.nz/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionData=%5B%7B%22name%22%3A%22notificationhub%22%7D%5D&tid=7&connectionToken=' + cryWsToken
+    orderBookMessage = '{"H":"notificationhub","M":"SetTradePairSubscription","A":[' + str(tradePairId) + ',null],"I":0}'
+
+    def on_message(ws, msg):
+        data = json.loads(msg)
+        if not data:
+          return
+
+        if 'S' in data or 'I' in data or 'G' in data:
+          return
+
+        for dataM in data['M']:
+          if dataM['M'] == 'SendTradeDataUpdate':
+            datam = dataM['A']
+            actions = list(filter(lambda x: 'Action' in x, list(datam)))
+
+            if len(actions) == 0:
+              return
+
+            if len(actions) > 1:
+              print('################## Birden Fazla Acion lu data var!!!!!!!!!! ##################')
+            
+            for action in actions:
+              OrderBookInsert(action, symbol)
+            
+
+            
+    def on_error(ws, error):
+        print(error)
+        
+    def on_open(ws):
+        ws.send(orderBookMessage)
+
+    def on_close(ws):
+        print("### closed ###")
+
+    websocket.enableTrace(True)
+    ws = websocket.WebSocketApp(wsUrl, on_message = on_message, on_error = on_error, on_close = on_close, on_open = on_open)
+    ws.run_forever()
+'''
+def OrderBookInsert(data):
+    global uygunMarkets, steamBasla
+    '''
+    Action: 3
+    Amount: 1.74837072
+    DataType: 0
+    Rate: 0.00826704
+    Total: 0.020000000017998
+    TradePairId: 101
+    Type: 1
+    UserId: null
+    '''
+    
+    depths = myColWsDepths.find_one({ 'tradePairId': data['TradePairId'] })
+
+    bids = []
+    asks = []
+    if not depths or 'bids' not in depths['depths']:
+        return
+
+    if len(depths['depths']['bids']) > 0:
+        bids = depths['depths']['bids']
+
+    if len(depths['depths']['asks']) > 0:
+        asks = depths['depths']['asks']
+
+    mix = bids+asks
+    if data['Action'] == 0: # add
+        mix = OrderEkle(data, mix)
+    
+    if data['Action'] == 3: # sil (iptal)
+        mix = OrderSil(data, mix)
+
+    if data['Action'] == 1: # sil (işlem yapıldı buy yada sell)
+        mix = OrderSil(data, mix)
+
+
+    asks = list(filter(lambda x: x['type'] == 'asks', mix))
+    asks = sorted(asks, key=lambda x: x['rate'])
+
+    bids = list(filter(lambda x: x['type'] == 'bids', mix))
+    bids = sorted(bids, key=lambda x: x['rate'],  reverse=True)
+    '''
+    newDepths = {'bids': bids[:10], 'asks': asks[:10] }
+
+    myColWsDepths.update_one({'tradePairId': data['TradePairId']}, {'$set': {'depths': newDepths}})
+    '''
+    if data['Action'] == 0: #and steamBasla:
+        ratem = list(filter(lambda x: x['rate'] == data['Rate'], mix ))
+        if len(ratem) == 0 : return
+        indexim = -1
+        if data['Type'] == 1: # sell 
+            indexim = [x['rate'] for x in asks].index(data['Rate'])
+        else:
+            indexim = [x['rate'] for x in bids].index(data['Rate'])
+
+        if indexim == 0:
+            uygunMarket = list(filter(lambda x: x['TradePairId'] == data['TradePairId'], uygunMarkets))
+            coin = uygunMarket[0]['symbol'].split('/')[0]
+            stream_handler(coin)
+    
+
+def OrderEkle(data, orderBooks):
+    rateExist = list(filter(lambda x: x['rate'] == data['Rate'],orderBooks))
+    if len(rateExist) > 0:
+      rateExist[0]['amount'] = rateExist[0]['amount'] + data['Amount']
+      rateExist[0]['amount'] = float("{0:.8f}".format(rateExist[0]['amount']))
+      orderBooks = list(filter(lambda x: x['rate'] != rateExist[0]['rate'], orderBooks))
+      orderBooks.append(rateExist[0])
+    else:
+      typem = 'asks' if data['Type'] == 1 else 'bids'
+      orderBooks.append({'rate': data['Rate'], 'amount': data['Amount'], 'type': typem })
+
+    return orderBooks
+
+def OrderSil(data, orderBooks):
+    if len(orderBooks) > 0:
+      onceLen = len(orderBooks)
+      rateExist = list(filter(lambda x: x['rate'] == data['Rate'],orderBooks))
+      if len(rateExist) > 0:
+        onceAmount = rateExist[0]['amount']
+        rateExist[0]['amount'] = rateExist[0]['amount'] - data['Amount']
+        rateExist[0]['amount'] = float("{0:.8f}".format(rateExist[0]['amount']))
+        if rateExist[0]['amount'] > 0:
+          orderBooks = list(filter(lambda x: x['rate'] != rateExist[0]['rate'], orderBooks))
+          orderBooks.append(rateExist[0])
+        else:
+          orderBooks = list(filter(lambda x: x['rate'] != rateExist[0]['rate'], orderBooks))
+
+        sonraLen = len(orderBooks)
+        if onceLen == sonraLen and onceAmount == data['Amount']:
+          print('huhu')
+     
+    return orderBooks
+
+
+
+def DbOrderbookDoldur(tradePairId):
+    global cryWsToken
+    fullUrl = 'https://www.cryptopia.co.nz/api/GetMarketOrders/'+str(tradePairId)+'/10'
+    r = requests.get(fullUrl)
+    result = r.json()
+    data = result['Data']
+
+    def depthsMapBuy(x):
+        return {
+          'rate': x['Price'],
+          'amount': x['Volume'],
+          'type': 'bids' }
+    
+    def depthsMapSell(x):
+        return {
+          'rate': x['Price'],
+          'amount': x['Volume'],
+          'type': 'asks' }
+
+    buys = list(map(depthsMapBuy, data['Buy']))
+    sells = list(map(depthsMapSell, data['Sell']))
+    depths = {
+      'bids': buys,
+      'asks': sells,
+      'tradePairId': tradePairId
+    }
+    myColWsDepths.update_one({'tradePairId': tradePairId}, {'$set': {'depths': depths}})
+
+# WEBSOCKET
+
+def on_message(ws, msg):
+    data = json.loads(msg)
+    if not data:
+      return
+
+    if 'S' in data or 'I' in data or 'G' in data:
+      return
+
+    for dataM in data['M']:
+      if dataM['M'] == 'SendTradeDataUpdate':
+        datam = dataM['A']
+        actions = list(filter(lambda x: 'Action' in x, list(datam)))
+
+        if len(actions) == 0:
+          return
+
+        if len(actions) > 1:
+          print('################## Birden Fazla Acion lu data var!!!!!!!!!! ##################')
+            
+        for action in actions:
+          OrderBookInsert(action)
+            
+
+            
+def on_error(ws, error):
+    print(error)
+        
+def on_open(ws):
+    print('ws opened')
+    #ws.send(orderBookMessage)
+
+def on_close(ws):
+    print("### closed ###")
+    '''
+    print("10 Saniye sonra tekrar başlıyor.")
+    time.sleep(10)
+    threading.Thread(target=Basla).start()
+    '''
+    
+
+def SetCryWsToken():
+    global cryWsToken, ws
+    timeMiliSecond = int(round(time.time() * 1000))
+    fullUrl = 'https://www.cryptopia.co.nz/signalr/negotiate?clientProtocol=1.5&connectionData=%5B%7B%22name%22%3A%22notificationhub%22%7D%5D&_=' + str(timeMiliSecond)
+    token = None
+    r = requests.get(fullUrl)
+    result = r.json()
+    token = result['ConnectionToken']
+    cryWsToken = urllib.parse.quote_plus(token)
+
+    wsUrl = 'wss://www.cryptopia.co.nz/signalr/connect?transport=webSockets&clientProtocol=1.5&connectionData=%5B%7B%22name%22%3A%22notificationhub%22%7D%5D&tid=7&connectionToken=' + cryWsToken
+    
+    websocket.enableTrace(True)
+    ws = websocket.WebSocketApp(wsUrl, on_message = on_message, on_error = on_error, on_close = on_close, on_open = on_open)
+    wst = threading.Thread(target=ws.run_forever)
+    wst.daemon = True
+    wst.start()
+
+    #ws.run_forever()
+
+
+
+def WsSubEkle(tradePairId):
+    global ws
+    #DbOrderbookDoldur(tradePairId)
+    orderBookMessage = '{"H":"notificationhub","M":"SetTradePairSubscription","A":[' + str(tradePairId) + ',null],"I":0}'
+    ws.send(orderBookMessage)
+  
+def Basla():
+    #time.sleep(60*2)
+    global ws, uygunMarkets, steamBasla
+    if ws:
+        ws.close()
+
+    SetCryWsToken()
+    uygunMarkets = PrepareDbAndGetUygunMarkets()
+    #WsSubEkle(5664)
+    for i in uygunMarkets:
+      WsSubEkle(i['TradePairId']) # 101
+
+    steamBasla = True
+    ready = threading.Event()
+    ready.wait()
+
+def set_interval(func, sec):
+    def func_wrapper():
+        set_interval(func, sec)
+        func()
+    t = threading.Timer(sec, func_wrapper)
+    t.start()
+    return t
+
+Basla()
+set_interval(Basla, 3720) # 1 saat 2 dakika
+#WebSocketleBaslat()
 

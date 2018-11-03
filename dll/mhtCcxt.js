@@ -248,7 +248,7 @@ class MhtCcxt {
         return {
           "OrderId": data.id,
           "Market": data.symbol,
-          "Type": data.side.replace(/\b\w/g, l => l.toUpperCase()),
+          "Type": data.side,
           "Rate": data.price,
           "Amount": data.remaining,
           "Remaining": data.remaining    

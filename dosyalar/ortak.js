@@ -1,38 +1,56 @@
 const mongodb = require('mongodb')
-const firebase = require('firebase-admin')
 const rp = require('request-promise')
 const MhtCcxt = require('../dll/mhtCcxt')
-const serviceAccount = require("../dll/firebase.json")
-firebase.initializeApp({
-    credential: firebase.credential.cert(serviceAccount),
-    databaseURL: "https://firem-b3432.firebaseio.com"
-})
+const WsDepth = require('./ws-depth')
 
-const mongoUrl = "mongodb://209.250.238.100:1453/";
+const mongoUrl = "mongodb://45.32.92.241:1453/";
 
 class Ortak {
     async LoadVeriables(){
+        this.minFark = 1
         this.mainMarkets = ['BTC', 'LTC', 'DOGE']
         this.site = 'cryptopia'
-        const key = "dbec90fd39294e1fa90db54e404c2edc" // hasip4441 cry
+        const key = "dbec90fd39294e1fa90db54e404c2edc" // apo cry
         const secret = "D3tx+b8gb3Me2z3T/D/gzMdRWfNbR9vfYyf/RiqdJzc="
         this.ccx = new MhtCcxt(key, secret, this.site, null)
-        this.limits = { "BTC": 0.0006, "ETH": 0.011, "LTC": 0.06, "DOGE": 700, "BNB":5.1, "USD": 5, "USDT": 5 }
-        this.volumeLimtis = { "BTC": 0.5, "ETH": 10, "LTC": 50, "DOGE": 1000, "BNB":250, "USD":3250, "USDT":3250 }
-        this.db = firebase.database();
+        this.limits = { "BTC": 0.0006, "ETH": 0.011, "LTC": 0.08, "DOGE": 1100, "BNB":5.1, "USD": 5, "USDT": 5 }
+        this.volumeLimtis = { "BTC": 0.5, "ETH": 10, "LTC": 50, "DOGE": 1100, "BNB":250, "USD":3250, "USDT":3250 }
         const connection = await mongodb.MongoClient.connect(mongoUrl, { useNewUrlParser: true });
         const cnn = connection.db('cry')
-        this.depths = cnn.collection('depths')
+        this.depths = [] //cnn.collection('ws-depths')
         this.fbBalances = cnn.collection('balances')
         this.history = cnn.collection('history')
+        this.mailData = cnn.collection('mailData')
+        this.mailDataEski = cnn.collection('mailData-Eski')
+        this.mailDataBosBuy = cnn.collection('mailData-bos-buy')
+        this.mailDataHata = cnn.collection('mailData-hata')
         this.openOrders = cnn.collection('openOrders')
+        this.testler = cnn.collection('testler')
         this.marketsInfos = await this.ccx.exchange.load_markets().catch(e=> console.log(e) )
-        this.marketsInfos = Object.keys(this.marketsInfos).map(e=> this.marketsInfos[e])
+        this.marketsInfos = this.marketsInfos && Object.keys(this.marketsInfos).map(e=> this.marketsInfos[e])
         this.marketTickers = await this.ccx.GetMarkets().catch(e=> console.log(e))
         this.islemdekiCoinler = []
+        this.allData = []
+        this.allActiveCoins = this.marketsInfos && this.marketsInfos.filter(e=> e.active &&  e.quote == 'BTC').map(e=>e.baseId.toUpperCase()).filter(e=> !this.mainMarkets.includes(e))
+        this.testAmount = 100
+        this.wsDepth = new WsDepth()
+        await this.wsDepth.LoadVeriables(this)
+        this.wsDataProcessing = true // ilk başta true diyoruz. ilk çalıştığında beklesin diye.
+        this.ws
+        this.wsZamanlayici = 30 // DAKİKA
     }
 
-    async Submit(marketName, rate, amount, type){
+    InsertTestler(data){
+        this.testler.insertOne(data)
+    }
+
+    WatchAllCollection(collection){
+        collection.watch().on('change', data => {
+            callback(data)
+        });
+    }
+
+    async SubmitSellKontrol(marketName, rate, amount, type){
         const orderParams = [marketName, 'limit', type, amount, rate]
         if(marketName.includes('SHOW')){
             var dur = 1
@@ -58,12 +76,42 @@ class Ortak {
         }
     }
 
+    async SubmitMongo(market, marketName, rate, amount, type){
+        const orderParams = [marketName, 'limit', type, amount, rate]
+        
+        const submitOrder = await this.ccx.exchange.createOrder(...orderParams).catch(e => {
+            market.Hata = e.message
+            market.date = new Date()
+            this.mailDataHata.insertOne(market)
+            console.log(e, orderParams)
+        })
+
+        if (submitOrder) {
+            console.log(`${marketName} için  ${type} kuruldu.'`)
+            return submitOrder
+        } else {
+            console.log(`${type} Kurarken Hata. market: ${marketName}`)
+            return false
+        }
+    }
+
+    async OrderIptalEt(order) {
+        return await this.ccx.CancelTrade(order.id, order.symbol).catch(e => console.log(e))
+    }
+
     async OpenOrderVarMi(marketName, type){
-        const openOrders = await this.openOrders.find().toArray()
-        if(openOrders.length == 0) return false // hiç order yoksa false dönder.
-        const order = openOrders.find(e=> e.market.includes(marketName))
+        let openOrders = await this.ccx.GetOpenOrders(marketName)
+        openOrders = openOrders.Data
+        // const openOrders = await this.openOrders.find().toArray()
+        if(openOrders.length == 0){  // hiç order yoksa mongo db dekileri siler ve false dönder.
+            await this.DeleteOrderFb(marketName, type)
+            return false
+        } 
+        const order = openOrders.find(e=> e.Market.includes(marketName) && e.Type == type )
         return order || false 
     }
+
+
 
     async DahaIyiMarketVarmi(openOrder, type){ // type sell yada buy sell de en hapalı buy da en ucuz market aranır.
         const altCoin = openOrder.market.split('/')[0]
@@ -77,25 +125,25 @@ class Ortak {
         if(!market) return false
         return market.market != openOrder.market
     }
-
+    /*
     async HangiMarketteEnPahali(coin){
         // marketler sırayla --> ADA/USDT, ADA/BTC, ADA/ETH ve BTC/USDT, ETH/USDT
-        const besTickers = await this.GetBesMarketTickers(coin)
-        if(!besTickers) return false
-        const { market1, market2, market3, market4, market5 } = besTickers //await this.GetBesMarketTickers(coin)
-        const depthsKontrol = !market1 || !market1.asks || !market2 || !market2.asks || !market3 || !market3.asks || !market4 || !market4.asks || !market5 || !market5.asks
+        const altiTickers = await this.GetAltiMarketTickers(coin)
+        if(!altiTickers) return false
+        const { coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc } = altiTickers //await this.GetAltiMarketTickers(coin)
+        const depthsKontrol = !coinBtc || !coinBtc.asks || !coinLtc || !coinLtc.asks || !coinDoge || !coinDoge.asks || !ltcBtc || !ltcBtc.asks || !dogeBtc || !dogeBtc.asks
 
         if(depthsKontrol) return false // eğer 1 market bile yoksa ve depthleri yoksa false dön, çünkü biz 3 markettede olanlarla iş yapıyoruz.
 
-        const coinMarket2Total = this.GetMarketTotal(market2)  // ADA/BTC
-        const coinMarket3Total = this.GetMarketTotal(market3)  // ADA/ETH
+        const coinMarket2Total = this.GetMarketTotal(coinLtc)  // ADA/BTC
+        const coinMarket3Total = this.GetMarketTotal(coinDoge)  // ADA/ETH
         
 
-        market1.total = this.GetMarketTotal(market1)  // ADA/USDT  değeri  -> bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
-        market2.total = market4.asks[0][0] * coinMarket2Total // BTC/USDT  değeri
-        market3.total = market5.asks[0][0] * coinMarket3Total  // ETH/USDT  değeri
+        coinBtc.total = this.GetMarketTotal(coinBtc)  // ADA/USDT  değeri  -> bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
+        coinLtc.total = ltcBtc.asks[0]['rate'] * coinMarket2Total // BTC/USDT  değeri
+        coinDoge.total = dogeBtc.asks[0]['rate'] * coinMarket3Total  // ETH/USDT  değeri
 
-        const markets = [market1, market2, market3]
+        const markets = [coinBtc, coinLtc, coinDoge]
         const volumeliMarkets = markets.filter(e=> {
             const volumeUygun = this.marketTickers.Data.find(a=> a.Label == e.market && a.Volume > 0)
             return volumeUygun
@@ -113,45 +161,12 @@ class Ortak {
         volumeliUygunMarket.type = 'asks' // sell kurarken priceyi buydanmı sell denmi alsın diye kontrol
         return volumeliUygunMarket || false // sıraya dizdikten sonra ilk en BÜYÜK marketi döndürüyoruz.
     }
+    */
 
-    async HangiMarketteEnPahaliBuy(coin){ // Buy için en pahalı market
-        // marketler sırayla --> ADA/USDT, ADA/BTC, ADA/ETH ve BTC/USDT, ETH/USDT
-        const { market1, market2, market3, market4, market5 } = await this.GetBesMarketTickers(coin)
-        const depthsKontrol = !market1 || !market1.asks || !market2 || !market2.asks || !market3 || !market3.asks || !market4 || !market4.asks || !market5 || !market5.asks
-
-        if(depthsKontrol) return false // eğer 1 market bile yoksa ve depthleri yoksa false dön, çünkü biz 3 markettede olanlarla iş yapıyoruz.
-        const coinMarket2Total = this.GetMarketTotal(market2, 'buy')  // ADA/BTC
-        const coinMarket3Total = this.GetMarketTotal(market3, 'buy')  // ADA/ETH
-        
-
-        market1.total = this.GetMarketTotal(market1, 'buy')  // ADA/USDT  değeri  -> bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
-        market2.total = market4.bids[0][0] * coinMarket2Total // BTC/USDT  değeri
-        market3.total = market5.bids[0][0] * coinMarket3Total  // ETH/USDT  değeri
-
-        let history = await this.GetHistory(coin) // coinin en son alındığı fiyatı verir.
-        if(!history) return false // history yoksa direk false döndür.
-        //history = history.sort((a,b)=> b.date - a.date) // en son history kaydını alıyoruz.
-
-        const historyTotal = history.btcPrice * 100 // test amount
-
-        const uygunBuyMarkets = [market1, market2, market3].filter(e=> { // aldığım fiyattan büyük olacak ama en az %1 yoksa zarar ederiz. 
-            const yuzde = (e.total - historyTotal) / historyTotal * 100
-            return yuzde > 1
-        })
-
-        if(uygunBuyMarkets.length > 0){
-            const marketsSort = uygunBuyMarkets.sort((a,b)=> b.total - a.total) // buyların arasında en büyüğünü alıyoruz eğer 1 den fazla market varsa.
-            marketsSort[0].type = 'bids' // sell kurarken priceyi buydanmı sell denmi alsın diye kontrol
-            return marketsSort[0]
-        }else{
-            return false
-        }
-
-    }
 
     async HangiMarketteEnUcuz(coin){
         // marketler sırayla --> ADA/USDT, ADA/BTC, ADA/ETH ve BTC/USDT, ETH/USDT
-        const { market1, market2, market3, market4, market5 } = await this.GetBesMarketTickers(coin)
+        const { market1, market2, market3, market4, market5 } = await this.GetAltiMarketTickers(coin)
         
         if(!market1) return false // eğer 1 market bile yoksa false dön, çünkü biz 3 markettede olanlarla iş yapıyoruz.
 
@@ -160,57 +175,85 @@ class Ortak {
         
 
         market1.total = this.GetMarketTotal(market1, 'buy')  // ADA/USDT  değeri  -> bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
-        market2.total = market4.bids[0][0] * coinMarket2Total // BTC/USDT  değeri
-        market3.total = market5.bids[0][0] * coinMarket3Total  // ETH/USDT  değeri
+        market2.total = market4.bids[0]['rate'] * coinMarket2Total // BTC/USDT  değeri
+        market3.total = market5.bids[0]['rate'] * coinMarket3Total  // ETH/USDT  değeri
 
         const markets = [market1, market2, market3].sort((a,b)=> a.total - b.total) // a-b küçükten büğüğe
         return markets[0] || false // sıraya dizdikten sonra ilk en KÜÇÜK marketi döndürüyoruz.
     }
 
-
-    GetMarketTotal(market, type = 'sell'){
-        if(!market) return 0
-        if(market.bids.length == 0) return 0
-        const baseCoin = market.market.split('/')[1]
-        const testAmount = 100
-        const ondalikliSayi = this.SetPrices(market.market) // base market price giriyoruz ondalık sayı için
-        let total
-        if(type == 'sell'){ // sell ise asks price -1, buy ise bids price +1
-            total = (market.asks[0][0] - ondalikliSayi) * testAmount // coin o markette varsa degerini, yoksa 0 yazsın.
-        }else{
-            total = (Number(market.bids[0][0]) + ondalikliSayi) * testAmount // coin o markette varsa degerini, yoksa 0 yazsın.
-        }
-        
-        if(baseCoin == 'BTC' && market.asks[0][0] < 0.0000000021) return 0 // basecoin BTC ise ve price 21 satoshiden küçükse bunu geç. 0 döndür.
-        return total
-    }
-
-    async GetBesMarketTickers(coin){
+    async GetAltiMarketTickers(coin){
+        // mainMarkets -> ['BTC', 'LTC', 'DOGE']
         const marketler = [
-            coin + "/" + this.mainMarkets[0], 
-            coin + "/" + this.mainMarkets[1], 
-            coin + "/" + this.mainMarkets[2], 
-            this.mainMarkets[1] + "/" + this.mainMarkets[0], 
-            this.mainMarkets[2] + "/" + this.mainMarkets[0]
+            coin + "/" + this.mainMarkets[0], // ADA/BTC
+            coin + "/" + this.mainMarkets[1], // ADA/LTC
+            coin + "/" + this.mainMarkets[2], // ADA/DOGE
+            this.mainMarkets[1] + "/" + this.mainMarkets[0], // LTC/BTC
+            this.mainMarkets[2] + "/" + this.mainMarkets[0], // DOGE/BTC
+            this.mainMarkets[2] + "/" + this.mainMarkets[1]  // DOGE/LTC
         ]
+
         let orderBooks = await this.GetOrderBooks(marketler)
-        if(orderBooks.length < 5){
+        const result = this.OrderBooksDataKontrol(orderBooks)
+        if(!result || orderBooks.length < 6) return false
+        
+        if(!result || orderBooks.length < 6){
             orderBooks = await this.GetOrderBookGroupRest(coin)
         }
 
         if(!orderBooks) return false
-
+        
+        //coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc
         return { 
-            market1: orderBooks.find(e => e.market == marketler[0]),
-            market2: orderBooks.find(e => e.market == marketler[1]),
-            market3: orderBooks.find(e => e.market == marketler[2]),
-            market4: orderBooks.find(e => e.market == marketler[3]),
-            market5: orderBooks.find(e => e.market == marketler[4])
+            coinBtc : orderBooks.find(e => e.market == marketler[0]),
+            coinLtc : orderBooks.find(e => e.market == marketler[1]),
+            coinDoge: orderBooks.find(e => e.market == marketler[2]),
+            ltcBtc  : orderBooks.find(e => e.market == marketler[3]),
+            dogeBtc : orderBooks.find(e => e.market == marketler[4]),
+            dogeLtc : orderBooks.find(e => e.market == marketler[5])
         }
     }
 
-    async GetOrderBooks(marketler){
-        let orderBooks = await this.depths.find( { 'market': { '$in': marketler } } ).toArray()
+    async GetAltiMarketTickersForMongoJS(coin){
+        // mainMarkets -> ['BTC', 'LTC', 'DOGE']
+        const marketler = [
+            coin + "/" + this.mainMarkets[0], // ADA/BTC
+            coin + "/" + this.mainMarkets[1], // ADA/LTC
+            coin + "/" + this.mainMarkets[2], // ADA/DOGE
+            this.mainMarkets[1] + "/" + this.mainMarkets[0], // LTC/BTC
+            this.mainMarkets[2] + "/" + this.mainMarkets[0], // DOGE/BTC
+            this.mainMarkets[2] + "/" + this.mainMarkets[1]  // DOGE/LTC
+        ]
+
+        let orderBooks = await this.GetOrderBooks(marketler)
+        const result = this.OrderBooksDataKontrol(orderBooks)
+        if(!result || orderBooks.length < 6){
+            orderBooks = await this.GetOrderBookGroupRest(coin)
+        }
+
+        if(!orderBooks) return false
+        //coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc
+        return orderBooks
+        /*
+        return { 
+            coinBtc : orderBooks.find(e => e.market == marketler[0]),
+            coinLtc : orderBooks.find(e => e.market == marketler[1]),
+            coinDoge: orderBooks.find(e => e.market == marketler[2]),
+            ltcBtc  : orderBooks.find(e => e.market == marketler[3]),
+            dogeBtc : orderBooks.find(e => e.market == marketler[4]),
+            dogeLtc : orderBooks.find(e => e.market == marketler[5])
+        }
+        */
+    }
+
+    GetOrderBooks(marketler, all = false){
+        let orderBooks
+        if(all) { // all true ise hepsini döndürür.
+            orderBooks = this.depths //.find().toArray()
+        }else{
+            orderBooks = this.depths.filter(e=> marketler.includes(e.market))//.find( { 'market': { '$in': marketler } } ).toArray()
+        }
+        
         orderBooks = orderBooks.map(e=> {
             if(!e.depths){
                 return e
@@ -242,19 +285,19 @@ class Ortak {
     GetKacinci(marketOrders, openOrder, type) {
         var result = { sellSirasi: 0, ilkSellTutar: 0, ikinciSellPrice: 0}
 
-        var secilenSellPrice = marketOrders[type].find(e => Number(e[0]) == openOrder.price)
+        var secilenSellPrice = marketOrders[type].find(e => Number(e['rate']) == openOrder.price)
         result.sellSirasi = secilenSellPrice && marketOrders[type].indexOf(secilenSellPrice) + 1
-        result.ikinciSellPrice = Number(marketOrders[type][1][0]) // ikinci sıradakinin buy price.. [1][1] olsaydı 2. sıradakinin amountu olurdu.
-        result.ilkSellTutar = marketOrders[type][0][1]
+        result.ikinciSellPrice = Number(marketOrders[type][1]['rate']) // ikinci sıradakinin buy price.. [1][1] olsaydı 2. sıradakinin amountu olurdu.
+        result.ilkSellTutar = marketOrders[type][0]['amount']
         result.ilkSellTutar = Number(result.ilkSellTutar)
 
         return result
     }
 
     OndekiTutarKontrolu(sira, marketOrders, type){
-        var ilkinTutari = marketOrders[type][0][0] * marketOrders[type][0][1]  // Burası 1. sıradaki buy un tutarı yani kaç dogelik pazar kurmuş eğerki 1000 dogenin altındaysa önüne geçme
-        var ilkVeIkincininTutari = ilkinTutari + marketOrders[type][1][0] * marketOrders[type][1][1] // Burası 1. sıradaki buy un tutarı yani kaç dogelik pazar kurmuş eğerki 1000 dogenin altındaysa önüne geçme
-        var ilkIkiVeUcuncununTutari = ilkVeIkincininTutari + marketOrders[type][2][0] * marketOrders[type][2][1]
+        var ilkinTutari = marketOrders[type][0]['rate'] * marketOrders[type][0]['amount']  // Burası 1. sıradaki buy un tutarı yani kaç dogelik pazar kurmuş eğerki 1000 dogenin altındaysa önüne geçme
+        var ilkVeIkincininTutari = ilkinTutari + marketOrders[type][1]['rate'] * marketOrders[type][1]['amount'] // Burası 1. sıradaki buy un tutarı yani kaç dogelik pazar kurmuş eğerki 1000 dogenin altındaysa önüne geçme
+        var ilkIkiVeUcuncununTutari = ilkVeIkincininTutari + marketOrders[type][2]['rate'] * marketOrders[type][2]['amount']
         
         if(sira == 1){
 
@@ -287,7 +330,7 @@ class Ortak {
     }
 
     async GetTickers(marketler){
-        let tickers = await this.depths.find( { 'market': { '$in': marketler } } ).toArray()
+        let tickers = await this.depths.filter(e=> marketler.includes(e.market)) //.find( { 'market': { '$in': marketler } } ).toArray()
         tickers = tickers.map(e=> {
             e.ticker.market = e.market
             return e.ticker
@@ -297,11 +340,18 @@ class Ortak {
 
     async GetOrderBook(marketName){
         
-        let marketOrders = await this.depths.findOne({ market: marketName } )
+        let marketOrders = await this.depths.find(e=> e.market == marketName)//.findOne({ market: marketName } )
         if(!marketOrders){
-            return await this.GetOrderBooksRest(marketName) 
+            return false
         }
         marketOrders = marketOrders.depths
+
+        const result = this.OrderBooksDataKontrol([marketOrders])
+
+        if(!result){
+            return false
+            //return await this.GetOrderBooksRest(marketName) 
+        }
         
         return marketOrders
     }
@@ -402,8 +452,8 @@ class Ortak {
         //console.log(coin + ' ÇIKTI', this.islemdekiCoinler)
     }
 
-    async DeleteOrderFb(order, type){
-        await this.openOrders.deleteOne({orderId: order.orderId})
+    async DeleteOrderFb(market, type){
+        await this.openOrders.deleteOne({market, side: type})
         /*
         const marketNameFb = order.market.replace('/','_') + '-' +  order.orderId
         await this.db.ref(`cry/${type}-open-orders`).child(marketNameFb).set(null)
@@ -418,7 +468,8 @@ class Ortak {
             market: order.symbol,
             price: order.price,
             amount: order.amount,
-            total: total
+            total: total,
+            side: order.side
         }
 
         await this.openOrders.insertOne(data)
@@ -442,25 +493,37 @@ class Ortak {
     }
     
     async GetOrderBookGroupRest(coin){
-        const marketler = [
-            coin + "/" + this.mainMarkets[0], 
-            coin + "/" + this.mainMarkets[1], 
-            coin + "/" + this.mainMarkets[2], 
-            this.mainMarkets[1] + "/" + this.mainMarkets[0], 
-            this.mainMarkets[2] + "/" + this.mainMarkets[0]
+        const marketler1 = [
+            coin + "/" + this.mainMarkets[0], // ADA/BTC
+            coin + "/" + this.mainMarkets[1], // ADA/LTC
+            coin + "/" + this.mainMarkets[2] // ADA/DOGE
         ]
 
-        const marketlerString = marketler.map(e=> e.replace('/','_')).join('-')//coin + "_BTC-" + coin + "_LTC-"+ coin + "_DOGE-" + "DOGE_BTC-LTC_BTC"
-        const fullUrl = `https://www.cryptopia.co.nz/api/GetMarketOrderGroups/${marketlerString}/10`
-        const result = await rp(fullUrl).then(e=> JSON.parse(e)).catch(e=> console.log(e))
-        if(!result.Data) return await this.GetOrderBookGroupRest(coin);
-        if(result.Data.length < 5 ) return false
+        const marketler2 =[
+            this.mainMarkets[1] + "/" + this.mainMarkets[0], // LTC/BTC
+            this.mainMarkets[2] + "/" + this.mainMarkets[0], // DOGE/BTC
+            this.mainMarkets[2] + "/" + this.mainMarkets[1]  // DOGE/LTC
+        ]
+
+        const marketler1String = marketler1.map(e=> e.replace('/','_')).join('-')
+        const marketler2String = marketler2.map(e=> e.replace('/','_')).join('-')
+
+        const fullUrl1 = `https://www.cryptopia.co.nz/api/GetMarketOrderGroups/${marketler1String}/5`
+        const fullUrl2 = `https://www.cryptopia.co.nz/api/GetMarketOrderGroups/${marketler2String}/5`
+        const result1 = await rp(fullUrl1).then(e=> JSON.parse(e)).catch(e=> console.log(e))
+        const result2 = await rp(fullUrl2).then(e=> JSON.parse(e)).catch(e=> console.log(e))
+
+        if(!result1 || !result2 || !result1.Data || !result2.Data) return await this.GetOrderBookGroupRest(coin);
+        if(result1.Data.length < 3 || result2.Data.length < 3) return false
+
+        const marketler = marketler1.concat(marketler2)
+        const result = result1.Data.concat(result2.Data)
 
         let uygunFormat = marketler.map(e=> {
-            var market = result.Data.find(x => x.Market == e.replace('/','_')) //  içinde market ismi olan depths gönderiyoruz. orjinalinde yok.
+            var market = result.find(x => x.Market == e.replace('/','_')) //  içinde market ismi olan depths gönderiyoruz. orjinalinde yok.
             return { 
-                bids: market.Buy ? market.Buy.map(a=> ([a.Price, a.Total / a.Price ])) : [], 
-                asks: market.Sell.map(a=> ([a.Price, a.Total / a.Price ])),
+                bids: market.Buy ? market.Buy.map(a=> ({ rate: a.Price, amount: a.Volume})) : [], 
+                asks: market.Sell.map(a=> ({ rate: a.Price, amount: a.Volume})),
                 market: e
             }
         })
@@ -469,17 +532,472 @@ class Ortak {
     }
 
     async GetOrderBooksRest(marketName){
-        const fullUrl = `https://www.cryptopia.co.nz/api/GetMarketOrders/${marketName.replace('/','_')}`
-        const result = await rp(fullUrl).then(e=> JSON.parse(e)).catch(e=> console.log(e))
-        if(!result.Data) return await this.GetOrderBooksRest(marketName);
-
-        var market = result.Data //  içinde market ismi olan depths gönderiyoruz. orjinalinde yok.
+        const market = await this.MarketOrderPost(marketName)
         var data =  { 
-            bids: market.Buy.map(a=> ([a.Price, a.Total / a.Price ])), 
-            asks: market.Sell.map(a=> ([a.Price, a.Total / a.Price ])),
+            bids: market.Buy.map(a=> ({ rate: a.Price, amount: a.Volume})), 
+            asks: market.Sell.map(a=> ({ rate: a.Price, amount: a.Volume})),
             market: marketName
         }
         return data  
+    }
+
+    async MarketOrderPost(marketName){
+        const fullUrl = `https://www.cryptopia.co.nz/api/GetMarketOrders/${marketName.replace('/','_')}/5`
+        const result = await rp(fullUrl).then(e=> JSON.parse(e)).catch(e=> console.log(e))
+        if(!result || !result.Data) return await this.MarketOrderPost(marketName)
+        return result.Data
+    }
+    
+    async HangiMarketteEnPahaliBuy(coin){ // Buy için en pahalı market
+        let history = await this.GetHistory(coin) // coinin en son alındığı fiyatı verir.
+        if(!history) return false // history yoksa direk false döndür.
+
+        // marketler sırayla --> ADA/BTC, ADA/LTC, ADA/DOGE ve LTC/BTC, DOGE/BTC
+        /*
+        const market = await this.HangiMarketteEnPahaliInAllMarkets(coin, history)
+
+        return false
+        */
+        const altiTickers = await this.GetAltiMarketTickers(coin)
+        if(!altiTickers) return false
+        const depthsKontrol = Object.keys(altiTickers).filter(e=> !altiTickers[e] || !altiTickers[e].asks || !altiTickers[e].bids) // boş item sayısı 0 dan büyükse false
+
+        if(depthsKontrol.length > 0) return false // eğer 1 market bile yoksa ve depthleri yoksa false dön, çünkü biz 3 markettede olanlarla iş yapıyoruz.
+        return this.FindIyiMarketiBuy(altiTickers, history)
+    }
+    
+
+    FindIyiMarketiBuy(altiTickers, history){ // coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc
+        const {coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc} = altiTickers
+        // marketler sırayla --> ADA/BTC, ADA/LTC, ADA/DOGE ve LTC/BTC, DOGE/BTC, DOGE/LTC
+        const totalBtc = this.GetMarketTotal(coinBtc, 'buy') // ADA/BTC  ->  bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
+        const totalLtc = this.GetMarketTotal(coinLtc, 'buy') // ADA/LTC  ->  1000 ada x LTC yapar değeri. LTC değer
+        const toalDoge = this.GetMarketTotal(coinDoge, 'buy') // ADA/DOGE ->  1000 ada x Doge yapar değeri. DOGE değer  ### BUY çünkü doge de sell e bakarsak hepsinde doge çıkar.
+
+        const ltcBtcTotal = ltcBtc.bids[0]['rate'] * totalLtc    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
+        const dogeBtcTotal = dogeBtc.bids[0]['rate'] * toalDoge  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
+
+        const dogeLtcTotal = dogeLtc.bids[0]['rate'] * toalDoge  // DOGE/LTC değeri, yukarıdaki toalDoge  nin LTC değeri.
+        const dogeLtcBtcTotal = ltcBtc.bids[0]['rate'] * dogeLtcTotal  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
+        
+        coinBtc.total = totalBtc
+        coinLtc.total = ltcBtcTotal 
+        coinDoge.total = [dogeBtcTotal, dogeLtcBtcTotal].sort((a,b)=> b - a)[0] // coin/doge -> doge/btc ve coin/doge -> doge/ltc -> ltc/btc var hangisi büyükse onu koyacak.
+
+        const historyTotal = history.btcPrice * 100 // test amount
+
+        const uygunBuyMarkets = [coinBtc, coinLtc, coinDoge].filter(e=> { // aldığım fiyattan büyük olacak ama en az %1 yoksa zarar ederiz. 
+            const yuzde = (e.total - historyTotal) / historyTotal * 100
+            return yuzde > 1
+        })
+
+        if(uygunBuyMarkets.length > 0){
+            const marketsSort = uygunBuyMarkets.sort((a,b)=> b.total - a.total) // buyların arasında en büyüğünü alıyoruz eğer 1 den fazla market varsa.
+            marketsSort[0].type = 'bids' // sell kurarken priceyi buydanmı sell denmi alsın diye kontrol
+            return marketsSort[0]
+        }else{
+            return false
+        }
+
+    }
+
+    async HangiMarketteEnPahali(coin){
+        // marketler sırayla --> ADA/BTC, ADA/LTC, ADA/DOGE ve LTC/BTC, DOGE/BTC
+        const altiTickers = await this.GetAltiMarketTickers(coin)
+        if(!altiTickers) return false
+        const depthsKontrol = Object.keys(altiTickers).filter(e=> !altiTickers[e] || !altiTickers[e].asks || !altiTickers[e].bids) // herhangi biri boşsa veya asks veya bids i boşsa false true
+
+        if(depthsKontrol > 0) return false // eğer 1 market bile yoksa ve depthleri yoksa false dön, çünkü biz 3 markettede olanlarla iş yapıyoruz.
+        return this.FindIyiMarketiSell(altiTickers)
+    }
+
+    FindIyiMarketiSell(altiTickers){ // coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc
+        const {coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc} = altiTickers
+        // marketler sırayla --> ADA/BTC, ADA/LTC, ADA/DOGE ve LTC/BTC, DOGE/BTC, DOGE/LTC
+        const totalBtc = this.GetMarketTotal(coinBtc) // ADA/BTC  ->  bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
+        const totalLtc = this.GetMarketTotal(coinLtc) // ADA/LTC  ->  1000 ada x LTC yapar değeri. LTC değer
+        const toalDoge = this.GetMarketTotal(coinDoge, 'buy') // ADA/DOGE ->  1000 ada x Doge yapar değeri. DOGE değer  ### BUY çünkü doge de sell e bakarsak hepsinde doge çıkar.
+
+        const ltcBtcTotal = ltcBtc.asks[0]['rate'] * totalLtc    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
+        const dogeBtcTotal = dogeBtc.asks[0]['rate'] * toalDoge  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
+
+        const dogeLtcTotal = dogeLtc.asks[0]['rate'] * this.GetMarketTotal(coinDoge)  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
+        const dogeLtcBtcTotal = ltcBtc.asks[0]['rate'] * dogeLtcTotal  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
+        
+        coinBtc.total = totalBtc
+        coinLtc.total = ltcBtcTotal 
+        coinDoge.total = [dogeBtcTotal, dogeLtcBtcTotal].sort((a,b)=> b - a)[0] // coin/doge -> doge/btc ve coin/doge -> doge/ltc -> ltc/btc var hangisi büyükse onu koyacak.
+
+        const markets = [coinBtc, coinLtc, coinDoge]
+        return this.VolumeKontrol(markets)
+    }
+
+     
+    VolumeKontrol(markets){
+        const vUygunlar = markets.filter(e=> this.marketTickers.Data.find(a=> a.Label == e.market && a.Volume > 0)) // Bu volumesi uygun marketleri alır.
+
+        const uygunMarket = vUygunlar.sort((a,b)=> b.total - a.total)[0] // b-a büyükten küçüğe
+        if(!uygunMarket){
+            const vsizUygunMarket = markets.sort((a,b)=> b.total - a.total)[0]
+            console.log(`Manuel satılması gereken coin: >>>>> ${coin}   market: >>>>> ${vsizUygunMarket.market} `)
+            return false
+        }
+        uygunMarket.type = 'asks' // sell kurarken priceyi buydanmı sell denmi alsın diye kontrol
+        return uygunMarket || false // sıraya dizdikten sonra ilk en BÜYÜK marketi döndürüyoruz.
+    }
+        
+    GetTotalDoge(coin, etn, firstMainCoin, thirdMainCoin, type, orderBooks ){
+        const d = {
+            coin,
+            type,
+            alisMarketName: coin + '/' + thirdMainCoin,  // Bu coinin ilk alınacağı yer
+            firstMarketName: coin + '/' + firstMainCoin, 
+            secondMarketName: etn +'/' + firstMainCoin, 
+            thirdMarketName: etn +'/' + thirdMainCoin
+        }
+        //const list = Object.keys(d).map(e=> d[e])
+        //const orderBooks = this.allData.filter(e=> list.includes(e.market))
+        const rob = this.GetOrderBookGroup(d, orderBooks) // result order book yani rob
+        if(!rob) return false
+        const sonuc = this.Kontrol(d, rob)
+        if(!sonuc) return false
+
+        d.alisTotal = sonuc.alisTotal
+        d.satisTotal = sonuc.satisTotal
+        d.fark = sonuc.fark
+        d.rob = rob
+        return d // sonuç true ise total döndürüyoruz. tani sonuç = total
+    }
+
+    GetOrderBookGroup(d, orderBooks){
+        const kontrol = this.OrderBooksKontrol(orderBooks, d)
+        if(!kontrol) return false
+
+        let { alisOrderBook, firstOrderBook, secondOrderBook, thirdOrderBook } = kontrol
+        alisOrderBook = this.SetBook(alisOrderBook, 'asks') 
+        firstOrderBook = this.SetBook(firstOrderBook, 'bids') 
+        secondOrderBook = this.SetBook(secondOrderBook, 'asks')
+        thirdOrderBook = d.type == 'alt' ? this.SetBook(thirdOrderBook, 'asks') : this.SetBook(thirdOrderBook, 'bids') 
+
+
+        return {alisOrderBook, firstOrderBook, secondOrderBook, thirdOrderBook}
+    }
+
+    SetBook(orderBook, type){ 
+        return {
+            price: Number(orderBook[type][0].rate), 
+            total: Number(orderBook[type][0].rate) * Number(orderBook[type][0].amount),
+            market: orderBook.market,
+            type
+        }
+    }
+
+    OrderBooksKontrol(orderBooks, d){
+        if(orderBooks.length < 4) return false
+        const result = this.OrderBooksDataKontrol(orderBooks)
+        if(!result) return false
+
+        const alisOrderBook = orderBooks.find(e=> e.market == d.alisMarketName)
+        const firstOrderBook = orderBooks.find(e=> e.market == d.firstMarketName)
+        const secondOrderBook = orderBooks.find(e=> e.market == d.secondMarketName)
+        const thirdOrderBook = orderBooks.find(e=> e.market == d.thirdMarketName)
+
+        if(!alisOrderBook || !firstOrderBook || !secondOrderBook || !thirdOrderBook) return false
+
+        return { alisOrderBook, firstOrderBook, secondOrderBook, thirdOrderBook }
+    }
+
+    OrderBooksDataKontrol(orderBooks){
+        // order 3 ten küçükse || orderbook boşsa || asks yoksa || bids yoksa || ask 1 satohi ise || sıfırıncı bid yoksa || bid 22 satoshhiden küçükse
+        for (const orderBook of orderBooks) {
+            const sonuc = !orderBook || !orderBook.asks || !orderBook.asks[0] || orderBook.asks[0].rate == 0.00000001 || !orderBook.bids || !orderBook.bids[0]
+            if(sonuc) return false
+        }
+
+        return true
+    }
+
+    
+    GetMarketTotal(market, type = 'sell'){
+        if(!market) return 0
+        if(market.bids.length == 0) return 0
+        const baseCoin = market.market.split('/')[1]
+        const ondalikliSayi = this.SetPrices(market.market) // base market price giriyoruz ondalık sayı için
+        let total
+        if(type == 'sell'){ // sell ise asks price -1, buy ise bids price +1
+            total = (market.asks[0]['rate'] - ondalikliSayi) * this.testAmount // coin o markette varsa degerini, yoksa 0 yazsın.
+        }else{
+            total = (Number(market.bids[0]['rate']) + ondalikliSayi) * this.testAmount // coin o markette varsa degerini, yoksa 0 yazsın.
+        }
+        
+        if(baseCoin == 'BTC' && market.asks[0]['rate'] < 0.0000000021) return 0 // basecoin BTC ise ve price 21 satoshiden küçükse bunu geç. 0 döndür.
+        return total
+    }
+
+    
+    GetMarketTotalForBuy(market, type = 'sell'){
+        if(!market) return 0
+        if(market.bids.length == 0) return 0
+        const rate = type == 'sell' ? market.asks[0]['rate'] : market.bids[0]['rate']
+        let total = Number(rate) * this.testAmount
+        return total
+    }
+
+    Kontrol(d, rob){
+        const { alisOrderBook, firstOrderBook, secondOrderBook, thirdOrderBook } = rob
+        const alisMainCoin = d.alisMarketName.split('/')[1]
+        const firstMainCoin = d.firstMarketName.split('/')[1]
+        const secondMainCoin = d.secondMarketName.split('/')[1]
+        const thirdMainCoin = d.thirdMarketName.split('/')[1]
+        const marketNames = [d.alisMarketName, d.firstMarketName, d.secondMarketName, d.thirdMarketName]
+        const aktifMarketSayisi = this.marketsInfos.filter(a=> marketNames.includes(a.symbol) && a.active)
+        if(aktifMarketSayisi.length != 4) return false // 3 markette aktif değilse false dön.
+
+        const alisTotal = alisOrderBook.price * this.testAmount  
+        const firstTotal = firstOrderBook.price * this.testAmount    // ADA/DOGE ->  1000 ada x Doge yapar değeri. DOGE değer 
+        const amountSecond = firstTotal / secondOrderBook.price         // DOGE/LTC değeri, yukarıdaki toalDoge  nin LTC değeri.
+        const satisTotal = thirdOrderBook.price * amountSecond               // LTC/BTC değeri , BTC değeri.
+        if(satisTotal < alisTotal) return false
+        const checkTamUygun = alisOrderBook.total >= this.limits[alisMainCoin] && firstOrderBook.total >= this.limits[firstMainCoin] && secondOrderBook.total >= this.limits[secondMainCoin] && thirdOrderBook.total >= this.limits[thirdMainCoin] // CHECK TAM UYGUN
+        if(satisTotal < alisTotal || !checkTamUygun) return false
+        const fark = (satisTotal -  alisTotal) / alisTotal * 100
+        if(fark < 1) return false
+        return {alisTotal, satisTotal, fark}
+    }
+
+    async HangiMarketteEnPahaliInAllMarkets(coin, history){
+        // marketler sırayla --> ADA/USDT, ADA/BTC, ADA/ETH ve BTC/USDT, ETH/USDT
+        let allData = await this.GetOrderBooks(null, true) // null market listesi burada boş veriyoruz, all true çünkü bütün datayı alıyoruz.
+        if(!allData) return false
+        allData = allData.filter(e=>{
+            const sonuc = e.asks && e.asks[0] && e.asks[0].rate != 0.00000001 && e.bids && e.bids[0] && e.bids[0].rate > 0.00000021  
+            return sonuc
+        })
+
+        this.allData = allData
+        
+        const historyTotal = history.btcPrice * 100 // test amount
+        const marketTotaller = this.MarketTotalleriGetir(coin)
+        if(!marketTotaller) return false
+        const {coinBtc, coinLtc, coinDoge, btcTotal, ltcTotal, dogeTotal} = marketTotaller
+        
+        const uygunBuyMarkets = [coinBtc, coinLtc, coinDoge, btcTotal, ltcTotal, dogeTotal].filter(e=> { // aldığım fiyattan büyük olacak ama en az %1 yoksa zarar ederiz. 
+            const yuzde = (e.total - historyTotal) / historyTotal * 100
+            return yuzde > 1
+        })
+
+        if(uygunBuyMarkets.length > 0){
+            const marketsSort = uygunBuyMarkets.sort((a,b)=> b.total - a.total) // buyların arasında en büyüğünü alıyoruz eğer 1 den fazla market varsa.
+            marketsSort[0].type = 'bids' // sell kurarken priceyi buydanmı sell denmi alsın diye kontrol
+            //return marketsSort[0]
+            console.log(coin + ' için buy var:', marketsSort)
+            return false
+        }else{
+            return false
+        }
+
+    }
+
+    MarketTotalleriGetir(coin){
+        //const allCoins = this.marketsInfos.filter(e=> e.quote == 'BTC').map(e=>e.baseId.toUpperCase()).filter(e=> !this.mainMarkets.includes(e))
+        let coinBtc, coinLtc, coinDoge, ltcBtcMarket, dogeBtcMarket
+
+        const length = this.allData.length
+        for (let i = 0; i < length; i++) {
+            switch (this.allData[i].market) {
+                case coin + '/BTC':
+                    coinBtc = this.allData[i]
+                    break;
+                case coin + '/LTC':
+                    coinLtc = this.allData[i]
+                    break;
+                case coin + '/DOGE':
+                    coinDoge = this.allData[i]
+                    break;
+                case 'LTC/BTC':
+                    ltcBtcMarket = this.allData[i]
+                    break;
+                case 'DOGE/BTC':
+                    dogeBtcMarket = this.allData[i]
+                    break;
+                default:
+                    break;
+            }
+            
+        }
+        const coinMarkets = [coinBtc, coinLtc, coinDoge, ltcBtcMarket, dogeBtcMarket]
+        const dataKontrol = this.OrderBooksDataKontrol(coinMarkets)
+        if(!dataKontrol || coinMarkets.length < 5) return false
+        const totalBtc = this.GetMarketTotalForBuy(coinBtc, 'buy')
+        const totalLtc = this.GetMarketTotalForBuy(coinLtc, 'buy')
+        const totalDoge = this.GetMarketTotalForBuy(coinDoge, 'buy')
+        coinBtc.total = totalBtc
+        coinLtc.total = totalLtc * ltcBtcMarket.bids[0].rate
+        if(coinLtc.total < this.limits['BTC']){
+            coinLtc.total =  0
+        }
+        coinDoge.total = totalDoge * dogeBtcMarket.bids[0].rate
+        if(coinDoge.total < this.limits['BTC']){
+            coinDoge.total = 0
+        }
+        
+        const totalListBtc = []
+        const totalListLtc = []
+        const totalListDoge = []
+        let resultBtc, resultLtc, resultDoge
+        for (const etn of this.allActiveCoins) {
+            if(coin == etn) continue
+            const marketList = [ coin + '/BTC', coin+'/LTC', coin+'/DOGE', etn + '/BTC', etn+'/LTC', etn+'/DOGE']
+        
+            const orderBooks = this.allData.filter(e=> marketList.includes(e.market)) 
+            
+            resultBtc = this.GetTotalDoge(coin, etn, 'DOGE', 'BTC', 'ust', orderBooks)
+            if(resultBtc) totalListBtc.push(resultBtc)
+
+            resultBtc = this.GetTotalDoge(coin, etn, 'LTC', 'BTC', 'ust', orderBooks)
+            if(resultBtc) totalListBtc.push(resultBtc)
+            //
+            resultLtc = this.GetTotalDoge(coin, etn, 'BTC', 'LTC', 'ust', orderBooks)
+            if(resultLtc) totalListLtc.push(resultLtc)
+
+            resultLtc = this.GetTotalDoge(coin, etn, 'DOGE', 'LTC', 'ust', orderBooks)
+            if(resultLtc) totalListLtc.push(resultLtc)
+            //
+            resultDoge = this.GetTotalDoge(coin, etn, 'BTC', 'DOGE', 'ust', orderBooks)
+            if(resultDoge) totalListDoge.push(resultDoge)
+
+            resultDoge = this.GetTotalDoge(coin, etn, 'LTC', 'DOGE', 'ust', orderBooks)
+            if(resultDoge) totalListDoge.push(resultDoge)
+
+        }
+
+        const btcTotal = totalListBtc.sort((a,b)=> b.satisTotal - a.satisTotal)[0] || 0
+
+        const ltcTotal = totalListLtc.sort((a,b)=> b.satisTotal - a.satisTotal)[0] || 0
+        if(ltcTotal != 0){
+            ltcTotal.satisTotal =  ltcTotal.satisTotal * ltcBtcMarket.bids[0].rate
+        }
+        
+
+        const dogeTotal = totalListDoge.sort((a,b)=> b.satisTotal - a.satisTotal)[0] || 0
+        if(dogeTotal != 0){
+            dogeTotal.satisTotal = dogeTotal.satisTotal * dogeBtcMarket.bids[0].rate
+        }
+
+        const btcDenKarliMarket = [btcTotal, ltcTotal, dogeTotal].sort((a,b)=> b.satisTotal - a.satisTotal)[0] 
+        if(btcDenKarliMarket == 0) return false
+        return btcDenKarliMarket
+        
+    }
+
+    async UygunMarketEkle(d, rob){
+        const uygunMarket = {
+            firstMarket:  { name: d.firstMarketName,  price: rob.firstOrderBook.price,  total: rob.firstOrderBook.total },
+            secondMarket: { name: d.secondMarketName, price: rob.secondOrderBook.price, total: rob.secondOrderBook.total },
+            thirdMarket:  { name: d.thirdMarketName,  price: rob.thirdOrderBook.price,  total: rob.thirdOrderBook.total, type: d.type },
+            //btcMarket:    { name: d.btcMarketName,    price: rob.btcOrderBook.price,    total: rob.btcOrderBook.total }
+        }
+
+        await this.BuySellBuyBasla(uygunMarket)         
+    }
+
+    BaseCoinAmountTotalGetir( firstMarket, secondMarket ){
+        let baseCoin, amount, total, price
+        let firstAmount = firstMarket.total / firstMarket.price // tofixed yerine round
+        let secondAmount = secondMarket.total / secondMarket.price // tofixed yerine round
+        firstAmount = Number(firstAmount.toFixed(8))
+        secondAmount = Number(secondAmount.toFixed(8))
+
+        if(firstAmount < secondAmount){
+            amount = firstAmount
+            total = firstMarket.total
+            price = firstMarket.price
+            baseCoin = firstMarket.name.split('/')[1]
+        }else{
+            amount = secondAmount
+            total = secondMarket.total
+            price = secondMarket.price
+            baseCoin = secondMarket.name.split('/')[1]
+        }
+
+        total = Number(total.toFixed(8))
+
+        const barajTotal = this.ortak.limits[baseCoin] * this.islemKati
+
+        if(total > barajTotal){
+            amount = barajTotal / price
+            amount = Number(amount.toFixed(8))
+        }
+
+        return { baseCoin, amount, total }
+    }
+
+    async BuySellBuyBasla(market){
+        const { firstMarket, secondMarket, btcMarket } = market
+        const altCoin = firstMarket.name.split('/')[0]
+        let { baseCoin, amount, total } = this.BaseCoinAmountTotalGetir(firstMarket, secondMarket)
+
+        const kontrol = await this.BuyBaslaKontroller(btcMarket, altCoin, baseCoin, total )
+        if(!kontrol) return
+
+        const firstSellResult = await this.Submit(market, firstMarket.name, firstMarket.price, amount, 'sell')
+
+        if(firstSellResult){
+            const buyResult = await this.SelliBuyYap({ firstSellResult, market, secondMarket, amount, altCoin, btcMarket })
+            if(buyResult){
+                const secondSellResult = await this.BuyuSellYap({ firstSellResult, market, secondMarket, amount, altCoin, btcMarket })
+                if(secondSellResult && secondSellResult.filled < buyResult.filled) await this.OrderIptalEt(buyResult)
+            }
+        }
+    }
+
+    async SelliBuyYap(data){
+        const { firstSellResult, market, secondMarket, amount } = data
+        let buyResult
+
+        if(firstSellResult.filled && firstSellResult.filled > 0){
+            buyResult = await this.Submit(market, secondMarket.name, secondMarket.price, firstSellResult.filled, 'buy')
+            if(buyResult && buyResult.filled < buyResult.firstSellResult) await this.OrderIptalEt(buyResult)
+        }
+
+        if(!firstSellResult.filled || firstSellResult.filled < amount) await this.OrderIptalEt(firstSellResult)
+        
+        return buyResult
+    }
+
+    async BuyuSellYap(data){
+        const { buyResult, market, secondMarket, amount } = data
+        let sellResult
+
+        if(buyResult.filled && buyResult.filled > 0){
+            sellResult = await this.Submit(market, secondMarket.name, secondMarket.price, buyResult.filled, 'buy')
+            if(sellResult && sellResult.filled < buyResult.filled) await this.OrderIptalEt(sellResult)
+        }
+
+        if(!buyResult.filled || buyResult.filled < amount) await this.OrderIptalEt(buyResult)
+        
+        return sellResult
+    }
+
+
+
+    async Submit(market, marketName, rate, amount, type){ // Bu all daha buy için (üstteki fonksiyon)
+        const orderParams = [marketName, 'limit', type, amount, rate]
+        
+        const submitOrder = await this.ccx.exchange.createOrder(...orderParams).catch(e => {
+            market.Hata = e.message
+            market.date = new Date()
+            this.mailDataHata.insertOne(market)
+            console.log(e, orderParams)
+        })
+
+        if (submitOrder) {
+            console.log(`${marketName} için  ${type} kuruldu.'`)
+            return submitOrder
+        } else {
+            console.log(`${type} Kurarken Hata. market: ${marketName}`)
+            return false
+        }
     }
 }
 

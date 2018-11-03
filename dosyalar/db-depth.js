@@ -10,7 +10,7 @@ class OkexWsDepth {
         this.uygunMarkets = []
         this.pingMsg = `{'event':'ping'}`
         //this.url = "mongodb://localhost:27017/"; // production
-        this.url = "mongodb://209.250.238.100:1453/" // test
+        this.url = "mongodb://45.76.71.83:1453/" // test
         this.mainMarkets = ['BTC', 'LTC', 'DOGE']
         this.marketsData = []
     }
@@ -72,7 +72,7 @@ class OkexWsDepth {
             }
             const urlString = marketNames.join('-')
             
-            const fullUrl = `https://www.cryptopia.co.nz/api/GetMarketOrderGroups/${urlString}/10`
+            const fullUrl = `https://www.cryptopia.co.nz/api/GetMarketOrderGroups/${urlString}/5`
             const result = await this.SendRequestOrderBook(fullUrl)
             if(!result || result.length < 5) continue
 
@@ -83,7 +83,7 @@ class OkexWsDepth {
                 this.marketsData[urlString] = result
             }
 
-            await this.sleep(100)
+            await this.sleep(500)
         }
     }
 
