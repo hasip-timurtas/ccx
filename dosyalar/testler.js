@@ -59,11 +59,12 @@ class Testler {
 
                 testler.islemdekiler = testler.islemdekiler.filter(a => a != coin)
                 testler.sonCoin = coin
-                self.close();
+                postMessage('Msj')
             };            
         });
 
         worker.postMessage({testler:this, ortak:this.ortak});
+        worker.onmessage = () => worker.close() // herhangi bir mesaj ile worker kapandı
 
     }
     
@@ -72,16 +73,16 @@ class Testler {
 async function Basla() {
     const testler = new Testler()
     await testler.LoadVeriables()
-    testler.ortak.wsDepth.WsBaslat(coin=> testler.BaslaBirCoin(coin))
-    /*
+    //testler.ortak.wsDepth.WsBaslat(coin=> testler.BaslaBirCoin(coin))
+    testler.ortak.wsDepth.WsBaslat()
     while(testler.ortak.wsDataProcessing){
         await testler.ortak.sleep(1)
     }
-
+    testler.Basla()
     console.time('test')
     testler.Basla()
     console.timeEnd('test')
-    */
+    
 }
 
 Basla()
