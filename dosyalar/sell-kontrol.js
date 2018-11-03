@@ -29,8 +29,9 @@ class SellKontrol {
         const islemdeBalances = totalBalances.filter(e=> e.Total != e.Available)
         const availableBalances = totalBalances.filter(e=> e.Total == e.Available)
 
-        await this.BalanceIslemdeOlanlar(islemdeBalances, openOrders)
-        await this.BalanceAvilableOlanlar(availableBalances)
+        const promise1 = this.BalanceIslemdeOlanlar(islemdeBalances, openOrders)
+        const promise2 = this.BalanceAvilableOlanlar(availableBalances)
+        await Promise.all([promise1, promise2]).catch(e=> console.log(e))
     }
 
     async BalanceAvilableOlanlar(balances){
