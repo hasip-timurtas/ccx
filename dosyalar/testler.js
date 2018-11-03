@@ -78,7 +78,7 @@ async function Basla() {
     while(testler.ortak.wsDataProcessing){
         await testler.ortak.sleep(1)
     }
-    testler.Basla()
+
     console.time('test')
     testler.Basla()
     console.timeEnd('test')
