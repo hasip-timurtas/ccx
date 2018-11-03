@@ -31,7 +31,7 @@ class Ortak {
         this.marketTickers = await this.ccx.GetMarkets().catch(e=> console.log(e))
         this.islemdekiCoinler = []
         this.allData = []
-        this.allActiveCoins = this.marketsInfos && this.marketsInfos.filter(e=> e.active &&  e.quote == 'BTC').map(e=>e.baseId.toUpperCase()).filter(e=> !this.mainMarkets.includes(e))
+        this.allActiveCoins = []//this.marketsInfos && this.marketsInfos.filter(e=> e.active &&  e.quote == 'BTC').map(e=>e.baseId.toUpperCase()).filter(e=> !this.mainMarkets.includes(e))
         this.testAmount = 100
         this.wsDepth = new WsDepth()
         await this.wsDepth.LoadVeriables(this)

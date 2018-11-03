@@ -20,6 +20,8 @@ class Testler {
             return sonuc
         })
         this.ortak.allData = allData
+        this.ortak.allCoins = this.ortak.depths.filter(e=> e.market.split('/')[1]=='BTC').map(e=> e.split('/')[0])
+        var a = 1
     }
 
     Basla(){
