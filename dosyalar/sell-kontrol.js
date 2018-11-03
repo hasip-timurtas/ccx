@@ -17,42 +17,54 @@ class SellKontrol {
             await this.ortak.sleep(2)
             return
         }
-        this.balances = await this.ortak.GetBalance()
-        const totalBalances = this.balances.filter(e=> e.Total > 0) // direk sell yapacağız.
-        await this.ortak.fbBalancesUpdate(totalBalances)
-        let openOrders = await this.ortak.GetFbData(`cry/sell-open-orders`) 
-        await this.BalanceEsitle(this.balances) // Şimdilik kapalı. Hangi coin en az gidiyorsa ona çevrilecek.
         
-        for (const balance of totalBalances) {
-            if(this.ortak.wsDataProcessing) return
-            if(balance.Symbol == "CNET"){
-                var dur = 1
-            }
-            
-            var coinMarkets = this.ortak.marketsInfos.filter(e=> e.baseId == balance.Symbol && e.active == true)
-            if(coinMarkets.length < 3) continue
-            
-            if(this.ortak.mainMarkets.includes(balance.Symbol)) continue  // Ana market kontrolü
-            /*
-            const balanceKontrol = await this.BalanceKontrol(balance)
-            if(!balanceKontrol) continue
-            */
-            if(balance.Total == balance.Available){
-                await this.SellKurKontrol(balance)
-            }else{
-                this.balance = balance
-                const openOrder = openOrders && openOrders.find(e=> e.market.split('/')[0] == balance.Symbol)
-    
-                if(!openOrder){
-                    // balanceler eşit değilse ve open ordersta yoksa dbde yok demek. ordersi iptal et.
-                    //await this.ortak.DeleteOrderFb(openOrder.market, 'sell')
-                    continue
-                }
-                // buy kontrol
-                //await this.BuyaKoyKontrol() 
-                await this.SelleKoyKontrol(balance, openOrder)
-            }
+
+        const balances = await this.ortak.GetBalance()
+        const totalBalances = balances.filter(e=> e.Total > 0)
+        await this.ortak.fbBalancesUpdate(totalBalances)
+        const openOrders = await this.ortak.GetFbData(`cry/sell-open-orders`) 
+        const mainBalances = balances.filter(e=> this.ortak.mainMarkets.includes(e.Symbol))
+        await this.BalanceEsitle(mainBalances) // Şimdilik kapalı. Hangi coin en az gidiyorsa ona çevrilecek.
+
+        const islemdeBalances = totalBalances.filter(e=> e.Total != e.Available)
+        const availableBalances = totalBalances.filter(e=> e.Total == e.Available)
+
+        await this.BalanceIslemdeOlanlar(islemdeBalances, openOrders)
+        await this.BalanceAvilableOlanlar(availableBalances)
+    }
+
+    async BalanceAvilableOlanlar(balances){
+        for (const balance of balances) {
+            if(!this.BalanceKontroller(balance)) continue
+            await this.SellKurKontrol(balance)
         }
+    }
+
+    async BalanceIslemdeOlanlar(balances, openOrders){
+        for (const balance of balances) {
+            if(!this.BalanceKontroller(balance)) continue
+            const openOrder = openOrders && openOrders.find(e=> e.market.split('/')[0] == balance.Symbol)
+    
+            if(!openOrder){
+                // TODO
+                // balanceler eşit değilse ve open ordersta yoksa dbde yok demek. ordersi bi şekilde iptal et.
+                continue
+            }
+            await this.SelleKoyKontrol(balance, openOrder)
+        }
+    }
+
+    BalanceKontroller(balance){
+        if(this.ortak.wsDataProcessing) return false
+        if(balance.Symbol == "MARKS"){
+            var dur = 1
+        }
+        
+        var coinMarkets = this.ortak.marketsInfos.filter(e=> e.baseId == balance.Symbol && e.active == true)
+        if(coinMarkets.length < 3) return false
+        
+        if(this.ortak.mainMarkets.includes(balance.Symbol)) return false  // Ana market kontrolü
+        return true
     }
 
     async BalanceKontrol(balance){
@@ -227,6 +239,7 @@ async function Basla(){
     sayac++
     sellKontrol = new SellKontrol()
     await sellKontrol.LoadVeriables()
+    const coin = sellKontrol.ortak.marketsInfos.filter(e=> e.baseId == 'MARKS')
     sellKontrol.cryWsBasla()
     sellKontrol.ortak.wsZamanlayici = 1 // dakika test için
     while(sellKontrol.ortak.wsDataProcessing){

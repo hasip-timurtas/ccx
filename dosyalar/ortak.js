@@ -317,11 +317,20 @@ class Ortak {
     
     async GetBalance(){
         let balances = await this.ccx.GetBalance().catch(e => console.log(e))
-        if(!balances){
+
+        if(!balances || !balances.Data){
             return await this.GetBalance()
         }
-        balances = balances.Data.filter(e=> e.Status == 'OK')
-        return balances
+        balances = balances.Data
+        const isimleriFarkliCoinler = this.marketsInfos.filter(e=> e.baseId != e.base).map(e=> ({base: e.base, baseId: e.baseId}))
+        balances.filter(e=> {
+            if(isimleriFarkliCoinler.map(e=> e.base).includes(e.Symbol)){
+                const coin = isimleriFarkliCoinler.find(a=> a.base == e.Symbol)
+                e.Symbol = coin.baseId
+            }
+        })
+
+        return balances.sort((a,b)=> a.Symbol - b.Symbol)
     }
 
     async fbBalancesUpdate(totalBalances){
