@@ -5,6 +5,9 @@ class Testler {
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables()
         this.islemdekiler = []
+        this.sonCoin = '1'
+        setInterval(()=> console.log('Son işlenen: ' + this.sonCoin), 5000 )
+        
     }
 
     SetAllData(){
@@ -50,6 +53,7 @@ class Testler {
             //karliMarketler.push(enKarliMarket)
         }
         this.islemdekiler = this.islemdekiler.filter(a => a != coin)
+        this.sonCoin = coin
     }
 }
 
