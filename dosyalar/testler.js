@@ -4,6 +4,7 @@ class Testler {
     async LoadVeriables(){
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables()
+        this.islemdekiler = []
     }
 
     SetAllData(){
@@ -37,6 +38,9 @@ class Testler {
     }
 
     BaslaBirCoin(coin){
+        if(this.islemdekiler.includes(coin)) return
+        this.islemdekiler.push(coin)
+        console.log(this.islemdekiler)
         this.SetAllData()
         const enKarliMarket = this.ortak.MarketTotalleriGetir(coin)
         if(enKarliMarket && enKarliMarket.fark >= 1){
@@ -45,6 +49,7 @@ class Testler {
             this.ortak.InsertTestler(enKarliMarket)
             //karliMarketler.push(enKarliMarket)
         }
+        this.islemdekiler = this.islemdekiler.filter(a => a != coin)
     }
 }
 
