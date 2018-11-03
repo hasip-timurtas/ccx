@@ -195,7 +195,6 @@ class Ortak {
 
         let orderBooks = await this.GetOrderBooks(marketler)
         const result = this.OrderBooksDataKontrol(orderBooks)
-        if(!result || orderBooks.length < 6) return false
         
         if(!result || orderBooks.length < 6){
             orderBooks = await this.GetOrderBookGroupRest(coin)

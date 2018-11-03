@@ -25,7 +25,7 @@ class SellKontrol {
         
         for (const balance of totalBalances) {
             if(this.ortak.wsDataProcessing) return
-            if(balance.Symbol == "UNIT"){
+            if(balance.Symbol == "CNET"){
                 var dur = 1
             }
             
