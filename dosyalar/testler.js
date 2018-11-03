@@ -43,7 +43,6 @@ class Testler {
     BaslaBirCoin(coin){
         if(this.islemdekiler.includes(coin)) return
         this.islemdekiler.push(coin)
-        console.log(this.islemdekiler)
         this.SetAllData()
         const enKarliMarket = this.ortak.MarketTotalleriGetir(coin)
         if(enKarliMarket && enKarliMarket.fark >= 1){
