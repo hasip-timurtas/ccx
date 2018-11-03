@@ -648,7 +648,7 @@ class Ortak {
         const uygunMarket = vUygunlar.sort((a,b)=> b.total - a.total)[0] // b-a büyükten küçüğe
         if(!uygunMarket){
             const vsizUygunMarket = markets.sort((a,b)=> b.total - a.total)[0]
-            console.log(`Manuel satılması gereken coin: >>>>> ${coin}   market: >>>>> ${vsizUygunMarket.market} `)
+            console.log(`Manuel satılması gereken coin: >>>>>  market: >>>>> ${vsizUygunMarket.market} `)
             return false
         }
         uygunMarket.type = 'asks' // sell kurarken priceyi buydanmı sell denmi alsın diye kontrol
