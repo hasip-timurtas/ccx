@@ -1,4 +1,5 @@
 const Ortak = require('./ortak')
+const Worker = require('webworker-threads').Worker
 
 class Testler {
     async LoadVeriables(){
@@ -45,16 +46,27 @@ class Testler {
         if(this.islemdekiler.includes(coin)) return
         this.islemdekiler.push(coin)
         this.SetAllData()
-        const enKarliMarket = this.ortak.MarketTotalleriGetir(coin)
-        if(enKarliMarket && enKarliMarket.fark >= 1){
-            var log = "Btcden karlı market var."
-            console.log(log, enKarliMarket)
-            this.ortak.InsertTestler(enKarliMarket)
-            //karliMarketler.push(enKarliMarket)
-        }
-        this.islemdekiler = this.islemdekiler.filter(a => a != coin)
-        this.sonCoin = coin
+        const worker = new Worker(function(){
+            this.onmessage = function(event) {
+                const { testler, ortak } = event.data
+                const enKarliMarket = ortak.MarketTotalleriGetir(coin)
+                if(enKarliMarket && enKarliMarket.fark >= 1){
+                    var log = "Btcden karlı market var."
+                    console.log(log, enKarliMarket)
+                    ortak.InsertTestler(enKarliMarket)
+                    //karliMarketler.push(enKarliMarket)
+                }
+
+                testler.islemdekiler = testler.islemdekiler.filter(a => a != coin)
+                testler.sonCoin = coin
+                self.close();
+            };            
+        });
+
+        worker.postMessage({testler:this, ortak:this.ortak});
+
     }
+    
 }
 
 async function Basla() {
