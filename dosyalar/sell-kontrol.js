@@ -12,19 +12,19 @@ class SellKontrol {
     
     async BaslaSell(){ // baseCoin hangi coinle alacağı
         console.log('>>>>>>>>>>>  BaslaSell BAŞLADI  >>>>>>>>>>>')
-        if(this.ortak.wsDataProcessing){
-            console.log('Ws data yükleniyor. beklemede.')
-            await this.ortak.sleep(2)
-            return
-        }
         
-
         const balances = await this.ortak.GetBalance()
-        const totalBalances = balances.filter(e=> e.Total > 0)
+        let totalBalances = balances.filter(e=> e.Total > 0)
         await this.ortak.fbBalancesUpdate(totalBalances)
         const openOrders = await this.ortak.GetFbData(`cry/sell-open-orders`) 
         const mainBalances = balances.filter(e=> this.ortak.mainMarkets.includes(e.Symbol))
         await this.BalanceEsitle(mainBalances) // Şimdilik kapalı. Hangi coin en az gidiyorsa ona çevrilecek.
+
+        if(false){
+            //  ################     TEST     ################    TEST    ################     TEST     ################
+            const testCoins = ['MGO'] // Dizi Olmalı
+            totalBalances = totalBalances.filter(e=> testCoins.includes(e.Symbol))
+        }
 
         const islemdeBalances = totalBalances.filter(e=> e.Total != e.Available)
         const availableBalances = totalBalances.filter(e=> e.Total == e.Available)
@@ -33,6 +33,8 @@ class SellKontrol {
         const promise2 = this.BalanceAvilableOlanlar(availableBalances)
         await Promise.all([promise1, promise2]).catch(e=> console.log(e))
     }
+
+
 
     async BalanceAvilableOlanlar(balances){
         for (const balance of balances) {
@@ -45,25 +47,15 @@ class SellKontrol {
         for (const balance of balances) {
             if(!this.BalanceKontroller(balance)) continue
             const openOrder = openOrders && openOrders.find(e=> e.market.split('/')[0] == balance.Symbol)
-    
-            if(!openOrder){
-                // TODO
-                // balanceler eşit değilse ve open ordersta yoksa dbde yok demek. ordersi bi şekilde iptal et.
-                continue
-            }
+            if(!openOrder) continue // TODO: balanceler eşit değilse ve open ordersta yoksa dbde yok demek. ordersi bi şekilde iptal et.
             await this.SelleKoyKontrol(balance, openOrder)
         }
     }
 
     BalanceKontroller(balance){
         if(this.ortak.wsDataProcessing) return false
-        if(balance.Symbol == "MARKS"){
-            var dur = 1
-        }
-        
         var coinMarkets = this.ortak.marketsInfos.filter(e=> e.baseId == balance.Symbol && e.active == true)
         if(coinMarkets.length < 3) return false
-        
         if(this.ortak.mainMarkets.includes(balance.Symbol)) return false  // Ana market kontrolü
         return true
     }
@@ -248,6 +240,11 @@ async function Basla(){
     }
     console.log('Sayaç Çalışma süresi: ' + sayac)
     while(true){
+        if(sellKontrol.ortak.wsDataProcessing){
+            console.log('Ws data yükleniyor. beklemede.')
+            await sellKontrol.ortak.sleep(2)
+            continue
+        }
         await sellKontrol.BaslaSell().catch(e=> console.log(e))
     }
 }

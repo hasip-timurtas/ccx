@@ -48,7 +48,7 @@ class WsDepth {
     async OrderBookInsert(data, callback){
         const depths = this.ortak.depths.find(e=> e.tradePairId == data.TradePairId) //await this.ortak.depths.findOne({ 'tradePairId': data['TradePairId'] })
 
-        if(!depths) return
+        if(!depths || !depths.depths.asks || !depths.depths.bids) return
         
         if(data['Type'] == 1 && depths.depths.asks.length > 9 && data.Rate > depths.depths.asks[9].rate) return 
         if(data['Type'] == 0 && depths.depths.bids.length > 9 && data.Rate < depths.depths.bids[9].rate) return 
