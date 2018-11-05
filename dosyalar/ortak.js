@@ -3,7 +3,7 @@ const rp = require('request-promise')
 const MhtCcxt = require('../dll/mhtCcxt')
 const WsDepth = require('./ws-depth')
 
-const mongoUrl = "mongodb://45.32.92.241:1453/";
+const mongoUrl = "mongodb://144.202.125.69:1453/";
 
 class Ortak {
     async LoadVeriables(){
