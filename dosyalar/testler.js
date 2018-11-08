@@ -8,7 +8,7 @@ class Testler {
         this.islemdekiler = []
         this.sonCoin = '1'
         setInterval(()=> console.log('Son işlenen: ' + this.sonCoin), 5000 )
-        
+        this.karliMarketler = []
     }
 
     SetAllData(){
@@ -27,21 +27,29 @@ class Testler {
 
     Basla(){
         this.SetAllData()
-        const karliMarketler = []
+        const promises = []
         //const balancemdekiCoinler = ['FROST', 'DRC', 'LGS', 'UNO', 'CEFS', 'PRJ', 'GRFT', 'PASL', 'GRWI', 'UNIT', 'ABC'] // test
         for (const coin of this.allCoins) { // allCoins
-            const enKarliMarket = this.ortak.MarketTotalleriGetir(coin)
-
-            if(enKarliMarket && enKarliMarket.fark >= 1){
-                var log = "Btcden karlı market var."
-                console.log(log, enKarliMarket)
-                karliMarketler.push(enKarliMarket)
-            }
+            promises.push(this.MarketGir(coin))
         }
-        console.log('Bitti')
-        console.log(karliMarketler.length)
+        
+        Promise.all(promises).then(e=> {
+            console.log('Bitti')
+            console.log(this.karliMarketler.length)
+        }).catch(e=> console.log(e))
     }
 
+    async MarketGir(coin){
+        const enKarliMarket = this.ortak.MarketTotalleriGetir(coin)
+
+        if(enKarliMarket && enKarliMarket.fark >= 1){
+            var log = "Btcden karlı market var."
+            console.log(log, enKarliMarket)
+            this.karliMarketler.push(enKarliMarket)
+        }
+    }
+
+    /*
     BaslaBirCoin(coin){
         if(this.islemdekiler.includes(coin)) return
         this.islemdekiler.push(coin)
@@ -67,7 +75,7 @@ class Testler {
         worker.onmessage = () => worker.close() // herhangi bir mesaj ile worker kapandı
 
     }
-    
+    */
 }
 
 async function Basla() {
