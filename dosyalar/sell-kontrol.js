@@ -233,7 +233,7 @@ async function Basla(){
     sellKontrol = new SellKontrol()
     await sellKontrol.LoadVeriables()
     //const coin = sellKontrol.ortak.marketsInfos.filter(e=> e.baseId == 'MARKS')
-    sellKontrol.ortak.wsZamanlayici = 1 // dakika test için
+    sellKontrol.ortak.wsZamanlayici = 30 // dakika test için
     sellKontrol.cryWsBasla()
     while(sellKontrol.ortak.wsDataProcessing){
         await sellKontrol.ortak.sleep(1)
