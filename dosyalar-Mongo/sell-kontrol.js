@@ -9,7 +9,7 @@ class SellKontrol {
     async BaslaSell(){ // baseCoin hangi coinle alacağı
         console.log('>>>>>>>>>>>  BaslaSell BAŞLADI  >>>>>>>>>>>')
         const wsProcessing = await this.ortak.GetVariable('ws-processing') // ws process ediliyormu çek.
-        if(wsProcessing){
+        if(wsProcessing && wsProcessing.value){
             console.log('ws process işlemi oluyor, beklemede.')
             await this.ortak.sleep(2)
             return
