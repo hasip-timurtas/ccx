@@ -151,13 +151,29 @@ class WsDepth {
         return orderBooks
     }
 
+    async CheckVariableExist(){
+        const data = { key: 'ws-processing', value: false}
+        const variables = await this.ortak.variables.findOne({key: data.key})
+        if(!variables){
+            await this.ortak.variables.insertOne(data)
+        }
+    }
+
+    async UpdateProcessStatus(type){
+        await this.CheckVariableExist()
+        await this.ortak.variables.updateOne({key: 'ws-processing'}, {'$set': {'value': type}})
+    }
+
     async WsBaslat(callback){
+        // processi durdur.
+        await this.UpdateProcessStatus(true) // ilk başladığında da update ediyoruz. aşağıda ws zamanlayıcıda olduğu gibi.
+
         this.WsZamanlayici(callback)
         if(this.ortak.wsDataProcessing && this.ortak.ws){
             console.log('###############################################################    WS ZATEN AÇIK   ############################################################### ')
             this.ortak.ws.close()
         }
-
+        return
         const fullUrl = 'https://www.cryptopia.co.nz/signalr/negotiate?clientProtocol=1.5&connectionData=%5B%7B%22name%22%3A%22notificationhub%22%7D%5D&_=' + new Date().getTime()
         const result = await rp(fullUrl).then(e=> JSON.parse(e)).catch(e=> console.log(e))
         const token = encodeURIComponent(result['ConnectionToken'])
@@ -194,15 +210,15 @@ class WsDepth {
                 this.subSayac = this.subSayac + 5
                 console.log(this.subSayac + ' market eklendi. Tolam market: '+ leng)
             }
-            this.ortak.wsDataProcessing = false
+            this.UpdateProcessStatus(false) // process bitti diye update ediyoruz.
             console.log('OrderBooks atama işlemi bitti. Tarih: '+ new Date());            
         }
     }
 
     WsZamanlayici(callback){
         setTimeout(() => {
+            this.UpdateProcessStatus(true)  // ws kapanmadan önce db yi process başladı diye update ediyoruz.
             this.ortak.ws.close()
-            this.ortak.wsDataProcessing = true
             //this.ortak.depths = []
             this.subSayac = 0
             this.WsBaslat(callback)

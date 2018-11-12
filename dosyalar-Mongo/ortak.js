@@ -25,6 +25,8 @@ class Ortak {
         this.mailDataHata = cnn.collection('mailData-hata')
         this.openOrders = cnn.collection('openOrders')
         this.testler = cnn.collection('testler')
+        this.variables = cnn.collection('variables')
+
         this.marketsInfos = await this.ccx.exchange.load_markets().catch(e=> console.log(e) )
         this.marketsInfos = this.marketsInfos && Object.keys(this.marketsInfos).map(e=> this.marketsInfos[e])
         this.marketTickers = await this.ccx.GetMarkets().catch(e=> console.log(e))
@@ -37,6 +39,10 @@ class Ortak {
         this.wsDataProcessing = true // ilk başta true diyoruz. ilk çalıştığında beklesin diye.
         this.ws
         this.wsZamanlayici = 30 // DAKİKA
+    }
+
+    async GetVariable(key){
+       return await this.variables.findOne({key})
     }
 
     InsertTestler(data){

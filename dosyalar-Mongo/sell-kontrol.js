@@ -8,7 +8,12 @@ class SellKontrol {
     
     async BaslaSell(){ // baseCoin hangi coinle alacağı
         console.log('>>>>>>>>>>>  BaslaSell BAŞLADI  >>>>>>>>>>>')
-        
+        const wsProcessing = await this.ortak.GetVariable('ws-processing') // ws process ediliyormu çek.
+        if(wsProcessing){
+            console.log('ws process işlemi oluyor, beklemede.')
+            await this.ortak.sleep(2)
+            return
+        }
         const balances = await this.ortak.GetBalance()
         let totalBalances = balances.filter(e=> e.Total > 0)
         await this.ortak.fbBalancesUpdate(totalBalances)
