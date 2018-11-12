@@ -52,6 +52,9 @@ class WsMongo {
     }
 
     async MarketGir(coin, firstMarketName, secondMarketName, thirdMarketName, btcMarketName, type, orderBooks ){
+        //Volume kontrol
+        const volumeUygun = this.ortak.marketTickers.Data.find(e=> e.Label == thirdMarketName && e.Volume > 0.01)
+        if(!volumeUygun) return
         const d = {coin, firstMarketName, secondMarketName, thirdMarketName, btcMarketName, type }
         const rob = await this.GetOrderBookGroup(d, orderBooks) // result order book yani rob
         if(!rob) return 
