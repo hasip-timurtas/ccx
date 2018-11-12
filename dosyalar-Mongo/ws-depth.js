@@ -173,7 +173,7 @@ class WsDepth {
             console.log('###############################################################    WS ZATEN AÇIK   ############################################################### ')
             this.ortak.ws.close()
         }
-        return
+
         const fullUrl = 'https://www.cryptopia.co.nz/signalr/negotiate?clientProtocol=1.5&connectionData=%5B%7B%22name%22%3A%22notificationhub%22%7D%5D&_=' + new Date().getTime()
         const result = await rp(fullUrl).then(e=> JSON.parse(e)).catch(e=> console.log(e))
         const token = encodeURIComponent(result['ConnectionToken'])
