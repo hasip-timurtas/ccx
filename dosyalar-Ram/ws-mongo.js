@@ -288,7 +288,7 @@ async function Basla(){
     sayac++
     cryBuy = new WsMongo()
     await cryBuy.LoadVeriables()
-    cryBuy.ortak.wsZamanlayici = 15 // dakika
+    cryBuy.ortak.wsZamanlayici = 10 // dakika
     cryBuy.cryWsBasla()
     
     while(cryBuy.ortak.wsDataProcessing){
