@@ -14,7 +14,7 @@ class WsDepth {
         this.depths = []
         this.orderBookCount = 10
         this.subSayac = 0
-        this.wsZamanlayici = 5
+        this.wsZamanlayici = 15
     }
 
     async GetMarkets(){
