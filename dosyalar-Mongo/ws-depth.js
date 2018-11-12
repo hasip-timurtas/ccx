@@ -14,6 +14,7 @@ class WsDepth {
         this.depths = []
         this.orderBookCount = 10
         this.subSayac = 0
+        this.wsZamanlayici = 5
     }
 
     async GetMarkets(){
@@ -222,7 +223,7 @@ class WsDepth {
             //this.ortak.depths = []
             this.subSayac = 0
             this.WsBaslat(callback)
-        }, 1000 * 60 * this.ortak.wsZamanlayici) // salisel * saniye * dk
+        }, 1000 * 60 * this.wsZamanlayici) // salisel * saniye * dk
     }
 
     async DbOrderbookDoldurBesMarkets(besMarkets){
