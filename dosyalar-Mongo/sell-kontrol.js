@@ -5,10 +5,6 @@ class SellKontrol {
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables()
     }
-
-    cryWsBasla(){
-        this.ortak.wsDepth.WsBaslat()
-    }
     
     async BaslaSell(){ // baseCoin hangi coinle alacağı
         console.log('>>>>>>>>>>>  BaslaSell BAŞLADI  >>>>>>>>>>>')
@@ -53,7 +49,6 @@ class SellKontrol {
     }
 
     BalanceKontroller(balance){
-        if(this.ortak.wsDataProcessing) return false
         var coinMarkets = this.ortak.marketsInfos.filter(e=> e.baseId == balance.Symbol && e.active == true)
         if(coinMarkets.length < 3) return false
         if(this.ortak.mainMarkets.includes(balance.Symbol)) return false  // Ana market kontrolü
@@ -194,33 +189,6 @@ class SellKontrol {
             }
         }
     }
-
-
-
-    async GetOrderBooks(marketler){
-        let orderBooks = await this.depths.find( { 'market': { '$in': marketler } } ).toArray()
-        orderBooks = orderBooks.map(e=> {
-            if(!e.depths){
-                return e
-            }
-            e.depths.market = e.market
-            return e.depths
-        }) //  içinde market ismi olan depths gönderiyoruz. orjinalinde yok.
-        return orderBooks
-    }
-
-
-
-    async GetOrderBook(marketName){
-        
-        let marketOrders = await this.depths.findOne({ market: marketName } )
-        if(!marketOrders){
-            return null
-        }
-        marketOrders = marketOrders.depths
-        
-        return marketOrders
-    }
 }
 
 module.exports = SellKontrol
@@ -232,19 +200,7 @@ async function Basla(){
     sayac++
     sellKontrol = new SellKontrol()
     await sellKontrol.LoadVeriables()
-    //const coin = sellKontrol.ortak.marketsInfos.filter(e=> e.baseId == 'MARKS')
-    sellKontrol.ortak.wsZamanlayici = 30 // dakika test için
-    sellKontrol.cryWsBasla()
-    while(sellKontrol.ortak.wsDataProcessing){
-        await sellKontrol.ortak.sleep(1)
-    }
-    console.log('Sayaç Çalışma süresi: ' + sayac)
     while(true){
-        if(sellKontrol.ortak.wsDataProcessing){
-            console.log('Ws data yükleniyor. beklemede.')
-            await sellKontrol.ortak.sleep(2)
-            continue
-        }
         await sellKontrol.BaslaSell().catch(e=> console.log(e))
     }
 }

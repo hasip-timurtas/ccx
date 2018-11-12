@@ -1,8 +1,6 @@
 const mongodb = require('mongodb')
 const rp = require('request-promise')
 const MhtCcxt = require('../dll/mhtCcxt')
-const WsDepth = require('./ws-depth')
-
 const mongoUrl = "mongodb://144.202.125.69:1453/";
 
 class Ortak {
@@ -246,12 +244,12 @@ class Ortak {
         */
     }
 
-    GetOrderBooks(marketler, all = false){
+    async GetOrderBooks(marketler, all = false){
         let orderBooks
         if(all) { // all true ise hepsini döndürür.
-            orderBooks = this.depths //.find().toArray()
+            orderBooks = await this.depths.find().toArray()
         }else{
-            orderBooks = this.depths.filter(e=> marketler.includes(e.market))//.find( { 'market': { '$in': marketler } } ).toArray()
+            orderBooks = await this.depths.find( { 'market': { '$in': marketler } } ).toArray()
         }
         
         orderBooks = orderBooks.map(e=> {
@@ -339,7 +337,7 @@ class Ortak {
     }
 
     async GetTickers(marketler){
-        let tickers = await this.depths.filter(e=> marketler.includes(e.market)) //.find( { 'market': { '$in': marketler } } ).toArray()
+        let tickers = await this.depths.find( { 'market': { '$in': marketler } } ).toArray()
         tickers = tickers.map(e=> {
             e.ticker.market = e.market
             return e.ticker
@@ -349,7 +347,7 @@ class Ortak {
 
     async GetOrderBook(marketName){
         
-        let marketOrders = await this.depths.find(e=> e.market == marketName)//.findOne({ market: marketName } )
+        let marketOrders = await this.depths.findOne({ market: marketName } )
         if(!marketOrders){
             return false
         }
