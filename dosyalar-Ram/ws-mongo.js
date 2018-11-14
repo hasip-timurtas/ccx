@@ -36,7 +36,7 @@ class WsMongo {
 
         const data = this.ortak.OrderBooksDataKontrol(allMarkets)
         if(!data){
-            console.log('Veritabanında Orderbooks yok ccx ten alınıyor.')
+            console.log('Data uygun değil. ÇIK.')
             this.IslemdekilerCikar(coin)
             return
             allMarkets = await this.ortak.GetOrderBookGroupRest(coin)
