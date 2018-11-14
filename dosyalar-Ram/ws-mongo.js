@@ -43,8 +43,8 @@ class WsMongo {
         }
         const promises = []
         for (const item of result.listForFunction) {
-            const orderBooks = allMarkets.filter(e=> item.list.includes(e.market))
-            promises.push(this.MarketGir(coin, ...item.list, item.type, orderBooks))
+            //const orderBooks = allMarkets.filter(e=> item.list.includes(e.market))
+            promises.push(this.MarketGir(coin, ...item.list, item.type, allMarkets))
         }
 
         Promise.all(promises).then(e => this.IslemdekilerCikar(coin)).catch(e=> this.IslemdekilerCikarHataEkle(e, coin))
@@ -63,16 +63,22 @@ class WsMongo {
     }
 
     Kontrol(d, rob){
-        const { firstOrderBook, secondOrderBook, thirdOrderBook } = rob
+        const { firstOrderBook, secondOrderBook, thirdOrderBook, dogeLtcOrderBook, ltcBtcOrderBook } = rob
         const firstMainCoin = d.firstMarketName.split('/')[1]
         const secondMainCoin = d.secondMarketName.split('/')[1]
-
         const ourTotal = this.ortak.limits[firstMainCoin]
         const firstMarketAmount = ourTotal / firstOrderBook.price // first market amount' u aldık.
         if(!isFinite(firstMarketAmount)) return false // infinity ise çık
 
         const secondMarketTotal = firstMarketAmount * secondOrderBook.price // totalimizi aldık. second market total.
-        const thirdMarketTotal = d.type == 'alt' ? secondMarketTotal / thirdOrderBook.price : secondMarketTotal * thirdOrderBook.price // alt ise böy, üst se çarp
+        let thirdMarketTotal = d.type == 'alt' ? secondMarketTotal / thirdOrderBook.price : secondMarketTotal * thirdOrderBook.price // alt ise böy, üst se çarp
+
+        if(d.type == 'ust' && d.thirdMarketName == 'DOGE/BTC'){
+            const dogeLtcTotal = dogeLtcOrderBook.price * secondMarketTotal
+            const thirdMarketTotal2 = ltcBtcOrderBook.price * dogeLtcTotal 
+            thirdMarketTotal = [thirdMarketTotal, thirdMarketTotal2].sort((a,b)=> b-a)[0] // hem doge>btc hemde doge>ltc>btc fiyatlarını alıyoruz hangisi büyükse onu alacak.
+        }
+
         const kar = thirdMarketTotal - ourTotal // elde edilen doge ile 10.000 doge arasındaki farka bakıyor. kâr.
         const fark = kar / ourTotal * 100
         const sonuc = fark >= this.minFark
@@ -97,14 +103,15 @@ class WsMongo {
         const kontrol = this.OrderBooksKontrol(orderBooks, d)
         if(!kontrol) return false
         const SetBook = (orderBook, type) => ({ price: Number(orderBook[type][0].rate), total: Number(orderBook[type][0].rate) * Number(orderBook[type][0].amount) })
-        let { firstOrderBook, secondOrderBook, thirdOrderBook, btcOrderBook } = kontrol
+        let { firstOrderBook, secondOrderBook, thirdOrderBook, btcOrderBook, dogeLtcOrderBook, ltcBtcOrderBook } = kontrol
 
         firstOrderBook = SetBook(firstOrderBook, 'asks') 
         secondOrderBook = SetBook(secondOrderBook, 'bids') 
-        btcOrderBook = SetBook(btcOrderBook, 'asks') 
+        btcOrderBook = SetBook(btcOrderBook, 'asks')
         thirdOrderBook = d.type == 'alt' ? SetBook(thirdOrderBook, 'asks') : SetBook(thirdOrderBook, 'bids') 
-
-        return {firstOrderBook, secondOrderBook, thirdOrderBook, btcOrderBook}
+        dogeLtcOrderBook = SetBook(dogeLtcOrderBook, 'bids')
+        ltcBtcOrderBook = SetBook(ltcBtcOrderBook, 'bids')
+        return {firstOrderBook, secondOrderBook, thirdOrderBook, btcOrderBook, dogeLtcOrderBook, ltcBtcOrderBook}
     }
 
     OrderBooksKontrol(orderBooks, d){
@@ -119,10 +126,11 @@ class WsMongo {
         const secondOrderBook = orderBooks.find(e=> e.market == d.secondMarketName)
         const thirdOrderBook = orderBooks.find(e=> e.market == d.thirdMarketName)
         const btcOrderBook = orderBooks.find(e=> e.market == d.btcMarketName)
-
+        const dogeLtcOrderBook = orderBooks.find(e=> e.market ==  'DOGE/LTC')
+        const ltcBtcOrderBook = orderBooks.find(e=> e.market ==  'LTC/BTC')
         if(!btcOrderBook || !firstOrderBook || !secondOrderBook || !thirdOrderBook) return false
 
-        return { firstOrderBook, secondOrderBook, thirdOrderBook, btcOrderBook }
+        return { firstOrderBook, secondOrderBook, thirdOrderBook, btcOrderBook, dogeLtcOrderBook, ltcBtcOrderBook }
     }
 
     async BuySellBasla(market){
