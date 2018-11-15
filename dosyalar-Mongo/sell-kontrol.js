@@ -204,6 +204,7 @@ let sellKontrol
 async function Basla(){
     sayac++
     sellKontrol = new SellKontrol()
+    await sellKontrol.ortak.sleep(60)
     await sellKontrol.LoadVeriables()
     while(true){
         await sellKontrol.BaslaSell().catch(e=> console.log(e))
