@@ -291,11 +291,11 @@ class WsMongo {
     async MinMaxFunk(coin){
         const sonuc = await this.GetEnUcuzVeEnPahaliMarket(coin)
         if(!sonuc) return false
-        const { enIyiBuy, enIyiSell, coinBtc, fark } = sonuc
+        const {enUcuzSell, enPahaliBuy, coinBtc, fark } = sonuc
 
         const uygunMarket = {
-            firstMarket:  { name: enIyiBuy.market,  price: enIyiBuy.price.toFixed(8),  total: enIyiBuy.total}, // TODO: tofixed kaldır.
-            secondMarket: { name: enIyiSell.market, price: enIyiSell.price.toFixed(8), total: enIyiSell.total},// TODO: tofixed kaldır.
+            firstMarket:  { name: enUcuzSell.market,  price: enUcuzSell.price.toFixed(8),  total: enUcuzSell.total}, // TODO: tofixed kaldır.
+            secondMarket: { name: enPahaliBuy.market, price: enPahaliBuy.price.toFixed(8), total: enPahaliBuy.total},// TODO: tofixed kaldır.
             btcMarket:    { name: coinBtc.market,  price: coinBtc.price.toFixed(8),  total: coinBtc.total},// TODO: tofixed kaldır.
             date: new Date(),
             fark
@@ -320,25 +320,25 @@ class WsMongo {
 
         if(depthsKontrol > 0) return false // eğer 1 market bile yoksa ve depthleri yoksa false dön, çünkü biz 3 markettede olanlarla iş yapıyoruz.
 
-        const enIyiSell =  this.EnUcuzaSatan(altiTickers)
-        const enIyiBuy = this.EnPahaliyaAlan(altiTickers)
+        const enUcuzSell =  this.EnUcuzaSatan(altiTickers)
+        const enPahaliBuy = this.EnPahaliyaAlan(altiTickers)
         const {coinBtc} = altiTickers
 
-        if(!enIyiSell || !enIyiBuy || (enIyiBuy.market == enIyiSell.market)) return false
+        if(!enUcuzSell || !enPahaliBuy || (enPahaliBuy.market == enUcuzSell.market)) return false
 
-        const fark = (enIyiBuy.testTotalP - enIyiSell.testTotalU) / enIyiSell.testTotalU * 100
+        const fark = (enPahaliBuy.testTotalP - enUcuzSell.testTotalU) / enUcuzSell.testTotalU * 100
         if(fark >= 1){
             // Gerçek fiyatlarını belirliyoruz. askmı bidimi diye buy sel için.
-            enIyiSell.total = enIyiSell.ask.total
-            enIyiSell.price = enIyiSell.ask.price
-            enIyiBuy.total = enIyiBuy.bid.total
-            enIyiBuy.price = enIyiBuy.bid.price
+            enUcuzSell.total = enUcuzSell.ask.total
+            enUcuzSell.price = enUcuzSell.ask.price
+            enPahaliBuy.total = enPahaliBuy.bid.total
+            enPahaliBuy.price = enPahaliBuy.bid.price
             coinBtc.total = coinBtc.ask.total
             coinBtc.price = coinBtc.ask.price
-            const firstBase = enIyiBuy.market.split('/')[1]
-            const secondBase = enIyiSell.market.split('/')[1]
-            const checkTamUygun = enIyiBuy.total >= this.ortak.limits[firstBase] && enIyiSell.total >= this.ortak.limits[secondBase] // CHECK TAM UYGUN
-            if(checkTamUygun) return { enIyiBuy, enIyiSell, coinBtc, fark }
+            const firstBase = enPahaliBuy.market.split('/')[1]
+            const secondBase = enUcuzSell.market.split('/')[1]
+            const checkTamUygun = enPahaliBuy.total >= this.ortak.limits[firstBase] && enUcuzSell.total >= this.ortak.limits[secondBase] // CHECK TAM UYGUN
+            if(checkTamUygun) return { enPahaliBuy, enUcuzSell, coinBtc, fark }
         }
 
         return false
