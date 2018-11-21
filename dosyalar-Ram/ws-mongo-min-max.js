@@ -291,13 +291,14 @@ class WsMongo {
     async MinMaxFunk(coin){
         const sonuc = await this.GetEnUcuzVeEnPahaliMarket(coin)
         if(!sonuc) return false
-        const { enIyiBuy, enIyiSell, coinBtc } = sonuc
+        const { enIyiBuy, enIyiSell, coinBtc, fark } = sonuc
 
         const uygunMarket = {
-            firstMarket:  { name: enIyiBuy.market,  price: enIyiBuy.price,  total: enIyiBuy.total},
-            secondMarket: { name: enIyiSell.market, price: enIyiSell.price, total: enIyiSell.total},
-            btcMarket:    { name: coinBtc.market,  price: coinBtc.price,  total: coinBtc.total},
-            date: new Date()
+            firstMarket:  { name: enIyiBuy.market,  price: enIyiBuy.price.toFixed(8),  total: enIyiBuy.total}, // TODO: tofixed kaldır.
+            secondMarket: { name: enIyiSell.market, price: enIyiSell.price.toFixed(8), total: enIyiSell.total},// TODO: tofixed kaldır.
+            btcMarket:    { name: coinBtc.market,  price: coinBtc.price.toFixed(8),  total: coinBtc.total},// TODO: tofixed kaldır.
+            date: new Date(),
+            fark
         }
 
         this.ortak.mailDataMinMax.insertOne(uygunMarket)
@@ -325,8 +326,8 @@ class WsMongo {
 
         if(!enIyiSell || !enIyiBuy || (enIyiBuy.market == enIyiSell.market)) return false
 
-        const yuzdeFark = (enIyiBuy.testTotalP - enIyiSell.testTotalU) / enIyiSell.testTotalU * 100
-        if(yuzdeFark >= 1){
+        const fark = (enIyiBuy.testTotalP - enIyiSell.testTotalU) / enIyiSell.testTotalU * 100
+        if(fark >= 1){
             // Gerçek fiyatlarını belirliyoruz. askmı bidimi diye buy sel için.
             enIyiSell.total = enIyiSell.ask.total
             enIyiSell.price = enIyiSell.ask.price
@@ -337,7 +338,7 @@ class WsMongo {
             const firstBase = enIyiBuy.market.split('/')[1]
             const secondBase = enIyiSell.market.split('/')[1]
             const checkTamUygun = enIyiBuy.total >= this.ortak.limits[firstBase] && enIyiSell.total >= this.ortak.limits[secondBase] // CHECK TAM UYGUN
-            if(checkTamUygun) return { enIyiBuy, enIyiSell, coinBtc }
+            if(checkTamUygun) return { enIyiBuy, enIyiSell, coinBtc, fark }
         }
 
         return false
