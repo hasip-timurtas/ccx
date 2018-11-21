@@ -22,6 +22,7 @@ class Ortak {
         this.fbBalances = cnn.collection('balances')
         this.history = cnn.collection('history')
         this.mailData = cnn.collection('mailData')
+        this.mailDataMinMax = cnn.collection('mailData-min-max')
         this.mailDataEski = cnn.collection('mailData-Eski')
         this.mailDataBosBuy = cnn.collection('mailData-bos-buy')
         this.mailDataHata = cnn.collection('mailData-hata')
@@ -198,10 +199,9 @@ class Ortak {
         const result = this.OrderBooksDataKontrol(orderBooks)
         
         if(!result || orderBooks.length < 6){
+            return false
             orderBooks = await this.GetOrderBookGroupRest(coin)
         }
-
-        if(!orderBooks) return false
         
         //coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc
         return { 
@@ -625,13 +625,13 @@ class Ortak {
         // marketler sırayla --> ADA/BTC, ADA/LTC, ADA/DOGE ve LTC/BTC, DOGE/BTC, DOGE/LTC
         const totalBtc = this.GetMarketTotal(coinBtc) // ADA/BTC  ->  bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
         const totalLtc = this.GetMarketTotal(coinLtc) // ADA/LTC  ->  1000 ada x LTC yapar değeri. LTC değer
-        const toalDoge = this.GetMarketTotal(coinDoge, 'buy') // ADA/DOGE ->  1000 ada x Doge yapar değeri. DOGE değer  ### BUY çünkü doge de sell e bakarsak hepsinde doge çıkar.
+        const toalDoge = this.GetMarketTotal(coinDoge) // ADA/DOGE ->  1000 ada x Doge yapar değeri. DOGE değer  ### BUY çünkü doge de sell e bakarsak hepsinde doge çıkar.
 
-        const ltcBtcTotal = ltcBtc.asks[0]['rate'] * totalLtc    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
-        const dogeBtcTotal = dogeBtc.asks[0]['rate'] * toalDoge  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
+        const ltcBtcTotal = ltcBtc.bids[0]['rate'] * totalLtc    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
+        const dogeBtcTotal = dogeBtc.bids[0]['rate'] * toalDoge  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
 
-        const dogeLtcTotal = dogeLtc.asks[0]['rate'] * this.GetMarketTotal(coinDoge)  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
-        const dogeLtcBtcTotal = ltcBtc.asks[0]['rate'] * dogeLtcTotal  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
+        const dogeLtcTotal = dogeLtc.bids[0]['rate'] * toalDoge  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
+        const dogeLtcBtcTotal = ltcBtc.bids[0]['rate'] * dogeLtcTotal  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
         
         coinBtc.total = totalBtc
         coinLtc.total = ltcBtcTotal 
@@ -640,7 +640,6 @@ class Ortak {
         const markets = [coinBtc, coinLtc, coinDoge]
         return this.VolumeKontrol(markets)
     }
-
      
     VolumeKontrol(markets){
         const vUygunlar = markets.filter(e=> this.marketTickers.Data.find(a=> a.Label == e.market && a.Volume > 0)) // Bu volumesi uygun marketleri alır.
@@ -744,14 +743,6 @@ class Ortak {
     }
 
     
-    GetMarketTotalForBuy(market, type = 'sell'){
-        if(!market) return 0
-        if(market.bids.length == 0) return 0
-        const rate = type == 'sell' ? market.asks[0]['rate'] : market.bids[0]['rate']
-        let total = Number(rate) * this.testAmount
-        return total
-    }
-
     Kontrol(d, rob){
         const { alisOrderBook, firstOrderBook, secondOrderBook, thirdOrderBook } = rob
         const alisMainCoin = d.alisMarketName.split('/')[1]
