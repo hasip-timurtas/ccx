@@ -19,6 +19,7 @@ class WsMongo {
     }
 
     cryWsBasla(){
+        this.ortak.db.ref(`cry/min-max`).set(null)
         this.ortak.wsDepth.WsBaslat(coin=> this.SteamHandler(coin))
     }
 
