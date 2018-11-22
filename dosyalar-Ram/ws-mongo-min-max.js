@@ -293,8 +293,8 @@ class WsMongo {
         const uygunMarket = {
             firstName: enUcuzSell.market,
             secondName: enPahaliBuy.market,
-            firstMarket:  { name: enUcuzSell.market,  price: enUcuzSell.ask.price.toFixed(8), amount: enUcuzSell.ask.amount.toFixed(8), total: enUcuzSell.ask.total.toFixed(8) }, // TODO: tofixed kaldır.
-            secondMarket: { name: enPahaliBuy.market, price: enPahaliBuy.bid.price.toFixed(8), amount: enPahaliBuy.bid.amount.toFixed(8), total: enPahaliBuy.bid.total.toFixed(8) },// TODO: tofixed kaldır.
+            firstMarket:  { price: enUcuzSell.ask.price.toFixed(8), amount: enUcuzSell.ask.amount.toFixed(8), total: enUcuzSell.ask.total.toFixed(8) }, // TODO: tofixed kaldır.
+            secondMarket: { price: enPahaliBuy.bid.price.toFixed(8), amount: enPahaliBuy.bid.amount.toFixed(8), total: enPahaliBuy.bid.total.toFixed(8) },// TODO: tofixed kaldır.
             //btcMarket:    { name: coinBtc.market,  price: coinBtc.ask.price.toFixed(8),  total: coinBtc.ask.total},// TODO: tofixed kaldır.
             date: Date(),
             fark: fark.toFixed(2)
