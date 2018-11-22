@@ -290,15 +290,20 @@ class WsMongo {
         return { marketList, listForFunction }
     }
 
-    async FdbKaydet(coin, sonuc){
-        const {enUcuzSell, enPahaliBuy, fark } = sonuc
+    async FdbIslemleri(coin, farkKontrol, data){
+        if(!farkKontrol){
+            return this.ortak.db.ref(`cry/min-max`).child(coin).set(null)
+        }
+        const {enUcuzSell, enPahaliBuy, fark } = data
         const firstTotalUygun = enUcuzSell.ask.total >= this.ortak.limits[enUcuzSell.market.split('/')[1]]
         const secondTotalUygun = enPahaliBuy.bid.total >= this.ortak.limits[enPahaliBuy.market.split('/')[1]]
+        const totalUygun = firstTotalUygun && secondTotalUygun
         const uygunMarket = {
             firstName: enUcuzSell.market,
             secondName: enPahaliBuy.market,
             firstMarket:  { price: enUcuzSell.ask.price.toFixed(8), amount: enUcuzSell.ask.amount.toFixed(8), total: enUcuzSell.ask.total.toFixed(8), totalUygun: firstTotalUygun  }, // TODO: tofixed kaldır.
             secondMarket: { price: enPahaliBuy.bid.price.toFixed(8), amount: enPahaliBuy.bid.amount.toFixed(8), total: enPahaliBuy.bid.total.toFixed(8), totalUygun: secondTotalUygun },// TODO: tofixed kaldır.
+            totalUygun,
             fark: fark.toFixed(2)
         }
 
@@ -314,10 +319,8 @@ class WsMongo {
 
     MinMaxFunk(coin){
         const sonuc = this.GetEnUcuzVeEnPahaliMarket(coin)
-        if(!sonuc){
-            this.ortak.db.ref(`cry/min-max`).child(coin).set(null)
-            return false
-        }
+        if(!sonuc) return false
+        
         const {enUcuzSell, enPahaliBuy, coinBtc, fark } = sonuc
 
         const uygunMarket = {
@@ -325,9 +328,8 @@ class WsMongo {
             secondMarket: { name: enPahaliBuy.market, price: enPahaliBuy.bid.price, total: enPahaliBuy.bid.total},// TODO: tofixed kaldır.
             btcMarket:    { name: coinBtc.market,  price: coinBtc.ask.price,  total: coinBtc.ask.total},// TODO: tofixed kaldır.
         }
-        
+        this.ortak.mailDataMinMax.insertOne(uygunMarket)
         // BUY YAP kodu buraya ...
-        this.FdbKaydet(coin, sonuc) // BUYDAN SONRA YAP.
     }
 
     GetEnUcuzVeEnPahaliMarket(coin){ // mix max v2
@@ -348,17 +350,18 @@ class WsMongo {
         const enPahaliBuy = this.EnPahaliyaAlanBuy(altiTickers)
         const coinBtc  = altiTickers["coinBtc"]
 
-        if(!enUcuzSell || !enPahaliBuy || (enPahaliBuy.market == enUcuzSell.market)) return false
+        if(!enUcuzSell || !enPahaliBuy) return false
 
-        const fark = (enPahaliBuy.testTotalPahali - enUcuzSell.testTotalUcuz) / enUcuzSell.testTotalUcuz * 100
-        if(fark >= 1){
-            const firstBase = enPahaliBuy.market.split('/')[1]
-            const secondBase = enUcuzSell.market.split('/')[1]
-            const checkTamUygun = enPahaliBuy.total >= this.ortak.limits[firstBase] && enUcuzSell.total >= this.ortak.limits[secondBase] // CHECK TAM UYGUN
-            return { enPahaliBuy, enUcuzSell, coinBtc, fark }
-            //if(checkTamUygun) return { enPahaliBuy, enUcuzSell, coinBtc, fark }
-        }
+        const firstBase = enPahaliBuy.market.split('/')[1]
+        const secondBase = enUcuzSell.market.split('/')[1]
+        const checkTamUygun = enPahaliBuy.total >= this.ortak.limits[firstBase] && enUcuzSell.total >= this.ortak.limits[secondBase] // CHECK TAM UYGUN
+        const farkKontrol = ((enPahaliBuy.testTotalPahali - enUcuzSell.testTotalUcuz) / enUcuzSell.testTotalUcuz * 100) >= 1
+        const data = { enPahaliBuy, enUcuzSell, coinBtc, fark }
 
+        this.FdbIslemleri(coin, farkKontrol, data)// fark kontrol uygunsa db de data yı ekleyecek yada güncelleyecek değilse silecek. o yüzden buraya koyduk
+
+        if(farkKontrol && checkTamUygun) return data // fark kontrol ile checktamuygunsa data döndürecek.
+            
         return false
     }
 
