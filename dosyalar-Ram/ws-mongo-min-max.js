@@ -293,7 +293,7 @@ class WsMongo {
     async FdbKaydet(coin, sonuc){
         const {enUcuzSell, enPahaliBuy, fark } = sonuc
         const firstTotalUygun = enUcuzSell.ask.total >= this.ortak.limits[enUcuzSell.market.split('/')[1]]
-        const secondTotalUygun = enUcuzSell.ask.total >= this.ortak.limits[enPahaliBuy.market.split('/')[1]]
+        const secondTotalUygun = enPahaliBuy.bid.total >= this.ortak.limits[enPahaliBuy.market.split('/')[1]]
         const uygunMarket = {
             firstName: enUcuzSell.market,
             secondName: enPahaliBuy.market,
