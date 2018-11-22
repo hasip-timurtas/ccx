@@ -293,15 +293,15 @@ class WsMongo {
         const uygunMarket = {
             firstName: enUcuzSell.market,
             secondName: enPahaliBuy.market,
-            firstMarket:  { name: enUcuzSell.market,  price: enUcuzSell.ask.price.toFixed(8),  total: enUcuzSell.ask.total}, // TODO: tofixed kaldır.
-            secondMarket: { name: enPahaliBuy.market, price: enPahaliBuy.bid.price.toFixed(8), total: enPahaliBuy.bid.total},// TODO: tofixed kaldır.
-            btcMarket:    { name: coinBtc.market,  price: coinBtc.ask.price.toFixed(8),  total: coinBtc.ask.total},// TODO: tofixed kaldır.
+            firstMarket:  { name: enUcuzSell.market,  price: enUcuzSell.ask.price.toFixed(8), amount: enUcuzSell.ask.amount.toFixed(8), total: enUcuzSell.ask.total.toFixed(8) }, // TODO: tofixed kaldır.
+            secondMarket: { name: enPahaliBuy.market, price: enPahaliBuy.bid.price.toFixed(8), amount: enPahaliBuy.bid.amount.toFixed(8), total: enPahaliBuy.bid.total.toFixed(8) },// TODO: tofixed kaldır.
+            //btcMarket:    { name: coinBtc.market,  price: coinBtc.ask.price.toFixed(8),  total: coinBtc.ask.total},// TODO: tofixed kaldır.
             date: Date(),
             fark: fark.toFixed(2)
         }
 
         const fdbName = enUcuzSell.market.replace('/','-') + '--' + enPahaliBuy.market.replace('/','-')
-        this.ortak.db.ref(`cry/min-max`).child(coin).child(fdbName).set(uygunMarket)
+        await this.ortak.db.ref(`cry/min-max`).child(coin).child(fdbName).set(uygunMarket)
         await this.ortak.sleep(10)
         this.MinMaxFunk(coin)
     }
@@ -333,8 +333,8 @@ class WsMongo {
         const depthsKontrol = Object.keys(altiTickers).filter(e=> {
             const mrkt = altiTickers[e]
             // BURADA SADECE TEKLİ PRİCELERİ GİRİYORUZ birinci ask ve birinci bid gibi
-            altiTickers[e].ask = {price: mrkt.asks[0].rate, total: mrkt.asks[0].rate * mrkt.asks[0].amount }
-            altiTickers[e].bid = {price: mrkt.bids[0].rate, total: mrkt.bids[0].rate * mrkt.bids[0].amount }
+            altiTickers[e].ask = {price: mrkt.asks[0].rate, amount: mrkt.asks[0].amount, total: mrkt.asks[0].rate * mrkt.asks[0].amount }
+            altiTickers[e].bid = {price: mrkt.bids[0].rate, amount: mrkt.bids[0].amount, total: mrkt.bids[0].rate * mrkt.bids[0].amount }
             return !altiTickers[e] || !altiTickers[e].asks || !altiTickers[e].bids
         }) // herhangi biri boşsa veya asks veya bids i boşsa false true
 
