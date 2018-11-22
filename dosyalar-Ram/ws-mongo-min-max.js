@@ -288,7 +288,7 @@ class WsMongo {
         return { marketList, listForFunction }
     }
 
-    async MinMaxFunk(coin){
+    MinMaxFunk(coin){
         const sonuc = this.GetEnUcuzVeEnPahaliMarket(coin)
         if(!sonuc) return false
         const {enUcuzSell, enPahaliBuy, coinBtc, fark } = sonuc
@@ -302,11 +302,8 @@ class WsMongo {
             date: new Date(),
             fark
         }
-        const data = await this.ortak.mailDataMinMax.findOne({$and :[{firstName:enUcuzSell.market }, {secondName: enPahaliBuy.market }]})
-        if(data) return
+        this.ortak.mailDataMinMax.deleteOne({$and :[{firstName:enUcuzSell.market }, {secondName: enPahaliBuy.market }]})
         this.ortak.mailDataMinMax.insertOne(uygunMarket)
-
-        
     }
 
     GetEnUcuzVeEnPahaliMarket(coin){ // mix max v2
@@ -331,15 +328,6 @@ class WsMongo {
 
         const fark = (enPahaliBuy.testTotalPahali - enUcuzSell.testTotalUcuz) / enUcuzSell.testTotalUcuz * 100
         if(fark >= 1){
-            // Gerçek fiyatlarını belirliyoruz. askmı bidimi diye buy sel için.
-            /*
-            enUcuzSell.total = enUcuzSell.ask.total
-            enUcuzSell.price = enUcuzSell.ask.price
-            enPahaliBuy.total = enPahaliBuy.bid.total
-            enPahaliBuy.price = enPahaliBuy.bid.price
-            coinBtc.total = coinBtc.ask.total
-            coinBtc.price = coinBtc.ask.price
-            */
             const firstBase = enPahaliBuy.market.split('/')[1]
             const secondBase = enUcuzSell.market.split('/')[1]
             const checkTamUygun = enPahaliBuy.total >= this.ortak.limits[firstBase] && enUcuzSell.total >= this.ortak.limits[secondBase] // CHECK TAM UYGUN
@@ -353,15 +341,15 @@ class WsMongo {
         const {coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc} = altiTickers
         // marketler sırayla --> ADA/BTC, ADA/LTC, ADA/DOGE ve LTC/BTC, DOGE/BTC, DOGE/LTC
         const testAmount = 100
-        const totalBtc = coinBtc.ask.price * testAmount  // ADA/BTC  ->  bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
-        const totalLtc = coinLtc.ask.price * testAmount  // ADA/LTC  ->  1000 ada x LTC yapar değeri. LTC değer
-        const toalDoge = coinDoge.ask.price * testAmount // ADA/DOGE ->  1000 ada x Doge yapar değeri. DOGE değer  ### BUY çünkü doge de sell e bakarsak hepsinde doge çıkar.
+        const totalBtc = this.GetVatTotal(coinBtc.ask.price * testAmount, 'ask')  // ADA/BTC  ->  bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
+        const totalLtc = this.GetVatTotal(coinLtc.ask.price * testAmount, 'ask')  // ADA/LTC  ->  1000 ada x LTC yapar değeri. LTC değer
+        const toalDoge = this.GetVatTotal(coinDoge.ask.price * testAmount, 'ask') // ADA/DOGE ->  1000 ada x Doge yapar değeri. DOGE değer  ### BUY çünkü doge de sell e bakarsak hepsinde doge çıkar.
 
-        const ltcBtcTotal = ltcBtc.bid.price * totalLtc    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
-        const dogeBtcTotal = dogeBtc.bid.price * toalDoge  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
+        const ltcBtcTotal = this.GetVatTotal(ltcBtc.bid.price * totalLtc, 'bid')    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
+        const dogeBtcTotal = this.GetVatTotal(dogeBtc.bid.price * toalDoge, 'bid')  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
 
-        const dogeLtcTotal = dogeLtc.bid.price * toalDoge  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
-        const dogeLtcBtcTotal = ltcBtc.bid.price * dogeLtcTotal  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
+        const dogeLtcTotal = this.GetVatTotal(dogeLtc.bid.price * toalDoge, 'bid')  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
+        const dogeLtcBtcTotal = this.GetVatTotal(ltcBtc.bid.price * dogeLtcTotal, 'bid')  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
         
         coinBtc.testTotalUcuz = totalBtc
         coinLtc.testTotalUcuz = ltcBtcTotal 
@@ -373,31 +361,35 @@ class WsMongo {
         const uygunMarket = vUygunlar.sort((a,b)=> a.testTotalUcuz - b.testTotalUcuz)[0] // b-a büyükten küçüğe
         return uygunMarket
     }
-/*
-    GetMarketTotalForBuy(market, type = 'sell'){
-        if(!market) return 0
-        if(market.bids.length == 0) return 0
-        let rate = type == 'sell' ? market.asks[0]['rate'] : market.bids[0]['rate']
-        rate = Number(rate)
-        market.price = rate
-        market.total = rate * market.asks[0].amount
-        const total =  rate * 100
-        return total
+
+    GetVatTotal(total, type){
+        const yuzde = 0.002 // yüzde 0.2 yani 1000 de 2
+        const vat = total * yuzde
+        let netTotal
+        if(type == 'bid'){
+            netTotal = total + vat
+        }else if(type =='ask'){
+            netTotal = total - vat
+        }else{
+            throw 'GetTotal TYPE HATALI'
+        }
+       
+        return netTotal
     }
-*/
+
     EnPahaliyaAlanBuy(altiTickers){ // BUY
         const {coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc} = altiTickers
         const testAmount = 100
         // marketler sırayla --> ADA/BTC, ADA/LTC, ADA/DOGE ve LTC/BTC, DOGE/BTC, DOGE/LTC
-        const totalBtc = coinBtc.bid.price * testAmount  // ADA/BTC  ->  bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
-        const totalLtc = coinLtc.bid.price * testAmount // ADA/LTC  ->  1000 ada x LTC yapar değeri. LTC değer
-        const toalDoge = coinDoge.bid.price * testAmount // ADA/DOGE ->  1000 ada x Doge yapar değeri. DOGE değer  ### BUY çünkü doge de sell e bakarsak hepsinde doge çıkar.
+        const totalBtc = this.GetVatTotal(coinBtc.bid.price * testAmount, 'bid')  // ADA/BTC  ->  bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
+        const totalLtc = this.GetVatTotal(coinLtc.bid.price * testAmount, 'bid') // ADA/LTC  ->  1000 ada x LTC yapar değeri. LTC değer
+        const toalDoge = this.GetVatTotal(coinDoge.bid.price * testAmount, 'bid') // ADA/DOGE ->  1000 ada x Doge yapar değeri. DOGE değer  ### BUY çünkü doge de sell e bakarsak hepsinde doge çıkar.
 
-        const ltcBtcTotal = ltcBtc.bid.price * totalLtc    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
-        const dogeBtcTotal = dogeBtc.bid.price * toalDoge  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
+        const ltcBtcTotal = this.GetVatTotal(ltcBtc.bid.price * totalLtc, 'bid')    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
+        const dogeBtcTotal = this.GetVatTotal(dogeBtc.bid.price * toalDoge, 'bid')  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
 
-        const dogeLtcTotal = dogeLtc.bid.price * toalDoge  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
-        const dogeLtcBtcTotal = ltcBtc.bid.price * dogeLtcTotal  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
+        const dogeLtcTotal = this.GetVatTotal(dogeLtc.bid.price * toalDoge, 'bid')  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
+        const dogeLtcBtcTotal = this.GetVatTotal(ltcBtc.bid.price * dogeLtcTotal, 'bid')  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
         
         coinBtc.testTotalPahali = totalBtc
         coinLtc.testTotalPahali = ltcBtcTotal 
