@@ -288,7 +288,7 @@ class WsMongo {
         return { marketList, listForFunction }
     }
 
-    async FdbKaydet(sonuc){
+    async FdbKaydet(coin, sonuc){
         const {enUcuzSell, enPahaliBuy, coinBtc, fark } = sonuc
         const uygunMarket = {
             firstName: enUcuzSell.market,
