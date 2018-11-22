@@ -355,7 +355,8 @@ class WsMongo {
         const firstBase = enPahaliBuy.market.split('/')[1]
         const secondBase = enUcuzSell.market.split('/')[1]
         const checkTamUygun = enPahaliBuy.total >= this.ortak.limits[firstBase] && enUcuzSell.total >= this.ortak.limits[secondBase] // CHECK TAM UYGUN
-        const farkKontrol = ((enPahaliBuy.testTotalPahali - enUcuzSell.testTotalUcuz) / enUcuzSell.testTotalUcuz * 100) >= 1
+        const fark = (enPahaliBuy.testTotalPahali - enUcuzSell.testTotalUcuz) / enUcuzSell.testTotalUcuz * 100
+        const farkKontrol = fark >= 1
         const data = { enPahaliBuy, enUcuzSell, coinBtc, fark }
 
         this.FdbIslemleri(coin, farkKontrol, data)// fark kontrol uygunsa db de data yı ekleyecek yada güncelleyecek değilse silecek. o yüzden buraya koyduk
