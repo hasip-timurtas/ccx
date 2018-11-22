@@ -288,11 +288,8 @@ class WsMongo {
         return { marketList, listForFunction }
     }
 
-    MinMaxFunk(coin){
-        const sonuc = this.GetEnUcuzVeEnPahaliMarket(coin)
-        if(!sonuc) return false
+    async FdbKaydet(sonuc){
         const {enUcuzSell, enPahaliBuy, coinBtc, fark } = sonuc
-
         const uygunMarket = {
             firstName: enUcuzSell.market,
             secondName: enPahaliBuy.market,
@@ -302,12 +299,29 @@ class WsMongo {
             date: Date(),
             fark
         }
+
         const fdbName = enUcuzSell.market.replace('/','-') + '--' + enPahaliBuy.market.replace('/','-')
-        this.ortak.db.ref(`cry/min-max`).child(fdbName).set(uygunMarket)
+        this.ortak.db.ref(`cry/min-max`).child(coin).child(fdbName).set(uygunMarket)
+    }
+
+    MinMaxFunk(coin){
+        const sonuc = this.GetEnUcuzVeEnPahaliMarket(coin)
+        if(!sonuc){
+            this.ortak.db.ref(`cry/min-max`).child(coin).set(null)
+            return false
+        }
+        const {enUcuzSell, enPahaliBuy, coinBtc, fark } = sonuc
+
+        const uygunMarket = {
+            firstMarket:  { name: enUcuzSell.market,  price: enUcuzSell.ask.price,  total: enUcuzSell.ask.total}, // TODO: tofixed kaldır.
+            secondMarket: { name: enPahaliBuy.market, price: enPahaliBuy.bid.price, total: enPahaliBuy.bid.total},// TODO: tofixed kaldır.
+            btcMarket:    { name: coinBtc.market,  price: coinBtc.ask.price,  total: coinBtc.ask.total},// TODO: tofixed kaldır.
+        }
         /*
         this.ortak.mailDataMinMax.deleteOne({$and :[{firstName:enUcuzSell.market }, {secondName: enPahaliBuy.market }]})
         this.ortak.mailDataMinMax.insertOne(uygunMarket)
         */
+       this.FdbKaydet(coin, sonuc) // BUYDAN SONRA YAP.
     }
 
     GetEnUcuzVeEnPahaliMarket(coin){ // mix max v2
