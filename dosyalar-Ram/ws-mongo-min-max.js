@@ -292,11 +292,13 @@ class WsMongo {
 
     async FdbKaydet(coin, sonuc){
         const {enUcuzSell, enPahaliBuy, fark } = sonuc
+        const firstTotalUygun = enUcuzSell.ask.total >= this.ortak.limits[enUcuzSell.market.split('/')[1]]
+        const secondTotalUygun = enUcuzSell.ask.total >= this.ortak.limits[enPahaliBuy.market.split('/')[1]]
         const uygunMarket = {
             firstName: enUcuzSell.market,
             secondName: enPahaliBuy.market,
-            firstMarket:  { price: enUcuzSell.ask.price.toFixed(8), amount: enUcuzSell.ask.amount.toFixed(8), total: enUcuzSell.ask.total.toFixed(8) }, // TODO: tofixed kaldır.
-            secondMarket: { price: enPahaliBuy.bid.price.toFixed(8), amount: enPahaliBuy.bid.amount.toFixed(8), total: enPahaliBuy.bid.total.toFixed(8) },// TODO: tofixed kaldır.
+            firstMarket:  { price: enUcuzSell.ask.price.toFixed(8), amount: enUcuzSell.ask.amount.toFixed(8), total: enUcuzSell.ask.total.toFixed(8), totalUygun: firstTotalUygun  }, // TODO: tofixed kaldır.
+            secondMarket: { price: enPahaliBuy.bid.price.toFixed(8), amount: enPahaliBuy.bid.amount.toFixed(8), total: enPahaliBuy.bid.total.toFixed(8), totalUygun: secondTotalUygun },// TODO: tofixed kaldır.
             fark: fark.toFixed(2)
         }
 
@@ -323,11 +325,9 @@ class WsMongo {
             secondMarket: { name: enPahaliBuy.market, price: enPahaliBuy.bid.price, total: enPahaliBuy.bid.total},// TODO: tofixed kaldır.
             btcMarket:    { name: coinBtc.market,  price: coinBtc.ask.price,  total: coinBtc.ask.total},// TODO: tofixed kaldır.
         }
-        /*
-        this.ortak.mailDataMinMax.deleteOne({$and :[{firstName:enUcuzSell.market }, {secondName: enPahaliBuy.market }]})
-        this.ortak.mailDataMinMax.insertOne(uygunMarket)
-        */
-       this.FdbKaydet(coin, sonuc) // BUYDAN SONRA YAP.
+        
+        // BUY YAP kodu buraya ...
+        this.FdbKaydet(coin, sonuc) // BUYDAN SONRA YAP.
     }
 
     GetEnUcuzVeEnPahaliMarket(coin){ // mix max v2
