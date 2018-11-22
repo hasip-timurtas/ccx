@@ -291,11 +291,12 @@ class WsMongo {
     }
 
     async FdbIslemleri(coin, farkKontrol, data){
+        const {enUcuzSell, enPahaliBuy, fark } = data
         const fdbName = enUcuzSell.market.replace('/','-') + '--' + enPahaliBuy.market.replace('/','-')
         if(!farkKontrol){
             return this.ortak.db.ref(`cry/min-max`).child(coin).child(fdbName).set(null)
         }
-        const {enUcuzSell, enPahaliBuy, fark } = data
+        
         const firstTotalUygun = enUcuzSell.ask.total >= this.ortak.limits[enUcuzSell.market.split('/')[1]]
         const secondTotalUygun = enPahaliBuy.bid.total >= this.ortak.limits[enPahaliBuy.market.split('/')[1]]
         const totalUygun = firstTotalUygun && secondTotalUygun
