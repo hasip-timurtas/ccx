@@ -297,7 +297,7 @@ class WsMongo {
             firstMarket:  { price: enUcuzSell.ask.price.toFixed(8), amount: enUcuzSell.ask.amount.toFixed(8), total: enUcuzSell.ask.total.toFixed(8) }, // TODO: tofixed kaldır.
             secondMarket: { price: enPahaliBuy.bid.price.toFixed(8), amount: enPahaliBuy.bid.amount.toFixed(8), total: enPahaliBuy.bid.total.toFixed(8) },// TODO: tofixed kaldır.
             //btcMarket:    { name: coinBtc.market,  price: coinBtc.ask.price.toFixed(8),  total: coinBtc.ask.total},// TODO: tofixed kaldır.
-            date: Date(),
+            //date: Date(),
             fark: fark.toFixed(2)
         }
 
