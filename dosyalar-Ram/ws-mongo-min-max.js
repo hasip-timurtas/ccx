@@ -302,6 +302,8 @@ class WsMongo {
 
         const fdbName = enUcuzSell.market.replace('/','-') + '--' + enPahaliBuy.market.replace('/','-')
         this.ortak.db.ref(`cry/min-max`).child(coin).child(fdbName).set(uygunMarket)
+        this.ortak.sleep(10)
+        this.MinMaxFunk(coin)
     }
 
     MinMaxFunk(coin){
