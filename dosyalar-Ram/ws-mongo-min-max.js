@@ -16,6 +16,7 @@ class WsMongo {
         this.subSayac = 0
         this.steamBasla = false
         this.sonCoin = '1'
+        this.datalarString = []
     }
 
     cryWsBasla(){
@@ -290,19 +291,21 @@ class WsMongo {
     }
 
     async FdbKaydet(coin, sonuc){
-        const {enUcuzSell, enPahaliBuy, coinBtc, fark } = sonuc
+        const {enUcuzSell, enPahaliBuy, fark } = sonuc
         const uygunMarket = {
             firstName: enUcuzSell.market,
             secondName: enPahaliBuy.market,
             firstMarket:  { price: enUcuzSell.ask.price.toFixed(8), amount: enUcuzSell.ask.amount.toFixed(8), total: enUcuzSell.ask.total.toFixed(8) }, // TODO: tofixed kaldır.
             secondMarket: { price: enPahaliBuy.bid.price.toFixed(8), amount: enPahaliBuy.bid.amount.toFixed(8), total: enPahaliBuy.bid.total.toFixed(8) },// TODO: tofixed kaldır.
-            //btcMarket:    { name: coinBtc.market,  price: coinBtc.ask.price.toFixed(8),  total: coinBtc.ask.total},// TODO: tofixed kaldır.
-            //date: Date(),
             fark: fark.toFixed(2)
         }
 
         const fdbName = enUcuzSell.market.replace('/','-') + '--' + enPahaliBuy.market.replace('/','-')
-        await this.ortak.db.ref(`cry/min-max`).child(coin).child(fdbName).set(uygunMarket)
+        if(this.datalarString[fdbName] != JSON.stringify(uygunMarket)){ // Datalar aynı değilse ise kaydet değilse tekrar kontrole git.
+            this.datalarString[fdbName] = JSON.stringify(uygunMarket)
+            await this.ortak.db.ref(`cry/min-max`).child(coin).child(fdbName).set(uygunMarket)
+        }
+
         await this.ortak.sleep(10)
         this.MinMaxFunk(coin)
     }
