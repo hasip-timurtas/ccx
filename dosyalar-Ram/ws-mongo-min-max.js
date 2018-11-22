@@ -302,7 +302,7 @@ class WsMongo {
             date: Date(),
             fark
         }
-        const fdbName = enUcuzSell.market.replace('/','') + '-' + enPahaliBuy.market.replace('/','')
+        const fdbName = enUcuzSell.market.replace('/','-') + '--' + enPahaliBuy.market.replace('/','-')
         this.ortak.db.ref(`cry/min-max`).child(fdbName).set(uygunMarket)
         /*
         this.ortak.mailDataMinMax.deleteOne({$and :[{firstName:enUcuzSell.market }, {secondName: enPahaliBuy.market }]})
