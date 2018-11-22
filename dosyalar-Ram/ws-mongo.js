@@ -96,8 +96,8 @@ class WsMongo {
         //const {enUcuzSell, enPahaliBuy, fark } = data
         const {firstOrderBook, secondOrderBook } = data
         const {coin, firstMarketName, secondMarketName } = d
-        const firstTotalUygun = enUcuzSell.ask.total >= this.ortak.limits[firstMarketName.split('/')[1]]
-        const secondTotalUygun = enPahaliBuy.bid.total >= this.ortak.limits[secondMarketName.split('/')[1]]
+        const firstTotalUygun = firstOrderBook.total >= this.ortak.limits[firstMarketName.split('/')[1]]
+        const secondTotalUygun = secondOrderBook.total >= this.ortak.limits[secondMarketName.split('/')[1]]
         const totalUygun = firstTotalUygun && secondTotalUygun
         const uygunMarket = {
             firstName: firstMarketName,
