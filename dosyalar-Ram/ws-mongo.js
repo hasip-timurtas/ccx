@@ -91,12 +91,14 @@ class WsMongo {
     }
 
     async FdbIslemleri(d, farkKontrol, fark, data){
-        if(!farkKontrol){
-            return this.ortak.db.ref(`cry/min-max-eski`).child(d.coin).set(null)
-        }
         //const {enUcuzSell, enPahaliBuy, fark } = data
         const {firstOrderBook, secondOrderBook } = data
         const {coin, firstMarketName, secondMarketName } = d
+        const fdbName = firstMarketName.replace('/','-') + '--' + secondMarketName.replace('/','-')
+        if(!farkKontrol){
+            return this.ortak.db.ref(`cry/min-max-eski`).child(d.coin).child(fdbName).set(null)
+        }
+
         const firstTotalUygun = firstOrderBook.total >= this.ortak.limits[firstMarketName.split('/')[1]]
         const secondTotalUygun = secondOrderBook.total >= this.ortak.limits[secondMarketName.split('/')[1]]
         const totalUygun = firstTotalUygun && secondTotalUygun
@@ -109,7 +111,6 @@ class WsMongo {
             fark: fark.toFixed(2)
         }
 
-        const fdbName = firstMarketName.replace('/','-') + '--' + secondMarketName.replace('/','-')
         if(this.datalarString[fdbName] != JSON.stringify(uygunMarket)){ // Datalar aynı değilse ise kaydet değilse tekrar kontrole git.
             this.datalarString[fdbName] = JSON.stringify(uygunMarket)
             await this.ortak.db.ref(`cry/min-max-eski`).child(coin).child(fdbName).set(uygunMarket)
