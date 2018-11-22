@@ -2,6 +2,12 @@ const mongodb = require('mongodb')
 const rp = require('request-promise')
 const MhtCcxt = require('../dll/mhtCcxt')
 const WsDepth = require('./ws-depth')
+const firebase = require('firebase-admin')
+const serviceAccount = require("./firebase.json")
+firebase.initializeApp({
+    credential: firebase.credential.cert(serviceAccount),
+    databaseURL: "https://firem-b3432.firebaseio.com"
+})
 
 const mongoUrl = "mongodb://144.202.125.69:1453/";
 
@@ -16,6 +22,7 @@ class Ortak {
         this.limits = { "BTC": 0.0006, "ETH": 0.011, "LTC": 0.08, "DOGE": 1100, "BNB":5.1, "USD": 5, "USDT": 5 }
         this.sellLimits = { "BTC": 0.0005, "LTC": 0.01, "DOGE": 100}
         this.volumeLimtis = { "BTC": 0.5, "ETH": 10, "LTC": 50, "DOGE": 1100, "BNB":250, "USD":3250, "USDT":3250 }
+        this.db = firebase.database()
         const connection = await mongodb.MongoClient.connect(mongoUrl, { useNewUrlParser: true });
         const cnn = connection.db('cry')
         this.depths = [] //cnn.collection('ws-depths')

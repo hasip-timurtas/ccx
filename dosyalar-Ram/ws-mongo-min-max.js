@@ -302,8 +302,12 @@ class WsMongo {
             date: new Date(),
             fark
         }
+        const fdbName = enUcuzSell.market.replace('/','') + '-' + enPahaliBuy.market.replace('/','')
+        this.ortak.db.ref(`cry/min-max`).child(fdbName).set(uygunMarket)
+        /*
         this.ortak.mailDataMinMax.deleteOne({$and :[{firstName:enUcuzSell.market }, {secondName: enPahaliBuy.market }]})
         this.ortak.mailDataMinMax.insertOne(uygunMarket)
+        */
     }
 
     GetEnUcuzVeEnPahaliMarket(coin){ // mix max v2
@@ -331,7 +335,8 @@ class WsMongo {
             const firstBase = enPahaliBuy.market.split('/')[1]
             const secondBase = enUcuzSell.market.split('/')[1]
             const checkTamUygun = enPahaliBuy.total >= this.ortak.limits[firstBase] && enUcuzSell.total >= this.ortak.limits[secondBase] // CHECK TAM UYGUN
-            if(checkTamUygun) return { enPahaliBuy, enUcuzSell, coinBtc, fark }
+            return { enPahaliBuy, enUcuzSell, coinBtc, fark }
+            //if(checkTamUygun) return { enPahaliBuy, enUcuzSell, coinBtc, fark }
         }
 
         return false
