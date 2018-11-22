@@ -91,7 +91,7 @@ class WsMongo {
 
     async FdbIslemleri(d, farkKontrol, fark, data){
         if(!farkKontrol){
-            return this.ortak.db.ref(`cry/min-max-eski`).child(coin).set(null)
+            return this.ortak.db.ref(`cry/min-max-eski`).child(d.coin).set(null)
         }
         //const {enUcuzSell, enPahaliBuy, fark } = data
         const {firstOrderBook, secondOrderBook } = data
