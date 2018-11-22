@@ -297,7 +297,7 @@ class WsMongo {
             secondMarket: { name: enPahaliBuy.market, price: enPahaliBuy.bid.price.toFixed(8), total: enPahaliBuy.bid.total},// TODO: tofixed kaldır.
             btcMarket:    { name: coinBtc.market,  price: coinBtc.ask.price.toFixed(8),  total: coinBtc.ask.total},// TODO: tofixed kaldır.
             date: Date(),
-            fark
+            fark: fark.toFixed(2)
         }
 
         const fdbName = enUcuzSell.market.replace('/','-') + '--' + enPahaliBuy.market.replace('/','-')
