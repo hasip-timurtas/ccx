@@ -54,7 +54,7 @@ class WsMongo {
 
     async MarketGir(coin, firstMarketName, secondMarketName, thirdMarketName, btcMarketName, type, orderBooks ){
         //Volume kontrol
-        const volumeUygun = this.ortak.marketTickers.Data.find(e=> e.Label == thirdMarketName && e.Volume > 0.01)
+        const volumeUygun = this.ortak.marketTickers.Data.find(e=> e.Label == secondMarketName && e.Volume > 0.01)
         if(!volumeUygun) return
         const d = {coin, firstMarketName, secondMarketName, thirdMarketName, btcMarketName, type }
         const rob = await this.GetOrderBookGroup(d, orderBooks) // result order book yani rob
@@ -139,7 +139,7 @@ class WsMongo {
         const altCoin = firstMarket.name.split('/')[0]
         let { baseCoin, amount, total } = this.BaseCoinAmountTotalGetir(firstMarket, secondMarket)
 
-        const kontrol = await this.BuyBaslaKontroller(btcMarket, altCoin, baseCoin, total )
+        const kontrol =  this.BuyBaslaKontroller(btcMarket, altCoin, baseCoin, total )
         if(!kontrol) return
 
         const buyResult = await this.ortak.SubmitMongo(market, firstMarket.name, firstMarket.price, amount, 'buy')
@@ -289,26 +289,29 @@ class WsMongo {
     }
 
     async MinMaxFunk(coin){
-        const sonuc = await this.GetEnUcuzVeEnPahaliMarket(coin)
+        const sonuc = this.GetEnUcuzVeEnPahaliMarket(coin)
         if(!sonuc) return false
         const {enUcuzSell, enPahaliBuy, coinBtc, fark } = sonuc
 
         const uygunMarket = {
-            firstMarket:  { name: enUcuzSell.market,  price: enUcuzSell.price.toFixed(8),  total: enUcuzSell.total}, // TODO: tofixed kaldır.
-            secondMarket: { name: enPahaliBuy.market, price: enPahaliBuy.price.toFixed(8), total: enPahaliBuy.total},// TODO: tofixed kaldır.
-            btcMarket:    { name: coinBtc.market,  price: coinBtc.price.toFixed(8),  total: coinBtc.total},// TODO: tofixed kaldır.
+            firstName: enUcuzSell.market,
+            secondName: enPahaliBuy.market,
+            firstMarket:  { name: enUcuzSell.market,  price: enUcuzSell.ask.price.toFixed(8),  total: enUcuzSell.ask.total}, // TODO: tofixed kaldır.
+            secondMarket: { name: enPahaliBuy.market, price: enPahaliBuy.bid.price.toFixed(8), total: enPahaliBuy.bid.total},// TODO: tofixed kaldır.
+            btcMarket:    { name: coinBtc.market,  price: coinBtc.ask.price.toFixed(8),  total: coinBtc.ask.total},// TODO: tofixed kaldır.
             date: new Date(),
             fark
         }
-
+        const data = await this.ortak.mailDataMinMax.findOne({$and :[{firstName:enUcuzSell.market }, {secondName: enPahaliBuy.market }]})
+        if(data) return
         this.ortak.mailDataMinMax.insertOne(uygunMarket)
 
         
     }
 
-    async GetEnUcuzVeEnPahaliMarket(coin){ // mix max v2
+    GetEnUcuzVeEnPahaliMarket(coin){ // mix max v2
         // marketler sırayla --> ADA/BTC, ADA/LTC, ADA/DOGE ve LTC/BTC, DOGE/BTC
-        const altiTickers = await this.ortak.GetAltiMarketTickers(coin)
+        const altiTickers = this.ortak.GetAltiMarketTickers(coin)
         if(!altiTickers) return false
         const depthsKontrol = Object.keys(altiTickers).filter(e=> {
             const mrkt = altiTickers[e]
@@ -320,21 +323,23 @@ class WsMongo {
 
         if(depthsKontrol > 0) return false // eğer 1 market bile yoksa ve depthleri yoksa false dön, çünkü biz 3 markettede olanlarla iş yapıyoruz.
 
-        const enUcuzSell =  this.EnUcuzaSatan(altiTickers)
-        const enPahaliBuy = this.EnPahaliyaAlan(altiTickers)
-        const {coinBtc} = altiTickers
+        const enUcuzSell =  this.EnUcuzaSatanSell(altiTickers)
+        const enPahaliBuy = this.EnPahaliyaAlanBuy(altiTickers)
+        const coinBtc  = altiTickers["coinBtc"]
 
         if(!enUcuzSell || !enPahaliBuy || (enPahaliBuy.market == enUcuzSell.market)) return false
 
-        const fark = (enPahaliBuy.testTotalP - enUcuzSell.testTotalU) / enUcuzSell.testTotalU * 100
+        const fark = (enPahaliBuy.testTotalPahali - enUcuzSell.testTotalUcuz) / enUcuzSell.testTotalUcuz * 100
         if(fark >= 1){
             // Gerçek fiyatlarını belirliyoruz. askmı bidimi diye buy sel için.
+            /*
             enUcuzSell.total = enUcuzSell.ask.total
             enUcuzSell.price = enUcuzSell.ask.price
             enPahaliBuy.total = enPahaliBuy.bid.total
             enPahaliBuy.price = enPahaliBuy.bid.price
             coinBtc.total = coinBtc.ask.total
             coinBtc.price = coinBtc.ask.price
+            */
             const firstBase = enPahaliBuy.market.split('/')[1]
             const secondBase = enUcuzSell.market.split('/')[1]
             const checkTamUygun = enPahaliBuy.total >= this.ortak.limits[firstBase] && enUcuzSell.total >= this.ortak.limits[secondBase] // CHECK TAM UYGUN
@@ -344,7 +349,7 @@ class WsMongo {
         return false
     }
 
-    EnUcuzaSatan(altiTickers){ // SELL
+    EnUcuzaSatanSell(altiTickers){ // SELL
         const {coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc} = altiTickers
         // marketler sırayla --> ADA/BTC, ADA/LTC, ADA/DOGE ve LTC/BTC, DOGE/BTC, DOGE/LTC
         const testAmount = 100
@@ -358,14 +363,14 @@ class WsMongo {
         const dogeLtcTotal = dogeLtc.bid.price * toalDoge  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
         const dogeLtcBtcTotal = ltcBtc.bid.price * dogeLtcTotal  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
         
-        coinBtc.testTotalU = totalBtc
-        coinLtc.testTotalU = ltcBtcTotal 
-        coinDoge.testTotalU = [dogeBtcTotal, dogeLtcBtcTotal].sort((a,b)=> a - b)[0] // coin/doge -> doge/btc ve coin/doge -> doge/ltc -> ltc/btc var hangisi KÜÇÜKSE onu koyacak.
+        coinBtc.testTotalUcuz = totalBtc
+        coinLtc.testTotalUcuz = ltcBtcTotal 
+        coinDoge.testTotalUcuz = [dogeBtcTotal, dogeLtcBtcTotal].sort((a,b)=> a - b)[0] // coin/doge -> doge/btc ve coin/doge -> doge/ltc -> ltc/btc var hangisi KÜÇÜKSE onu koyacak.
 
         const markets = [coinBtc, coinLtc, coinDoge]
         const vUygunlar = markets.filter(e=> this.ortak.marketTickers.Data.find(a=> a.Label == e.market && a.Volume > 0)) // Bu volumesi uygun marketleri alır.
 
-        const uygunMarket = vUygunlar.sort((a,b)=> a.testTotalU - b.testTotalU)[0] // b-a büyükten küçüğe
+        const uygunMarket = vUygunlar.sort((a,b)=> a.testTotalUcuz - b.testTotalUcuz)[0] // b-a büyükten küçüğe
         return uygunMarket
     }
 /*
@@ -380,7 +385,7 @@ class WsMongo {
         return total
     }
 */
-    EnPahaliyaAlan(altiTickers){ // BUY
+    EnPahaliyaAlanBuy(altiTickers){ // BUY
         const {coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc} = altiTickers
         const testAmount = 100
         // marketler sırayla --> ADA/BTC, ADA/LTC, ADA/DOGE ve LTC/BTC, DOGE/BTC, DOGE/LTC
@@ -394,14 +399,14 @@ class WsMongo {
         const dogeLtcTotal = dogeLtc.bid.price * toalDoge  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
         const dogeLtcBtcTotal = ltcBtc.bid.price * dogeLtcTotal  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
         
-        coinBtc.testTotalP = totalBtc
-        coinLtc.testTotalP = ltcBtcTotal 
-        coinDoge.testTotalP = [dogeBtcTotal, dogeLtcBtcTotal].sort((a,b)=> b - a)[0] // coin/doge -> doge/btc ve coin/doge -> doge/ltc -> ltc/btc var hangisi BÜYÜKSE onu koyacak.
+        coinBtc.testTotalPahali = totalBtc
+        coinLtc.testTotalPahali = ltcBtcTotal 
+        coinDoge.testTotalPahali = [dogeBtcTotal, dogeLtcBtcTotal].sort((a,b)=> b - a)[0] // coin/doge -> doge/btc ve coin/doge -> doge/ltc -> ltc/btc var hangisi BÜYÜKSE onu koyacak.
 
         const markets = [coinBtc, coinLtc, coinDoge]
         const vUygunlar = markets.filter(e=> this.ortak.marketTickers.Data.find(a=> a.Label == e.market && a.Volume > 0)) // Bu volumesi uygun marketleri alır.
 
-        const uygunMarket = vUygunlar.sort((a,b)=> b.testTotalP - a.testTotalP)[0] // b-a büyükten küçüğe
+        const uygunMarket = vUygunlar.sort((a,b)=> b.testTotalPahali - a.testTotalPahali)[0] // b-a büyükten küçüğe
         return uygunMarket
     }
 

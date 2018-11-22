@@ -184,7 +184,7 @@ class Ortak {
         return markets[0] || false // sıraya dizdikten sonra ilk en KÜÇÜK marketi döndürüyoruz.
     }
 
-    async GetAltiMarketTickers(coin){
+    GetAltiMarketTickers(coin){
         // mainMarkets -> ['BTC', 'LTC', 'DOGE']
         const marketler = [
             coin + "/" + this.mainMarkets[0], // ADA/BTC
@@ -195,12 +195,12 @@ class Ortak {
             this.mainMarkets[2] + "/" + this.mainMarkets[1]  // DOGE/LTC
         ]
 
-        let orderBooks = await this.GetOrderBooks(marketler)
+        let orderBooks = this.GetOrderBooks(marketler)
         const result = this.OrderBooksDataKontrol(orderBooks)
         
         if(!result || orderBooks.length < 6){
             return false
-            orderBooks = await this.GetOrderBookGroupRest(coin)
+            //orderBooks = await this.GetOrderBookGroupRest(coin)
         }
         
         //coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc
