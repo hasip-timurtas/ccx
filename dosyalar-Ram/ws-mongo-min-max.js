@@ -299,7 +299,7 @@ class WsMongo {
             firstMarket:  { name: enUcuzSell.market,  price: enUcuzSell.ask.price.toFixed(8),  total: enUcuzSell.ask.total}, // TODO: tofixed kaldır.
             secondMarket: { name: enPahaliBuy.market, price: enPahaliBuy.bid.price.toFixed(8), total: enPahaliBuy.bid.total},// TODO: tofixed kaldır.
             btcMarket:    { name: coinBtc.market,  price: coinBtc.ask.price.toFixed(8),  total: coinBtc.ask.total},// TODO: tofixed kaldır.
-            date: new Date(),
+            date: Date(),
             fark
         }
         const fdbName = enUcuzSell.market.replace('/','') + '-' + enPahaliBuy.market.replace('/','')
