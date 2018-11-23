@@ -27,10 +27,19 @@ class WsMongo {
         })
     }
 
-    cryWsBasla(){
+    async cryWsBasla(){
+    
         this.SetFbdDebug()
         this.ortak.db.ref(`cry/min-max`).set(null)
-        this.ortak.wsDepth.WsBaslat(coin=> this.SteamHandler(coin))
+        var coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
+        this.ortak.wsDepth.WsBaslat()
+        while(this.ortak.wsDataProcessing){
+            await this.ortak.sleep(2)
+        }
+        for (const coin of coins) {
+            this.SteamHandler(coin)
+        }
+        //this.ortak.wsDepth.WsBaslat(coin=> this.SteamHandler(coin))
     }
 
     SteamHandler(coin){
