@@ -328,7 +328,20 @@ class WsMongo {
     }
 
     MinMaxFunk(coin){
-        const sonuc = this.GetEnUcuzVeEnPahaliMarket(coin)
+
+        const altiTickers = this.ortak.GetAltiMarketTickers(coin)
+        if(!altiTickers) return false
+        const depthsKontrol = Object.keys(altiTickers).filter(e=> {
+            const mrkt = altiTickers[e]
+            // BURADA SADECE TEKLİ PRİCELERİ GİRİYORUZ birinci ask ve birinci bid gibi
+            altiTickers[e].ask = {price: mrkt.asks[0].rate, amount: mrkt.asks[0].amount, total: mrkt.asks[0].rate * mrkt.asks[0].amount }
+            altiTickers[e].bid = {price: mrkt.bids[0].rate, amount: mrkt.bids[0].amount, total: mrkt.bids[0].rate * mrkt.bids[0].amount }
+            return !altiTickers[e] || !altiTickers[e].asks || !altiTickers[e].bids
+        }) // herhangi biri boşsa veya asks veya bids i boşsa false true
+
+        if(depthsKontrol > 0) return false // eğer 1 market bile yoksa ve depthleri yoksa false dön, çünkü biz 3 markettede olanlarla iş yapıyoruz.
+
+        const sonuc = this.GetEnUcuzVeEnPahaliMarket(coin, altiTickers)
         if(!sonuc) return false
         
         const {enUcuzSell, enPahaliBuy, coinBtc, fark } = sonuc
@@ -342,20 +355,8 @@ class WsMongo {
         // BUY YAP kodu buraya ...
     }
 
-    GetEnUcuzVeEnPahaliMarket(coin){ // mix max v2
+    GetEnUcuzVeEnPahaliMarket(coin, altiTickers){ // mix max v2
         // marketler sırayla --> ADA/BTC, ADA/LTC, ADA/DOGE ve LTC/BTC, DOGE/BTC
-        const altiTickers = this.ortak.GetAltiMarketTickers(coin)
-        if(!altiTickers) return false
-        const depthsKontrol = Object.keys(altiTickers).filter(e=> {
-            const mrkt = altiTickers[e]
-            // BURADA SADECE TEKLİ PRİCELERİ GİRİYORUZ birinci ask ve birinci bid gibi
-            altiTickers[e].ask = {price: mrkt.asks[0].rate, amount: mrkt.asks[0].amount, total: mrkt.asks[0].rate * mrkt.asks[0].amount }
-            altiTickers[e].bid = {price: mrkt.bids[0].rate, amount: mrkt.bids[0].amount, total: mrkt.bids[0].rate * mrkt.bids[0].amount }
-            return !altiTickers[e] || !altiTickers[e].asks || !altiTickers[e].bids
-        }) // herhangi biri boşsa veya asks veya bids i boşsa false true
-
-        if(depthsKontrol > 0) return false // eğer 1 market bile yoksa ve depthleri yoksa false dön, çünkü biz 3 markettede olanlarla iş yapıyoruz.
-
         const enUcuzSell =  this.EnUcuzaSatanSell(altiTickers)
         const enPahaliBuy = this.EnPahaliyaAlanBuy(altiTickers)
         const coinBtc  = altiTickers["coinBtc"]
