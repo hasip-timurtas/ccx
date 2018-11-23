@@ -414,15 +414,15 @@ class WsMongo {
         const {coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc} = altiTickers
         let totalBtc, totalLtc, toalDoge, ltcBtcTotal, dogeBtcTotal, dogeLtcTotal, dogeLtcBtcTotal
 
-        totalBtc = this.GetVatTotal(coinBtc[type].price * testAmount, type)  // ADA/BTC  ->  bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
-        totalLtc = this.GetVatTotal(coinLtc[type].price * testAmount, type)  // ADA/LTC  ->  1000 ada x LTC yapar değeri. LTC değer
-        toalDoge = this.GetVatTotal(coinDoge[type].price * testAmount, type) // ADA/DOGE ->  1000 ada x Doge yapar değeri. DOGE değer  ### BUY çünkü doge de sell e bakarsak hepsinde doge çıkar.
+        totalBtc = coinBtc[type].price * testAmount  // ADA/BTC  ->  bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
+        totalLtc = coinLtc[type].price * testAmount  // ADA/LTC  ->  1000 ada x LTC yapar değeri. LTC değer
+        toalDoge = coinDoge[type].price * testAmount// ADA/DOGE ->  1000 ada x Doge yapar değeri. DOGE değer  ### BUY çünkü doge de sell e bakarsak hepsinde doge çıkar.
     
-        ltcBtcTotal = this.GetVatTotal(ltcBtc.bid.price * totalLtc, 'bid')    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
-        dogeBtcTotal = this.GetVatTotal(dogeBtc.bid.price * toalDoge, 'bid')  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
+        ltcBtcTotal = ltcBtc.bid.price * totalLtc    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
+        dogeBtcTotal = dogeBtc.bid.price * toalDoge  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
     
-        dogeLtcTotal = this.GetVatTotal(dogeLtc.bid.price * toalDoge, 'bid')  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
-        dogeLtcBtcTotal = this.GetVatTotal(ltcBtc.bid.price * dogeLtcTotal, 'bid')  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
+        dogeLtcTotal = dogeLtc.bid.price * toalDoge  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
+        dogeLtcBtcTotal = ltcBtc.bid.price * dogeLtcTotal  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
 
         return {totalBtc, ltcBtcTotal, dogeBtcTotal, dogeLtcBtcTotal}
     }
