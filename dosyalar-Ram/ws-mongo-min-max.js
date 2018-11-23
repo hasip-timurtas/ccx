@@ -169,7 +169,7 @@ class WsMongo {
         const {coin, firstMarketName, secondMarketName } = d
         const fdbName = firstMarketName.replace('/','-') + '--' + secondMarketName.replace('/','-')
         if(!farkKontrol){
-            return this.ortak.db.ref(`cry/min-max-eski`).child(d.coin).child(fdbName).set(null)
+            return this.ortak.db.ref(`cry/min-max`).child(d.coin).child(fdbName).set(null)
         }
 
         const firstTotalUygun = firstOrderBook.total >= this.ortak.limits[firstMarketName.split('/')[1]]
@@ -186,7 +186,7 @@ class WsMongo {
 
         if(this.datalarString[fdbName] != JSON.stringify(uygunMarket)){ // Datalar aynı değilse ise kaydet değilse tekrar kontrole git.
             this.datalarString[fdbName] = JSON.stringify(uygunMarket)
-            await this.ortak.db.ref(`cry/min-max-eski`).child(coin).child(fdbName).set(uygunMarket)
+            await this.ortak.db.ref(`cry/min-max`).child(coin).child(fdbName).set(uygunMarket)
         }
 
         await this.ortak.sleep(10)
