@@ -338,7 +338,7 @@ class WsMongo {
         }
 
         await this.ortak.sleep(10)
-        this.MinMaxFunk(coin)
+        this.SteamHandler(coin)
     }
 
     MinMaxFunk(coin){
