@@ -376,19 +376,10 @@ class WsMongo {
     }
 
     EnUcuzaSatanSell(altiTickers){ // SELL
-        const {coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc} = altiTickers
+        const {coinBtc, coinLtc, coinDoge} = altiTickers
         // marketler sırayla --> ADA/BTC, ADA/LTC, ADA/DOGE ve LTC/BTC, DOGE/BTC, DOGE/LTC
-        const testAmount = 100
-        const totalBtc = this.GetVatTotal(coinBtc.ask.price * testAmount, 'ask')  // ADA/BTC  ->  bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
-        const totalLtc = this.GetVatTotal(coinLtc.ask.price * testAmount, 'ask')  // ADA/LTC  ->  1000 ada x LTC yapar değeri. LTC değer
-        const toalDoge = this.GetVatTotal(coinDoge.ask.price * testAmount, 'ask') // ADA/DOGE ->  1000 ada x Doge yapar değeri. DOGE değer  ### BUY çünkü doge de sell e bakarsak hepsinde doge çıkar.
 
-        const ltcBtcTotal = this.GetVatTotal(ltcBtc.bid.price * totalLtc, 'bid')    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
-        const dogeBtcTotal = this.GetVatTotal(dogeBtc.bid.price * toalDoge, 'bid')  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
-
-        const dogeLtcTotal = this.GetVatTotal(dogeLtc.bid.price * toalDoge, 'bid')  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
-        const dogeLtcBtcTotal = this.GetVatTotal(ltcBtc.bid.price * dogeLtcTotal, 'bid')  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
-        
+        const {totalBtc, ltcBtcTotal, dogeBtcTotal, dogeLtcBtcTotal} = this.GetTotals('ask', altiTickers) // sell fiyatına bakacağımız için ask
         coinBtc.testTotalUcuz = totalBtc
         coinLtc.testTotalUcuz = ltcBtcTotal 
         coinDoge.testTotalUcuz = [dogeBtcTotal, dogeLtcBtcTotal].sort((a,b)=> a - b)[0] // coin/doge -> doge/btc ve coin/doge -> doge/ltc -> ltc/btc var hangisi KÜÇÜKSE onu koyacak.
@@ -400,35 +391,11 @@ class WsMongo {
         return uygunMarket
     }
 
-    GetVatTotal(total, type){
-        const yuzde = 0.002 // yüzde 0.2 yani 1000 de 2
-        const vat = total * yuzde
-        let netTotal
-        if(type == 'bid'){
-            netTotal = total + vat
-        }else if(type =='ask'){
-            netTotal = total - vat
-        }else{
-            throw 'GetTotal TYPE HATALI'
-        }
-       
-        return netTotal
-    }
-
     EnPahaliyaAlanBuy(altiTickers){ // BUY
-        const {coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc} = altiTickers
-        const testAmount = 100
+        const {coinBtc, coinLtc, coinDoge} = altiTickers
         // marketler sırayla --> ADA/BTC, ADA/LTC, ADA/DOGE ve LTC/BTC, DOGE/BTC, DOGE/LTC
-        const totalBtc = this.GetVatTotal(coinBtc.bid.price * testAmount, 'bid')  // ADA/BTC  ->  bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
-        const totalLtc = this.GetVatTotal(coinLtc.bid.price * testAmount, 'bid') // ADA/LTC  ->  1000 ada x LTC yapar değeri. LTC değer
-        const toalDoge = this.GetVatTotal(coinDoge.bid.price * testAmount, 'bid') // ADA/DOGE ->  1000 ada x Doge yapar değeri. DOGE değer  ### BUY çünkü doge de sell e bakarsak hepsinde doge çıkar.
+        const {totalBtc, ltcBtcTotal, dogeBtcTotal, dogeLtcBtcTotal} = this.GetTotals('bid', altiTickers) // buy fiyarına bakacağımız için bid
 
-        const ltcBtcTotal = this.GetVatTotal(ltcBtc.bid.price * totalLtc, 'bid')    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
-        const dogeBtcTotal = this.GetVatTotal(dogeBtc.bid.price * toalDoge, 'bid')  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
-
-        const dogeLtcTotal = this.GetVatTotal(dogeLtc.bid.price * toalDoge, 'bid')  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
-        const dogeLtcBtcTotal = this.GetVatTotal(ltcBtc.bid.price * dogeLtcTotal, 'bid')  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
-        
         coinBtc.testTotalPahali = totalBtc
         coinLtc.testTotalPahali = ltcBtcTotal 
         coinDoge.testTotalPahali = [dogeBtcTotal, dogeLtcBtcTotal].sort((a,b)=> b - a)[0] // coin/doge -> doge/btc ve coin/doge -> doge/ltc -> ltc/btc var hangisi BÜYÜKSE onu koyacak.
@@ -440,7 +407,38 @@ class WsMongo {
         return uygunMarket
     }
 
+    GetTotals(type, altiTickers){ // type ask yada bid. 
+        const testAmount = 100
+        const {coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc} = altiTickers
+        let totalBtc, totalLtc, toalDoge, ltcBtcTotal, dogeBtcTotal, dogeLtcTotal, dogeLtcBtcTotal
 
+        totalBtc = this.GetVatTotal(coinBtc.ask.price * testAmount, type)  // ADA/BTC  ->  bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
+        totalLtc = this.GetVatTotal(coinLtc.ask.price * testAmount, type)  // ADA/LTC  ->  1000 ada x LTC yapar değeri. LTC değer
+        toalDoge = this.GetVatTotal(coinDoge.ask.price * testAmount, type) // ADA/DOGE ->  1000 ada x Doge yapar değeri. DOGE değer  ### BUY çünkü doge de sell e bakarsak hepsinde doge çıkar.
+    
+        ltcBtcTotal = this.GetVatTotal(ltcBtc.bid.price * totalLtc, 'bid')    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
+        dogeBtcTotal = this.GetVatTotal(dogeBtc.bid.price * toalDoge, 'bid')  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
+    
+        dogeLtcTotal = this.GetVatTotal(dogeLtc.bid.price * toalDoge, 'bid')  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
+        dogeLtcBtcTotal = this.GetVatTotal(ltcBtc.bid.price * dogeLtcTotal, 'bid')  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
+
+        return {totalBtc, ltcBtcTotal, dogeBtcTotal, dogeLtcBtcTotal}
+    }
+
+    GetVatTotal(total, type){
+        const yuzde = 0.002 // yüzde 0.2 yani 1000 de 2
+        const vat = total * yuzde
+        let netTotal
+        if(type == 'bid'){
+            netTotal = total - vat
+        }else if(type =='ask'){
+            netTotal = total + vat
+        }else{
+            throw 'GetTotal TYPE HATALI'
+        }
+       
+        return netTotal
+    }
 }
 
 
