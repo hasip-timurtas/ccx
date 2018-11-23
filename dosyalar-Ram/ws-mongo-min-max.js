@@ -413,9 +413,9 @@ class WsMongo {
         const {coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc} = altiTickers
         let totalBtc, totalLtc, toalDoge, ltcBtcTotal, dogeBtcTotal, dogeLtcTotal, dogeLtcBtcTotal
 
-        totalBtc = this.GetVatTotal(coinBtc.ask.price * testAmount, type)  // ADA/BTC  ->  bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
-        totalLtc = this.GetVatTotal(coinLtc.ask.price * testAmount, type)  // ADA/LTC  ->  1000 ada x LTC yapar değeri. LTC değer
-        toalDoge = this.GetVatTotal(coinDoge.ask.price * testAmount, type) // ADA/DOGE ->  1000 ada x Doge yapar değeri. DOGE değer  ### BUY çünkü doge de sell e bakarsak hepsinde doge çıkar.
+        totalBtc = this.GetVatTotal(coinBtc[type].price * testAmount, type)  // ADA/BTC  ->  bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
+        totalLtc = this.GetVatTotal(coinLtc[type].price * testAmount, type)  // ADA/LTC  ->  1000 ada x LTC yapar değeri. LTC değer
+        toalDoge = this.GetVatTotal(coinDoge[type].price * testAmount, type) // ADA/DOGE ->  1000 ada x Doge yapar değeri. DOGE değer  ### BUY çünkü doge de sell e bakarsak hepsinde doge çıkar.
     
         ltcBtcTotal = this.GetVatTotal(ltcBtc.bid.price * totalLtc, 'bid')    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
         dogeBtcTotal = this.GetVatTotal(dogeBtc.bid.price * toalDoge, 'bid')  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
