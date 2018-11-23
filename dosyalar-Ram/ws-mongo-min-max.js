@@ -32,9 +32,8 @@ class WsMongo {
         this.SetFbdDebug()
         this.ortak.db.ref(`cry/min-max`).set(null)
         this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
-        this.ortak.wsDepth.WsBaslat()
+        this.ortak.wsDepth.WsBaslat(coin=> this.SteamHandler(coin))
         this.RunForAllCoins()
-        //this.ortak.wsDepth.WsBaslat(coin=> this.SteamHandler(coin))
     }
 
     async RunForAllCoins(){
@@ -44,7 +43,7 @@ class WsMongo {
         for (const coin of this.coins) {
             this.SteamHandler(coin)
         }
-        await this.ortak.sleep(1)
+        await this.ortak.sleep(10)
         this.RunForAllCoins()
     }
 
@@ -368,6 +367,33 @@ class WsMongo {
         }
         this.ortak.mailDataMinMax.insertOne(uygunMarket)
         // BUY YAP kodu buraya ...
+    }
+
+    Kontrol(d, rob){
+        const { firstOrderBook, secondOrderBook, thirdOrderBook, dogeLtcOrderBook, ltcBtcOrderBook } = rob
+        const firstMainCoin = d.firstMarketName.split('/')[1]
+        const secondMainCoin = d.secondMarketName.split('/')[1]
+        const ourTotal = this.ortak.limits[firstMainCoin]
+        const firstMarketAmount = ourTotal / firstOrderBook.price // first market amount' u aldık.
+        if(!isFinite(firstMarketAmount)) return false // infinity ise çık
+
+        const secondMarketTotal = firstMarketAmount * secondOrderBook.price // totalimizi aldık. second market total.
+        let thirdMarketTotal = d.type == 'alt' ? secondMarketTotal / thirdOrderBook.price : secondMarketTotal * thirdOrderBook.price // alt ise böy, üst se çarp
+
+        if(d.type == 'ust' && d.thirdMarketName == 'DOGE/BTC'){
+            const dogeLtcTotal = dogeLtcOrderBook.price * secondMarketTotal
+            const thirdMarketTotal2 = ltcBtcOrderBook.price * dogeLtcTotal 
+            thirdMarketTotal = [thirdMarketTotal, thirdMarketTotal2].sort((a,b)=> b-a)[0] // hem doge>btc hemde doge>ltc>btc fiyatlarını alıyoruz hangisi büyükse onu alacak.
+        }
+
+        const kar = thirdMarketTotal - ourTotal // elde edilen doge ile 10.000 doge arasındaki farka bakıyor. kâr.
+        const fark = kar / ourTotal * 100
+        const farkKontrol = fark >= this.minFark
+        const checkTamUygun = rob.firstOrderBook.total >= this.ortak.limits[firstMainCoin] && rob.secondOrderBook.total >= this.ortak.limits[secondMainCoin] // CHECK TAM UYGUN
+
+        //if(sonuc && !checkTamUygun) console.log(`Market: ${d.firstMarketName} >  ${d.secondMarketName} # Fark: % ${fark.toFixed(2)}`)
+        this.FdbIslemleri(d, farkKontrol, fark, rob)
+        return farkKontrol && checkTamUygun
     }
 
     GetEnUcuzVeEnPahaliMarket(coin, altiTickers){ // mix max v2
