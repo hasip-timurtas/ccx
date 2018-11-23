@@ -20,6 +20,27 @@ class WsMongo {
     }
 
     cryWsBasla(){
+    
+        this.SetFbdDebug()
+        this.ortak.db.ref(`cry/min-max-eski`).set(null)
+        this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
+        this.ortak.wsDepth.WsBaslat(coin=> this.SteamHandler(coin))
+        this.RunForAllCoins()
+    }
+
+    async RunForAllCoins(){
+        while(this.ortak.wsDataProcessing){
+            await this.ortak.sleep(2)
+        }
+        for (const coin of this.coins) {
+            this.SteamHandler(coin)
+        }
+        await this.ortak.sleep(10)
+        this.RunForAllCoins()
+    }
+
+/*
+    cryWsBasla(){
         this.ortak.db.ref(`cry/min-max-eski`).set(null)
         this.ortak.wsDepth.WsBaslat(coin=> this.SteamHandler(coin))
     }
@@ -29,7 +50,7 @@ class WsMongo {
         //this.FiyatFarkKontrolYeni(coin, 'BTC', 'LTC', 'DOGE')
         this.YesYeniFunk(coin)
     }
-
+*/
     async YesYeniFunk(coin){
         this.islemdekiler.push(coin)
         const result = this.GetMarketList(coin)

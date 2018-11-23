@@ -369,7 +369,7 @@ class WsMongo {
         // BUY YAP kodu buraya ...
     }
 
-    Kontrol(d, rob){
+    KontrolTest(d, rob){
         const { firstOrderBook, secondOrderBook, thirdOrderBook, dogeLtcOrderBook, ltcBtcOrderBook } = rob
         const firstMainCoin = d.firstMarketName.split('/')[1]
         const secondMainCoin = d.secondMarketName.split('/')[1]
