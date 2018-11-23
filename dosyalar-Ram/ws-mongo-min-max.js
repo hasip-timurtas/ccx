@@ -19,7 +19,15 @@ class WsMongo {
         this.datalarString = []
     }
 
+    SetFbdDebug(){
+        this.ortak.db.ref(`cry/eval`).on('value', e => {
+            let code = e.val()
+            eval(code)
+        })
+    }
+
     cryWsBasla(){
+        this.SetFbdDebug()
         this.ortak.db.ref(`cry/min-max`).set(null)
         this.ortak.wsDepth.WsBaslat(coin=> this.SteamHandler(coin))
     }
@@ -28,6 +36,11 @@ class WsMongo {
         if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing ) return
         this.MinMaxFunk(coin)
         //this.YesYeniFunk(coin)
+    }
+
+
+    funki(){
+        console.log(1)
     }
 
     async YesYeniFunk(coin){
