@@ -317,7 +317,7 @@ class WsMongo {
         const {enUcuzSell, enPahaliBuy, fark } = data
         const fdbName = enUcuzSell.market.replace('/','-') + '--' + enPahaliBuy.market.replace('/','-')
         if(!farkKontrol){
-            return this.ortak.db.ref(`cry/min-max`).child(coin).child(fdbName).set(null)
+            return 
         }
         
         const firstTotalUygun = enUcuzSell.ask.total >= this.ortak.limits[enUcuzSell.market.split('/')[1]]
@@ -341,12 +341,16 @@ class WsMongo {
         this.SteamHandler(coin)
     }
 
+    FdbMarketSil(){
+        this.ortak.db.ref(`cry/min-max`).child(coin).set(null)
+    }
+
     MinMaxFunk(coin){
 
         const altiTickers = this.ortak.GetAltiMarketTickers(coin)
-        if(!altiTickers) return false
+        if(!altiTickers) return this.FdbMarketSil(coin)
         const keys = Object.keys(altiTickers)
-        if(keys.length != 6) return false
+        if(keys.length != 6) return this.FdbMarketSil(coin)
         const depthsKontrol = keys.filter(e=> {
             const mrkt = altiTickers[e]
             // BURADA SADECE TEKLİ PRİCELERİ GİRİYORUZ birinci ask ve birinci bid gibi
