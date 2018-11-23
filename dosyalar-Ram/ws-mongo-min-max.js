@@ -418,11 +418,11 @@ class WsMongo {
         totalLtc = coinLtc[type].price * testAmount  // ADA/LTC  ->  1000 ada x LTC yapar değeri. LTC değer
         toalDoge = coinDoge[type].price * testAmount// ADA/DOGE ->  1000 ada x Doge yapar değeri. DOGE değer  ### BUY çünkü doge de sell e bakarsak hepsinde doge çıkar.
     
-        ltcBtcTotal = ltcBtc[type].price * totalLtc    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
-        dogeBtcTotal = dogeBtc[type].price * toalDoge  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
-    
-        dogeLtcTotal = dogeLtc[type].price * toalDoge  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
-        dogeLtcBtcTotal = ltcBtc[type].price * dogeLtcTotal  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
+        ltcBtcTotal = ltcBtc.bid.price * totalLtc    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
+        dogeBtcTotal = dogeBtc.bid.price * toalDoge  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
+        // DOGE > LTC > BTC total 
+        dogeLtcTotal = dogeLtc.bid.price * toalDoge  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
+        dogeLtcBtcTotal = ltcBtc.bid.price * dogeLtcTotal  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
 
         return {totalBtc, ltcBtcTotal, dogeBtcTotal, dogeLtcBtcTotal}
     }
