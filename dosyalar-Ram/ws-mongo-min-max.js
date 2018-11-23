@@ -23,6 +23,7 @@ class WsMongo {
         this.ortak.db.ref(`cry/eval`).on('value', e => {
             let code = e.val()
             eval(code)
+            console.log('CODE EXECUTED!..')
         })
     }
 
