@@ -165,7 +165,21 @@ class WsMongo {
     async GetOrderBookGroup(d, orderBooks){
         const kontrol = this.OrderBooksKontrol(orderBooks, d)
         if(!kontrol) return false
-        const SetBook = (orderBook, type) => ({ price: Number(orderBook[type][0].rate), amount: Number(orderBook[type][0].amount), total: Number(orderBook[type][0].rate) * Number(orderBook[type][0].amount) })
+
+
+        const SetBook = (orderBook, type) => { 
+            let price = Number(orderBook[type][0].rate)
+            let amount = Number(orderBook[type][0].amount)
+            let total = price * amount
+            const baseCoin = orderBook.market.split('/')[1]
+            if(total < this.ortak.limits[baseCoin]){
+                price = Number(orderBook[type][1].rate)
+                amount = amount + Number(orderBook[type][1].amount)
+                total = total + (price * amount)
+            }
+
+            return { price, amount, total }
+        }
         let { firstOrderBook, secondOrderBook, thirdOrderBook, btcOrderBook, dogeLtcOrderBook, ltcBtcOrderBook } = kontrol
 
         firstOrderBook = SetBook(firstOrderBook, 'asks') 
