@@ -49,8 +49,49 @@ class WsMongo {
 
     SteamHandler(coin){
         if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$')) return
-        this.MinMaxFunk(coin)
-        //this.YesYeniFunk(coin)
+        //this.MinMaxFunk(coin)
+        this.YesYeniFunk(coin)
+    }
+
+    GetEnUcuzVeEnPahaliMarket(coin){ // mix max v2
+        const altiTickers = this.ortak.GetAltiMarketTickers(coin)
+        Object.keys(altiTickers).filter(e=> {
+            const mrkt = altiTickers[e]
+            // BURADA SADECE TEKLİ PRİCELERİ GİRİYORUZ birinci ask ve birinci bid gibi
+            altiTickers[e].ask = {price: mrkt.asks[0].rate, amount: mrkt.asks[0].amount, total: mrkt.asks[0].rate * mrkt.asks[0].amount }
+            altiTickers[e].bid = {price: mrkt.bids[0].rate, amount: mrkt.bids[0].amount, total: mrkt.bids[0].rate * mrkt.bids[0].amount }
+        }) 
+        
+        const enUcuzSell =  this.EnUcuzaSatanSell(altiTickers)
+        const enPahaliBuy = this.EnPahaliyaAlanBuy(altiTickers)
+        const coinBtc  = altiTickers["coinBtc"]
+
+        if(!enUcuzSell || !enPahaliBuy || enUcuzSell.market == enPahaliBuy.market) return false
+
+        const firstBase = enPahaliBuy.market.split('/')[1]
+        const secondBase = enUcuzSell.market.split('/')[1]
+        const depthType = this.GetAltOrUst(firstBase, secondBase)
+
+        return {
+            firstMarketName: enUcuzSell.market,
+            secondMarketName: enPahaliBuy.market,
+            thirdMarketName: firstBase + '/'+ secondBase,
+            btcMarketName: coinBtc.market,
+            type: depthType
+        }
+        /*
+        const checkTamUygun = enPahaliBuy.total >= this.ortak.limits[firstBase] && enUcuzSell.total >= this.ortak.limits[secondBase] // CHECK TAM UYGUN
+
+        const fark = (enPahaliBuy.testTotalPahali - enUcuzSell.testTotalUcuz) / enUcuzSell.testTotalUcuz * 100
+        const farkKontrol = fark >= 1
+        const data = { enPahaliBuy, enUcuzSell, coinBtc, fark }
+
+        this.FdbIslemleri(coin, farkKontrol, data)// fark kontrol uygunsa db de data yı ekleyecek yada güncelleyecek değilse silecek. o yüzden buraya koyduk
+
+        if(farkKontrol && checkTamUygun) return data // fark kontrol ile checktamuygunsa data döndürecek.
+        
+        return false
+        */
     }
 
     async YesYeniFunk(coin){
@@ -66,6 +107,12 @@ class WsMongo {
             return
             allMarkets = await this.ortak.GetOrderBookGroupRest(coin)
         }
+
+        const datam = this.GetEnUcuzVeEnPahaliMarket(coin)
+        if(!datam) return this.IslemdekilerCikar(coin)
+        const {firstMarketName, secondMarketName, thirdMarketName, btcMarketName, type} = datam
+        await this.MarketGir(coin, firstMarketName, secondMarketName, thirdMarketName, btcMarketName, type, allMarkets)
+        /*
         const promises = []
         for (const item of result.listForFunction) {
             //const orderBooks = allMarkets.filter(e=> item.list.includes(e.market))
@@ -74,6 +121,7 @@ class WsMongo {
 
         Promise.all(promises).then(e => this.IslemdekilerCikar(coin)).catch(e=> this.IslemdekilerCikarHataEkle(e, coin))
         //await this.GetEnUcuzVeEnPahaliMarket(coin)
+*/
         this.sonCoin = coin
     }
 
@@ -107,11 +155,42 @@ class WsMongo {
 
         const kar = thirdMarketTotal - ourTotal // elde edilen doge ile 10.000 doge arasındaki farka bakıyor. kâr.
         const fark = kar / ourTotal * 100
-        const sonuc = fark >= this.minFark
+        const farkKontrol = fark >= this.minFark
         const checkTamUygun = rob.firstOrderBook.total >= this.ortak.limits[firstMainCoin] && rob.secondOrderBook.total >= this.ortak.limits[secondMainCoin] // CHECK TAM UYGUN
-        console.log(fark)
+
         //if(sonuc && !checkTamUygun) console.log(`Market: ${d.firstMarketName} >  ${d.secondMarketName} # Fark: % ${fark.toFixed(2)}`)
-        return sonuc && checkTamUygun
+        this.FdbIslemleri(d, farkKontrol, fark, rob)
+        return farkKontrol && checkTamUygun
+    }
+
+    async FdbIslemleri(d, farkKontrol, fark, data){
+        //const {enUcuzSell, enPahaliBuy, fark } = data
+        const {firstOrderBook, secondOrderBook } = data
+        const {coin, firstMarketName, secondMarketName } = d
+        const fdbName = firstMarketName.replace('/','-') + '--' + secondMarketName.replace('/','-')
+        if(!farkKontrol){
+            return this.ortak.db.ref(`cry/min-max-eski`).child(d.coin).child(fdbName).set(null)
+        }
+
+        const firstTotalUygun = firstOrderBook.total >= this.ortak.limits[firstMarketName.split('/')[1]]
+        const secondTotalUygun = secondOrderBook.total >= this.ortak.limits[secondMarketName.split('/')[1]]
+        const totalUygun = firstTotalUygun && secondTotalUygun
+        const uygunMarket = {
+            firstName: firstMarketName,
+            secondName: secondMarketName,
+            firstMarket:  { price: firstOrderBook.price.toFixed(8), amount: firstOrderBook.amount.toFixed(8), total: firstOrderBook.total.toFixed(8), totalUygun: firstTotalUygun  }, // TODO: tofixed kaldır.
+            secondMarket: { price: secondOrderBook.price.toFixed(8), amount: secondOrderBook.amount.toFixed(8), total: secondOrderBook.total.toFixed(8), totalUygun: secondTotalUygun },// TODO: tofixed kaldır.
+            totalUygun,
+            fark: fark.toFixed(2)
+        }
+
+        if(this.datalarString[fdbName] != JSON.stringify(uygunMarket)){ // Datalar aynı değilse ise kaydet değilse tekrar kontrole git.
+            this.datalarString[fdbName] = JSON.stringify(uygunMarket)
+            await this.ortak.db.ref(`cry/min-max-eski`).child(coin).child(fdbName).set(uygunMarket)
+        }
+
+        await this.ortak.sleep(10)
+        this.SteamHandler(coin)
     }
 
     async UygunMarketEkle(d, rob){
@@ -128,15 +207,29 @@ class WsMongo {
     async GetOrderBookGroup(d, orderBooks){
         const kontrol = this.OrderBooksKontrol(orderBooks, d)
         if(!kontrol) return false
-        const SetBook = (orderBook, type) => ({ price: Number(orderBook[type][0].rate), total: Number(orderBook[type][0].rate) * Number(orderBook[type][0].amount) })
+
+
+        const SetBook = (orderBook, type) => { 
+            let price = Number(orderBook[type][0].rate)
+            let amount = Number(orderBook[type][0].amount)
+            let total = price * amount
+            const baseCoin = orderBook.market.split('/')[1]
+            if(total < this.ortak.limits[baseCoin]){
+                price = Number(orderBook[type][1].rate)
+                amount = amount + Number(orderBook[type][1].amount)
+                total = total + (price * amount)
+            }
+
+            return { price, amount, total }
+        }
         let { firstOrderBook, secondOrderBook, thirdOrderBook, btcOrderBook, dogeLtcOrderBook, ltcBtcOrderBook } = kontrol
 
         firstOrderBook = SetBook(firstOrderBook, 'asks') 
         secondOrderBook = SetBook(secondOrderBook, 'bids') 
+        btcOrderBook = SetBook(btcOrderBook, 'asks')
         thirdOrderBook = d.type == 'alt' ? SetBook(thirdOrderBook, 'asks') : SetBook(thirdOrderBook, 'bids') 
         dogeLtcOrderBook = SetBook(dogeLtcOrderBook, 'bids')
         ltcBtcOrderBook = SetBook(ltcBtcOrderBook, 'bids')
-        btcOrderBook = SetBook(btcOrderBook, 'asks')
         return {firstOrderBook, secondOrderBook, thirdOrderBook, btcOrderBook, dogeLtcOrderBook, ltcBtcOrderBook}
     }
 
@@ -313,7 +406,7 @@ class WsMongo {
         return { marketList, listForFunction }
     }
 
-    async FdbIslemleri(coin, farkKontrol, data){
+    async FdbIslemleri2(coin, farkKontrol, data){
         const {enUcuzSell, enPahaliBuy, fark } = data
         const fdbName = enUcuzSell.market.replace('/','-') + '--' + enPahaliBuy.market.replace('/','-')
         if(!farkKontrol){
@@ -376,55 +469,6 @@ class WsMongo {
         // BUY YAP kodu buraya ...
     }
 
-    KontrolTest(d, rob){
-        const { firstOrderBook, secondOrderBook, thirdOrderBook, dogeLtcOrderBook, ltcBtcOrderBook } = rob
-        const firstMainCoin = d.firstMarketName.split('/')[1]
-        const secondMainCoin = d.secondMarketName.split('/')[1]
-        const ourTotal = this.ortak.limits[firstMainCoin]
-        const firstMarketAmount = ourTotal / firstOrderBook.price // first market amount' u aldık.
-        if(!isFinite(firstMarketAmount)) return false // infinity ise çık
-
-        const secondMarketTotal = firstMarketAmount * secondOrderBook.price // totalimizi aldık. second market total.
-        let thirdMarketTotal = d.type == 'alt' ? secondMarketTotal / thirdOrderBook.price : secondMarketTotal * thirdOrderBook.price // alt ise böy, üst se çarp
-
-        if(d.type == 'ust' && d.thirdMarketName == 'DOGE/BTC'){
-            const dogeLtcTotal = dogeLtcOrderBook.price * secondMarketTotal
-            const thirdMarketTotal2 = ltcBtcOrderBook.price * dogeLtcTotal 
-            thirdMarketTotal = [thirdMarketTotal, thirdMarketTotal2].sort((a,b)=> b-a)[0] // hem doge>btc hemde doge>ltc>btc fiyatlarını alıyoruz hangisi büyükse onu alacak.
-        }
-
-        const kar = thirdMarketTotal - ourTotal // elde edilen doge ile 10.000 doge arasındaki farka bakıyor. kâr.
-        const fark = kar / ourTotal * 100
-        const farkKontrol = fark >= this.minFark
-        const checkTamUygun = rob.firstOrderBook.total >= this.ortak.limits[firstMainCoin] && rob.secondOrderBook.total >= this.ortak.limits[secondMainCoin] // CHECK TAM UYGUN
-
-        //if(sonuc && !checkTamUygun) console.log(`Market: ${d.firstMarketName} >  ${d.secondMarketName} # Fark: % ${fark.toFixed(2)}`)
-        this.FdbIslemleri(d, farkKontrol, fark, rob)
-        return farkKontrol && checkTamUygun
-    }
-
-    GetEnUcuzVeEnPahaliMarket(coin, altiTickers){ // mix max v2
-        // marketler sırayla --> ADA/BTC, ADA/LTC, ADA/DOGE ve LTC/BTC, DOGE/BTC
-        const enUcuzSell =  this.EnUcuzaSatanSell(altiTickers)
-        const enPahaliBuy = this.EnPahaliyaAlanBuy(altiTickers)
-        const coinBtc  = altiTickers["coinBtc"]
-
-        if(!enUcuzSell || !enPahaliBuy) return false
-
-        const firstBase = enPahaliBuy.market.split('/')[1]
-        const secondBase = enUcuzSell.market.split('/')[1]
-        const checkTamUygun = enPahaliBuy.total >= this.ortak.limits[firstBase] && enUcuzSell.total >= this.ortak.limits[secondBase] // CHECK TAM UYGUN
-        const fark = (enPahaliBuy.testTotalPahali - enUcuzSell.testTotalUcuz) / enUcuzSell.testTotalUcuz * 100
-        const farkKontrol = fark >= 1
-        const data = { enPahaliBuy, enUcuzSell, coinBtc, fark }
-
-        this.FdbIslemleri(coin, farkKontrol, data)// fark kontrol uygunsa db de data yı ekleyecek yada güncelleyecek değilse silecek. o yüzden buraya koyduk
-
-        if(farkKontrol && checkTamUygun) return data // fark kontrol ile checktamuygunsa data döndürecek.
-            
-        return false
-    }
-
     EnUcuzaSatanSell(altiTickers){ // SELL
         const {coinBtc, coinLtc, coinDoge} = altiTickers
         // marketler sırayla --> ADA/BTC, ADA/LTC, ADA/DOGE ve LTC/BTC, DOGE/BTC, DOGE/LTC
@@ -475,19 +519,13 @@ class WsMongo {
         return {totalBtc, ltcBtcTotal, dogeBtcTotal, dogeLtcBtcTotal}
     }
 
-    GetVatTotal(total, type){
-        const yuzde = 0.002 // yüzde 0.2 yani 1000 de 2
-        const vat = total * yuzde
-        let netTotal
-        if(type == 'bid'){
-            netTotal = total - vat
-        }else if(type =='ask'){
-            netTotal = total + vat
-        }else{
-            throw 'GetTotal TYPE HATALI'
-        }
-       
-        return netTotal
+    GetAltOrUst(fistBase, secondBase){
+        if(fistBase == 'BTC' && secondBase == 'LTC') return 'ust' // ust
+        if(fistBase == 'BTC' && secondBase == 'DOGE') return 'ust' // ust
+        if(fistBase == 'LTC' && secondBase == 'BTC') return 'alt' // alt
+        if(fistBase == 'LTC' && secondBase == 'DOGE') return 'ust' // ust
+        if(fistBase == 'DOGE' && secondBase == 'BTC') return 'alt' // alt
+        if(fistBase == 'DOGE' && secondBase == 'LTC') return 'alt' // alt
     }
 }
 
