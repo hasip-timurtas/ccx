@@ -345,12 +345,15 @@ class WsMongo {
 
         const altiTickers = this.ortak.GetAltiMarketTickers(coin)
         if(!altiTickers) return false
-        const depthsKontrol = Object.keys(altiTickers).filter(e=> {
+        const keys = Object.keys(altiTickers)
+        if(keys.length != 6) return false
+        const depthsKontrol = keys.filter(e=> {
             const mrkt = altiTickers[e]
             // BURADA SADECE TEKLİ PRİCELERİ GİRİYORUZ birinci ask ve birinci bid gibi
             altiTickers[e].ask = {price: mrkt.asks[0].rate, amount: mrkt.asks[0].amount, total: mrkt.asks[0].rate * mrkt.asks[0].amount }
             altiTickers[e].bid = {price: mrkt.bids[0].rate, amount: mrkt.bids[0].amount, total: mrkt.bids[0].rate * mrkt.bids[0].amount }
-            return !altiTickers[e] || !altiTickers[e].asks || !altiTickers[e].bids
+            
+            return !altiTickers[e].asks || !altiTickers[e].asks[0] || altiTickers[e].asks[0].rate == 0.00000001 || !altiTickers[e].bids || !altiTickers[e].bids[0]
         }) // herhangi biri boşsa veya asks veya bids i boşsa false true
 
         if(depthsKontrol > 0) return false // eğer 1 market bile yoksa ve depthleri yoksa false dön, çünkü biz 3 markettede olanlarla iş yapıyoruz.
