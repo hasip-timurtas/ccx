@@ -38,11 +38,6 @@ class WsMongo {
         //this.YesYeniFunk(coin)
     }
 
-
-    funki(){
-        console.log(1)
-    }
-
     async YesYeniFunk(coin){
         this.islemdekiler.push(coin)
         const result = this.GetMarketList(coin)
