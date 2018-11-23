@@ -27,13 +27,13 @@ class WsMongo {
         })
     }
 
-    async cryWsBasla(){
+    cryWsBasla(){
     
         this.SetFbdDebug()
         this.ortak.db.ref(`cry/min-max`).set(null)
         this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
         this.ortak.wsDepth.WsBaslat()
-        this.RunForAllCoins(coins)
+        this.RunForAllCoins()
         //this.ortak.wsDepth.WsBaslat(coin=> this.SteamHandler(coin))
     }
 
