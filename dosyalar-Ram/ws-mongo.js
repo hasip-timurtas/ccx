@@ -26,7 +26,7 @@ class WsMongo {
             console.log('CODE EXECUTED!..')
         })
     }
-    
+
 
     cryWsBasla(){
     
@@ -53,13 +53,13 @@ class WsMongo {
         this.ortak.db.ref(`cry/min-max-eski`).set(null)
         this.ortak.wsDepth.WsBaslat(coin=> this.SteamHandler(coin))
     }
-
+*/
     SteamHandler(coin){
         if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing ) return
         //this.FiyatFarkKontrolYeni(coin, 'BTC', 'LTC', 'DOGE')
         this.YesYeniFunk(coin)
     }
-*/
+
     async YesYeniFunk(coin){
         this.islemdekiler.push(coin)
         const result = this.GetMarketList(coin)
