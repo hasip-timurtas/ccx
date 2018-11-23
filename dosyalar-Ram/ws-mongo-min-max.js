@@ -68,14 +68,15 @@ class WsMongo {
 
         if(!enUcuzSell || !enPahaliBuy || enUcuzSell.market == enPahaliBuy.market) return false
 
-        const firstBase = enPahaliBuy.market.split('/')[1]
-        const secondBase = enUcuzSell.market.split('/')[1]
+        const firstBase = enUcuzSell.market.split('/')[1]
+        const secondBase = enPahaliBuy.market.split('/')[1]
+        
         const depthType = this.GetAltOrUst(firstBase, secondBase)
 
         return {
             firstMarketName: enUcuzSell.market,
             secondMarketName: enPahaliBuy.market,
-            thirdMarketName: firstBase + '/'+ secondBase,
+            thirdMarketName: depthType == 'alt' ? firstBase + '/'+ secondBase : secondBase + '/'+  firstBase,
             btcMarketName: coinBtc.market,
             type: depthType
         }
@@ -130,7 +131,7 @@ class WsMongo {
         const volumeUygun = this.ortak.marketTickers.Data.find(e=> e.Label == secondMarketName && e.Volume > 0.01)
         if(!volumeUygun) return
         const d = {coin, firstMarketName, secondMarketName, thirdMarketName, btcMarketName, type }
-        const rob = await this.GetOrderBookGroup(d, orderBooks) // result order book yani rob
+        const rob = this.GetOrderBookGroup(d, orderBooks) // result order book yani rob
         if(!rob) return 
         const sonuc = this.Kontrol(d, rob)
         if(sonuc) await this.UygunMarketEkle(d, rob)
@@ -204,7 +205,7 @@ class WsMongo {
         //await this.BuySellBasla(uygunMarket)         
     }
 
-    async GetOrderBookGroup(d, orderBooks){
+    GetOrderBookGroup(d, orderBooks){
         const kontrol = this.OrderBooksKontrol(orderBooks, d)
         if(!kontrol) return false
 
@@ -382,30 +383,6 @@ class WsMongo {
         this.islemdekiler = this.islemdekiler.filter(a => a != coin)
     }
 
-    GetMarketList(coin){
-        const marketList = [
-            coin + "/" + this.ortak.mainMarkets[0], // ADA/BTC
-            coin + "/" + this.ortak.mainMarkets[1], // ADA/LTC
-            coin + "/" + this.ortak.mainMarkets[2], // ADA/DOGE
-            this.ortak.mainMarkets[1] + "/" + this.ortak.mainMarkets[0], // LTC/BTC
-            this.ortak.mainMarkets[2] + "/" + this.ortak.mainMarkets[0], // DOGE/BTC
-            this.ortak.mainMarkets[2] + "/" + this.ortak.mainMarkets[1]  // DOGE/LTC
-        ]
-        // marketList sırasıyla - > ADA/BTC - ADA/LTC - ADA/DOGE - LTC/BTC - DOGE/BTC - DOGE/LTC
-        const listForFunction = [
-            { list: [ marketList[0], marketList[1], marketList[3], marketList[0] ], type: 'ust' },   // ADA/BTC  - ADA/LTC  - LTC/BTC  - [ADA/BTC]
-            { list: [ marketList[0], marketList[2], marketList[4], marketList[0] ], type: 'ust' },   // ADA/BTC  - ADA/DOGE - DOGE/BTC - [ADA/BTC]
-
-            { list: [ marketList[1], marketList[0], marketList[3], marketList[0] ], type: 'alt' },   // ADA/LTC  - ADA/BTC  - LTC/BTC  - [ADA/BTC]
-            { list: [ marketList[1], marketList[2], marketList[5], marketList[0] ], type: 'ust' },   // ADA/LTC  - ADA/DOGE - DOGE/LTC - [ADA/BTC]
-
-            { list: [ marketList[2], marketList[0], marketList[4], marketList[0] ], type: 'alt' },   // ADA/DOGE - ADA/BTC  - DOGE/BTC - [ADA/BTC]
-            { list: [ marketList[2], marketList[1], marketList[5], marketList[0] ], type: 'alt' },   // ADA/DOGE - ADA/LTC  - DOGE/LTC - [ADA/BTC]
-        ]
-
-        return { marketList, listForFunction }
-    }
-
     async FdbIslemleri2(coin, farkKontrol, data){
         const {enUcuzSell, enPahaliBuy, fark } = data
         const fdbName = enUcuzSell.market.replace('/','-') + '--' + enPahaliBuy.market.replace('/','-')
@@ -517,6 +494,30 @@ class WsMongo {
         dogeLtcBtcTotal = ltcBtc.bid.price * dogeLtcTotal  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
 
         return {totalBtc, ltcBtcTotal, dogeBtcTotal, dogeLtcBtcTotal}
+    }
+
+    GetMarketList(coin){
+        const marketList = [
+            coin + "/" + this.ortak.mainMarkets[0], // ADA/BTC
+            coin + "/" + this.ortak.mainMarkets[1], // ADA/LTC
+            coin + "/" + this.ortak.mainMarkets[2], // ADA/DOGE
+            this.ortak.mainMarkets[1] + "/" + this.ortak.mainMarkets[0], // LTC/BTC
+            this.ortak.mainMarkets[2] + "/" + this.ortak.mainMarkets[0], // DOGE/BTC
+            this.ortak.mainMarkets[2] + "/" + this.ortak.mainMarkets[1]  // DOGE/LTC
+        ]
+        // marketList sırasıyla - > ADA/BTC - ADA/LTC - ADA/DOGE - LTC/BTC - DOGE/BTC - DOGE/LTC
+        const listForFunction = [
+            { list: [ marketList[0], marketList[1], marketList[3], marketList[0] ], type: 'ust' },   // ADA/BTC  - ADA/LTC  - LTC/BTC  - [ADA/BTC]
+            { list: [ marketList[0], marketList[2], marketList[4], marketList[0] ], type: 'ust' },   // ADA/BTC  - ADA/DOGE - DOGE/BTC - [ADA/BTC]
+
+            { list: [ marketList[1], marketList[0], marketList[3], marketList[0] ], type: 'alt' },   // ADA/LTC  - ADA/BTC  - LTC/BTC  - [ADA/BTC]
+            { list: [ marketList[1], marketList[2], marketList[5], marketList[0] ], type: 'ust' },   // ADA/LTC  - ADA/DOGE - DOGE/LTC - [ADA/BTC]
+
+            { list: [ marketList[2], marketList[0], marketList[4], marketList[0] ], type: 'alt' },   // ADA/DOGE - ADA/BTC  - DOGE/BTC - [ADA/BTC]
+            { list: [ marketList[2], marketList[1], marketList[5], marketList[0] ], type: 'alt' },   // ADA/DOGE - ADA/LTC  - DOGE/LTC - [ADA/BTC]
+        ]
+
+        return { marketList, listForFunction }
     }
 
     GetAltOrUst(fistBase, secondBase){
