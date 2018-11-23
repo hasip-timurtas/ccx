@@ -312,8 +312,8 @@ class WsMongo {
         const uygunMarket = {
             firstName: enUcuzSell.market,
             secondName: enPahaliBuy.market,
-            firstMarket:  { price: enUcuzSell.ask.price.toFixed(8), amount: enUcuzSell.ask.amount.toFixed(8), total: enUcuzSell.ask.total.toFixed(8), totalUygun: firstTotalUygun, testTotal: enUcuzSell.testTotalUcuz  }, // TODO: tofixed kaldır.
-            secondMarket: { price: enPahaliBuy.bid.price.toFixed(8), amount: enPahaliBuy.bid.amount.toFixed(8), total: enPahaliBuy.bid.total.toFixed(8), totalUygun: secondTotalUygun, testTotal: enPahaliBuy.testTotalPahali  },// TODO: tofixed kaldır.
+            firstMarket:  { price: enUcuzSell.ask.price.toFixed(8), amount: enUcuzSell.ask.amount.toFixed(8), total: enUcuzSell.ask.total.toFixed(8), totalUygun: firstTotalUygun, testTotal: enUcuzSell.testTotalUcuz.toFixed(8)  }, // TODO: tofixed kaldır.
+            secondMarket: { price: enPahaliBuy.bid.price.toFixed(8), amount: enPahaliBuy.bid.amount.toFixed(8), total: enPahaliBuy.bid.total.toFixed(8), totalUygun: secondTotalUygun, testTotal: enPahaliBuy.testTotalPahali.toFixed(8)  },// TODO: tofixed kaldır.
             totalUygun,
             fark: fark.toFixed(2)
         }
