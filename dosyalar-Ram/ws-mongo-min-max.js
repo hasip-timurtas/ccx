@@ -341,7 +341,7 @@ class WsMongo {
         this.SteamHandler(coin)
     }
 
-    FdbMarketSil(){
+    FdbMarketSil(coin){
         this.ortak.db.ref(`cry/min-max`).child(coin).set(null)
     }
 
