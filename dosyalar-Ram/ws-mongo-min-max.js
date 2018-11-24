@@ -62,22 +62,18 @@ class WsMongo {
             altiTickers[e].bid = {price: mrkt.bids[0].rate, amount: mrkt.bids[0].amount, total: mrkt.bids[0].rate * mrkt.bids[0].amount }
         }) 
         
-        const enUcuzSell =  this.EnUcuzaSatanSell(altiTickers)
-        const enPahaliBuy = this.EnPahaliyaAlanBuy(altiTickers)
-        const coinBtc  = altiTickers["coinBtc"]
-
+        const { enUcuzSell, enPahaliBuy} =  this.UygunMarketleriGetir(altiTickers)
         if(!enUcuzSell || !enPahaliBuy || enUcuzSell.market == enPahaliBuy.market) return false
 
         const firstBase = enUcuzSell.market.split('/')[1]
         const secondBase = enPahaliBuy.market.split('/')[1]
-        
         const depthType = this.GetAltOrUst(firstBase, secondBase)
 
         return {
             firstMarketName: enUcuzSell.market,
             secondMarketName: enPahaliBuy.market,
             thirdMarketName: depthType == 'alt' ? firstBase + '/'+ secondBase : secondBase + '/'+  firstBase,
-            btcMarketName: coinBtc.market,
+            btcMarketName: altiTickers.coinBtc.market,
             type: depthType
         }
         /*
@@ -356,8 +352,6 @@ class WsMongo {
         await this.ortak.history.insertOne({'coin': altCoin, 'amount': amount, 'btcPrice': btcAskPrice, 'date': new Date() })
     }
 
-    // #################        WEBSOCKET       #################
-
     MailDataInsert(uygunMarket, buyResult, sellResult){
         this.ortak.mailData.insertOne({uygunMarket, buyResult, sellResult, 'date': new Date()})
     }
@@ -383,99 +377,16 @@ class WsMongo {
         this.islemdekiler = this.islemdekiler.filter(a => a != coin)
     }
 
-    async FdbIslemleri2(coin, farkKontrol, data){
-        const {enUcuzSell, enPahaliBuy, fark } = data
-        const fdbName = enUcuzSell.market.replace('/','-') + '--' + enPahaliBuy.market.replace('/','-')
-        if(!farkKontrol){
-            return 
-        }
-        
-        const firstTotalUygun = enUcuzSell.ask.total >= this.ortak.limits[enUcuzSell.market.split('/')[1]]
-        const secondTotalUygun = enPahaliBuy.bid.total >= this.ortak.limits[enPahaliBuy.market.split('/')[1]]
-        const totalUygun = firstTotalUygun && secondTotalUygun
-        const uygunMarket = {
-            firstName: enUcuzSell.market,
-            secondName: enPahaliBuy.market,
-            firstMarket:  { price: enUcuzSell.ask.price.toFixed(8), amount: enUcuzSell.ask.amount.toFixed(8), total: enUcuzSell.ask.total.toFixed(8), totalUygun: firstTotalUygun, testTotal: enUcuzSell.testTotalUcuz.toFixed(8)  }, // TODO: tofixed kaldır.
-            secondMarket: { price: enPahaliBuy.bid.price.toFixed(8), amount: enPahaliBuy.bid.amount.toFixed(8), total: enPahaliBuy.bid.total.toFixed(8), totalUygun: secondTotalUygun, testTotal: enPahaliBuy.testTotalPahali.toFixed(8)  },// TODO: tofixed kaldır.
-            totalUygun,
-            fark: fark.toFixed(2)
-        }
-
-        if(this.datalarString[fdbName] != JSON.stringify(uygunMarket)){ // Datalar aynı değilse ise kaydet değilse tekrar kontrole git.
-            this.datalarString[fdbName] = JSON.stringify(uygunMarket)
-            await this.ortak.db.ref(`cry/min-max`).child(coin).child(fdbName).set(uygunMarket)
-        }
-
-        await this.ortak.sleep(10)
-        this.SteamHandler(coin)
-    }
+    // #################       -- MIN MAX --       #################
 
     FdbMarketSil(coin){
         this.ortak.db.ref(`cry/min-max`).child(coin).set(null)
     }
 
-    MinMaxFunk(coin){
-
-        const altiTickers = this.ortak.GetAltiMarketTickers(coin)
-        if(!altiTickers) return this.FdbMarketSil(coin)
-        const keys = Object.keys(altiTickers)
-        if(keys.length != 6) return this.FdbMarketSil(coin)
-        const depthsKontrol = keys.filter(e=> {
-            const mrkt = altiTickers[e]
-            // BURADA SADECE TEKLİ PRİCELERİ GİRİYORUZ birinci ask ve birinci bid gibi
-            altiTickers[e].ask = {price: mrkt.asks[0].rate, amount: mrkt.asks[0].amount, total: mrkt.asks[0].rate * mrkt.asks[0].amount }
-            altiTickers[e].bid = {price: mrkt.bids[0].rate, amount: mrkt.bids[0].amount, total: mrkt.bids[0].rate * mrkt.bids[0].amount }
-            
-            return !altiTickers[e].asks || !altiTickers[e].asks[0] || altiTickers[e].asks[0].rate == 0.00000001 || !altiTickers[e].bids || !altiTickers[e].bids[0]
-        }) // herhangi biri boşsa veya asks veya bids i boşsa false true
-
-        if(depthsKontrol > 0) return false // eğer 1 market bile yoksa ve depthleri yoksa false dön, çünkü biz 3 markettede olanlarla iş yapıyoruz.
-
-        const sonuc = this.GetEnUcuzVeEnPahaliMarket(coin, altiTickers)
-        if(!sonuc) return false
-        
-        const {enUcuzSell, enPahaliBuy, coinBtc, fark } = sonuc
-
-        const uygunMarket = {
-            firstMarket:  { name: enUcuzSell.market,  price: enUcuzSell.ask.price,  total: enUcuzSell.ask.total}, // TODO: tofixed kaldır.
-            secondMarket: { name: enPahaliBuy.market, price: enPahaliBuy.bid.price, total: enPahaliBuy.bid.total},// TODO: tofixed kaldır.
-            btcMarket:    { name: coinBtc.market,  price: coinBtc.ask.price,  total: coinBtc.ask.total},// TODO: tofixed kaldır.
-        }
-        this.ortak.mailDataMinMax.insertOne(uygunMarket)
-        // BUY YAP kodu buraya ...
-    }
-
-    EnUcuzaSatanSell(altiTickers){ // SELL
-        const {coinBtc, coinLtc, coinDoge} = altiTickers
-        // marketler sırayla --> ADA/BTC, ADA/LTC, ADA/DOGE ve LTC/BTC, DOGE/BTC, DOGE/LTC
-
-        const {totalBtc, ltcBtcTotal, dogeBtcTotal, dogeLtcBtcTotal} = this.GetTotals('ask', altiTickers) // sell fiyatına bakacağımız için ask
-        coinBtc.testTotalUcuz = totalBtc
-        coinLtc.testTotalUcuz = ltcBtcTotal 
-        coinDoge.testTotalUcuz = [dogeBtcTotal, dogeLtcBtcTotal].sort((a,b)=> a - b)[0] // coin/doge -> doge/btc ve coin/doge -> doge/ltc -> ltc/btc var hangisi KÜÇÜKSE onu koyacak.
-
-        const markets = [coinBtc, coinLtc, coinDoge]
-        const vUygunlar = markets.filter(e=> this.ortak.marketTickers.Data.find(a=> a.Label == e.market && a.Volume > 0)) // Bu volumesi uygun marketleri alır.
-
-        const uygunMarket = vUygunlar.sort((a,b)=> a.testTotalUcuz - b.testTotalUcuz)[0] // b-a büyükten küçüğe
-        return uygunMarket
-    }
-
-    EnPahaliyaAlanBuy(altiTickers){ // BUY
-        const {coinBtc, coinLtc, coinDoge} = altiTickers
-        // marketler sırayla --> ADA/BTC, ADA/LTC, ADA/DOGE ve LTC/BTC, DOGE/BTC, DOGE/LTC
-        const {totalBtc, ltcBtcTotal, dogeBtcTotal, dogeLtcBtcTotal} = this.GetTotals('bid', altiTickers) // buy fiyarına bakacağımız için bid
-
-        coinBtc.testTotalPahali = totalBtc
-        coinLtc.testTotalPahali = ltcBtcTotal 
-        coinDoge.testTotalPahali = [dogeBtcTotal, dogeLtcBtcTotal].sort((a,b)=> b - a)[0] // coin/doge -> doge/btc ve coin/doge -> doge/ltc -> ltc/btc var hangisi BÜYÜKSE onu koyacak.
-
-        const markets = [coinBtc, coinLtc, coinDoge]
-        const vUygunlar = markets.filter(e=> this.ortak.marketTickers.Data.find(a=> a.Label == e.market && a.Volume > 0)) // Bu volumesi uygun marketleri alır.
-
-        const uygunMarket = vUygunlar.sort((a,b)=> b.testTotalPahali - a.testTotalPahali)[0] // b-a büyükten küçüğe
-        return uygunMarket
+    UygunMarketleriGetir(altiTickers){
+        const enUcuzSell = this.GetTotals('ask', altiTickers) // buy fiyarına bakacağımız için bid
+        const enPahaliBuy = this.GetTotals('bid', altiTickers) // buy fiyarına bakacağımız için bid
+        return {enUcuzSell, enPahaliBuy}
     }
 
     GetTotals(type, altiTickers){ // type ask yada bid. 
@@ -486,14 +397,29 @@ class WsMongo {
         totalBtc = coinBtc[type].price * testAmount  // ADA/BTC  ->  bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
         totalLtc = coinLtc[type].price * testAmount  // ADA/LTC  ->  1000 ada x LTC yapar değeri. LTC değer
         toalDoge = coinDoge[type].price * testAmount// ADA/DOGE ->  1000 ada x Doge yapar değeri. DOGE değer  ### BUY çünkü doge de sell e bakarsak hepsinde doge çıkar.
-    
-        ltcBtcTotal = ltcBtc.bid.price * totalLtc    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
-        dogeBtcTotal = dogeBtc.bid.price * toalDoge  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
+        const btcyeCevirType = type == 'ask' ? 'bid' : 'ask' // ana type bid ise ask, ask ise bid olsun bu.
+        ltcBtcTotal = ltcBtc[btcyeCevirType].price * totalLtc    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
+        dogeBtcTotal = dogeBtc[btcyeCevirType].price * toalDoge  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
         // DOGE > LTC > BTC total 
-        dogeLtcTotal = dogeLtc.bid.price * toalDoge  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
-        dogeLtcBtcTotal = ltcBtc.bid.price * dogeLtcTotal  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
+        dogeLtcTotal = dogeLtc[btcyeCevirType].price * toalDoge  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
+        dogeLtcBtcTotal = ltcBtc[btcyeCevirType].price * dogeLtcTotal  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
 
-        return {totalBtc, ltcBtcTotal, dogeBtcTotal, dogeLtcBtcTotal}
+        coinBtc.testTotalPahali = totalBtc
+        coinLtc.testTotalPahali = ltcBtcTotal
+        let markets, vUygunlar, uygunMarket
+        if(type == 'bid'){
+            coinDoge.testTotalPahali = [dogeBtcTotal, dogeLtcBtcTotal].sort((a,b)=> b - a)[0] // coin/doge -> doge/btc ve coin/doge -> doge/ltc -> ltc/btc var hangisi BÜYÜKSE onu koyacak.
+            markets = [coinBtc, coinLtc, coinDoge]
+            vUygunlar = markets.filter(e=> this.ortak.marketTickers.Data.find(a=> a.Label == e.market && a.Volume > 0)) // Bu volumesi uygun marketleri alır.
+            uygunMarket = vUygunlar.sort((a,b)=> b.testTotalPahali - a.testTotalPahali)[0] // b-a büyükten küçüğe
+        }else if(type == 'ask'){
+            coinDoge.testTotalUcuz = [dogeBtcTotal, dogeLtcBtcTotal].sort((a,b)=> a - b)[0] // coin/doge -> doge/btc ve coin/doge -> doge/ltc -> ltc/btc var hangisi KÜÇÜKSE onu koyacak.
+            markets = [coinBtc, coinLtc, coinDoge]
+            vUygunlar = markets.filter(e=> this.ortak.marketTickers.Data.find(a=> a.Label == e.market && a.Volume > 0)) // Bu volumesi uygun marketleri alır.
+            uygunMarket = vUygunlar.sort((a,b)=> a.testTotalUcuz - b.testTotalUcuz)[0] // b-a büyükten küçüğe
+        }
+
+        return uygunMarket
     }
 
     GetMarketList(coin){
