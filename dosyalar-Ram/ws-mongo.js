@@ -338,6 +338,7 @@ class WsMongo {
 
     IslemdekilerCikar(coin){
         this.islemdekiler = this.islemdekiler.filter(a => a != coin)
+        this.ortak.db.ref(`cry/min-max-eski`).child(coin).set(null)
     }
 
     GetMarketList(coin){
