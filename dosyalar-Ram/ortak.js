@@ -2,7 +2,7 @@ const mongodb = require('mongodb')
 const rp = require('request-promise')
 const MhtCcxt = require('../dll/mhtCcxt')
 const firebase = require('firebase-admin')
-const serviceAccount = require("./firebase.json")
+const serviceAccount = require("../dll/firebase.json")
 firebase.initializeApp({
     credential: firebase.credential.cert(serviceAccount),
     databaseURL: "https://firem-b3432.firebaseio.com"
