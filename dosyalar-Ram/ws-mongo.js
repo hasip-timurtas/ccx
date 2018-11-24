@@ -343,7 +343,7 @@ class WsMongo {
     }
 
     FdbCoiniSil(coin, marketName){
-        if(coinName){
+        if(marketName){
             this.ortak.db.ref(`cry/min-max-eski`).child(coin).child(marketName).set(null)
         }else{
             this.ortak.db.ref(`cry/min-max-eski`).child(coin).set(null)
