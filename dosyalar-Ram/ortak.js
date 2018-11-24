@@ -185,7 +185,7 @@ class Ortak {
         }
     }
 
-    GetOrderBooks(marketler, all = false){
+    async GetOrderBooks(marketler, all = false){
         let orderBooks
         if(all) { // all true ise hepsini döndürür.
             orderBooks = await this.GetDepths('all')

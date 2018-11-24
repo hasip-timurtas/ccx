@@ -62,7 +62,7 @@ class WsMongo {
     async YesYeniFunk(coin){
         this.islemdekiler.push(coin)
         const result = this.GetMarketList(coin)
-        let allMarkets = this.ortak.GetOrderBooks(result.marketList)
+        let allMarkets = await this.ortak.GetOrderBooks(result.marketList)
         if(allMarkets.length != 6){
             this.FdbCoiniSil(coin)
             return this.IslemdekilerCikar(coin)
@@ -162,7 +162,7 @@ class WsMongo {
         await this.BuySellBasla(uygunMarket)         
     }
 
-    async GetOrderBookGroup(d, orderBooks){
+    GetOrderBookGroup(d, orderBooks){
         const kontrol = this.OrderBooksKontrol(orderBooks, d)
         if(!kontrol) return false
 
