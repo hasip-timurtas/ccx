@@ -3,7 +3,7 @@ const Ortak = require('./ortak')
 class SellKontrol {
     async LoadVeriables(){
         this.ortak = new Ortak()  // Ortak Yükle
-        await this.ortak.LoadVeriables()
+        await this.ortak.LoadVeriables('MONGO')
     }
     
     async BaslaSell(){ // baseCoin hangi coinle alacağı

@@ -5,7 +5,7 @@ class WsMongo {
         this.islemKati = 15
         this.minFark = 1
         this.islemdekiler = []
-        this.ortak = new Ortak()
+        this.ortak = new Ortak('RAM')
         await this.ortak.LoadVeriables()
         //await this.ortak.LoadVeriables()
         setInterval(async ()=> await this.BalanceGuncelle(), 2000 )
@@ -26,7 +26,6 @@ class WsMongo {
             console.log('CODE EXECUTED!..')
         })
     }
-
 
     cryWsBasla(){
     

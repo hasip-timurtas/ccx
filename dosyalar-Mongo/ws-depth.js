@@ -8,7 +8,7 @@ class WsDepth {
         this.minFark = 1
         this.islemdekiCoinler = []
         this.ortak = new Ortak()
-        await this.ortak.LoadVeriables()
+        await this.ortak.LoadVeriables('MONGO')
         this.balances = []
         this.oncekiCoin = null
         this.depths = []

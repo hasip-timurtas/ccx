@@ -12,7 +12,9 @@ firebase.initializeApp({
 const mongoUrl = "mongodb://144.202.125.69:1453/";
 
 class Ortak {
-    async LoadVeriables(){
+    async LoadVeriables(type){
+        if(!type) console.log('LÜTFEN ORTAK CLASS İÇİN TYPE GİRİN.')
+        this.type = type
         this.minFark = 1
         this.mainMarkets = ['BTC', 'LTC', 'DOGE']
         this.site = 'cryptopia'
@@ -134,44 +136,6 @@ class Ortak {
         if(!market) return false
         return market.market != openOrder.market
     }
-    /*
-    async HangiMarketteEnPahali(coin){
-        // marketler sırayla --> ADA/USDT, ADA/BTC, ADA/ETH ve BTC/USDT, ETH/USDT
-        const altiTickers = await this.GetAltiMarketTickers(coin)
-        if(!altiTickers) return false
-        const { coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc } = altiTickers //await this.GetAltiMarketTickers(coin)
-        const depthsKontrol = !coinBtc || !coinBtc.asks || !coinLtc || !coinLtc.asks || !coinDoge || !coinDoge.asks || !ltcBtc || !ltcBtc.asks || !dogeBtc || !dogeBtc.asks
-
-        if(depthsKontrol) return false // eğer 1 market bile yoksa ve depthleri yoksa false dön, çünkü biz 3 markettede olanlarla iş yapıyoruz.
-
-        const coinMarket2Total = this.GetMarketTotal(coinLtc)  // ADA/BTC
-        const coinMarket3Total = this.GetMarketTotal(coinDoge)  // ADA/ETH
-        
-
-        coinBtc.total = this.GetMarketTotal(coinBtc)  // ADA/USDT  değeri  -> bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
-        coinLtc.total = ltcBtc.asks[0]['rate'] * coinMarket2Total // BTC/USDT  değeri
-        coinDoge.total = dogeBtc.asks[0]['rate'] * coinMarket3Total  // ETH/USDT  değeri
-
-        const markets = [coinBtc, coinLtc, coinDoge]
-        const volumeliMarkets = markets.filter(e=> {
-            const volumeUygun = this.marketTickers.Data.find(a=> a.Label == e.market && a.Volume > 0)
-            return volumeUygun
-        })
-
-        if(volumeliMarkets.length < 3){
-            var dur = 2
-        }
-        const volumeliUygunMarket = volumeliMarkets.sort((a,b)=> b.total - a.total)[0] // b-a büyükten küçüğe
-        if(!volumeliUygunMarket){
-            const vsizUygunMarket = markets.sort((a,b)=> b.total - a.total)[0]
-            console.log(`Manuel satılması gereken coin: >>>>> ${coin}   market: >>>>> ${vsizUygunMarket.market} `)
-            return false
-        }
-        volumeliUygunMarket.type = 'asks' // sell kurarken priceyi buydanmı sell denmi alsın diye kontrol
-        return volumeliUygunMarket || false // sıraya dizdikten sonra ilk en BÜYÜK marketi döndürüyoruz.
-    }
-    */
-
 
     async HangiMarketteEnUcuz(coin){
         // marketler sırayla --> ADA/USDT, ADA/BTC, ADA/ETH ve BTC/USDT, ETH/USDT
@@ -221,44 +185,12 @@ class Ortak {
         }
     }
 
-    async GetAltiMarketTickersForMongoJS(coin){
-        // mainMarkets -> ['BTC', 'LTC', 'DOGE']
-        const marketler = [
-            coin + "/" + this.mainMarkets[0], // ADA/BTC
-            coin + "/" + this.mainMarkets[1], // ADA/LTC
-            coin + "/" + this.mainMarkets[2], // ADA/DOGE
-            this.mainMarkets[1] + "/" + this.mainMarkets[0], // LTC/BTC
-            this.mainMarkets[2] + "/" + this.mainMarkets[0], // DOGE/BTC
-            this.mainMarkets[2] + "/" + this.mainMarkets[1]  // DOGE/LTC
-        ]
-
-        let orderBooks = await this.GetOrderBooks(marketler)
-        const result = this.OrderBooksDataKontrol(orderBooks)
-        if(!result || orderBooks.length < 6){
-            orderBooks = await this.GetOrderBookGroupRest(coin)
-        }
-
-        if(!orderBooks) return false
-        //coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc
-        return orderBooks
-        /*
-        return { 
-            coinBtc : orderBooks.find(e => e.market == marketler[0]),
-            coinLtc : orderBooks.find(e => e.market == marketler[1]),
-            coinDoge: orderBooks.find(e => e.market == marketler[2]),
-            ltcBtc  : orderBooks.find(e => e.market == marketler[3]),
-            dogeBtc : orderBooks.find(e => e.market == marketler[4]),
-            dogeLtc : orderBooks.find(e => e.market == marketler[5])
-        }
-        */
-    }
-
     GetOrderBooks(marketler, all = false){
         let orderBooks
         if(all) { // all true ise hepsini döndürür.
-            orderBooks = this.depths //.find().toArray()
+            orderBooks = await this.GetDepths('all')
         }else{
-            orderBooks = this.depths.filter(e=> marketler.includes(e.market))//.find( { 'market': { '$in': marketler } } ).toArray()
+            orderBooks = await this.GetDepths('list', marketler)
         }
         
         orderBooks = orderBooks.map(e=> {
@@ -270,6 +202,29 @@ class Ortak {
         }) //  içinde market ismi olan depths gönderiyoruz. orjinalinde yok.
         
         return orderBooks
+    }
+    
+    async GetDepths(type, data){
+        switch (type) {
+            case 'all':
+                if(this.type == 'MONGO'){
+                    return await this.depths.find().toArray()
+                }else{
+                    return this.depths
+                }
+            case 'list':
+                if(this.type == 'MONGO'){
+                    return await this.depths.find( { 'market': { '$in': data } } ).toArray()
+                }else{
+                    return this.depths.filter(e=> data.includes(e.market))
+                }
+            case 'single':
+                if(this.type == 'MONGO'){
+                    return await this.depths.findOne({ market: data } )
+                }else{
+                    return this.depths.find(e=> e.market == data)
+                }
+        }
     }
 
     SetPrices(marketName){
@@ -346,7 +301,7 @@ class Ortak {
     }
 
     async GetTickers(marketler){
-        let tickers = await this.depths.filter(e=> marketler.includes(e.market)) //.find( { 'market': { '$in': marketler } } ).toArray()
+        let tickers = await this.GetDepths('list', marketler)
         tickers = tickers.map(e=> {
             e.ticker.market = e.market
             return e.ticker
@@ -355,8 +310,7 @@ class Ortak {
     }
 
     async GetOrderBook(marketName){
-        
-        let marketOrders = await this.depths.find(e=> e.market == marketName)//.findOne({ market: marketName } )
+        let marketOrders = await this.GetDepths('single', marketName)
         if(!marketOrders){
             return false
         }
