@@ -94,7 +94,7 @@ class WsMongo {
     async YesYeniFunk(coin){
         this.islemdekiler.push(coin)
         const result = this.GetMarketList(coin)
-        let allMarkets = await this.ortak.GetOrderBooks(result.marketList)
+        let allMarkets = this.ortak.GetOrderBooks(result.marketList)
         if(allMarkets.length != 6) return this.IslemdekilerCikar(coin)
 
         const data = this.ortak.OrderBooksDataKontrol(allMarkets)
