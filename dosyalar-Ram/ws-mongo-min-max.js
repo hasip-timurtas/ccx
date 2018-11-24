@@ -62,9 +62,9 @@ class WsMongo {
             altiTickers[e].bid = {price: mrkt.bids[0].rate, amount: mrkt.bids[0].amount, total: mrkt.bids[0].rate * mrkt.bids[0].amount }
         }) 
         
-        const sonuc =  this.UygunMarketleriGetir(altiTickers)
+        const sonuc = this.UygunMarketleriGetir(altiTickers)
         if(!sonuc) return false
-
+        const {enUcuzSell, enPahaliBuy} = sonuc
         const firstBase = enUcuzSell.market.split('/')[1]
         const secondBase = enPahaliBuy.market.split('/')[1]
         const depthType = this.GetAltOrUst(firstBase, secondBase)
