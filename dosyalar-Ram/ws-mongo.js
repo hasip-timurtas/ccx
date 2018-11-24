@@ -174,6 +174,7 @@ class WsMongo {
             let total = price * amount
             const baseCoin = orderBook.market.split('/')[1]
             if(total < this.ortak.limits[baseCoin]){
+                this.ortak.db.ref(`cry/eksikler`).push(orderBook)
                 price = Number(orderBook[type][1].rate)
                 amount = amount + Number(orderBook[type][1].amount)
                 total = total + (price * amount)
