@@ -172,14 +172,15 @@ class WsMongo {
             let amount = Number(orderBook[type][0].amount)
             let total = price * amount
             const baseCoin = orderBook.market.split('/')[1]
+            let eksik = false
             if(total < this.ortak.limits[baseCoin]){
-                console.log(orderBook.market)
                 price = Number(orderBook[type][1].rate)
                 amount = amount + Number(orderBook[type][1].amount)
                 total = total + (price * amount)
+                eksik = true
             }
 
-            return { price, amount, total }
+            return { price, amount, total, eksik }
         }
         let { firstOrderBook, secondOrderBook, thirdOrderBook, btcOrderBook, dogeLtcOrderBook, ltcBtcOrderBook } = kontrol
 
