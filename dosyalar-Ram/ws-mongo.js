@@ -129,9 +129,7 @@ class WsMongo {
         const {firstOrderBook, secondOrderBook } = data
         const {coin, firstMarketName, secondMarketName } = d
         const fdbName = firstMarketName.replace('/','-') + '--' + secondMarketName.replace('/','-')
-        if(!farkKontrol){
-            return this.ortak.db.ref(`cry/min-max-eski`).child(d.coin).child(fdbName).set(null)
-        }
+        if(!farkKontrol) return this.FdbCoiniSil(d.coin, fdbName)
 
         const firstTotalUygun = firstOrderBook.total >= this.ortak.limits[firstMarketName.split('/')[1]]
         const secondTotalUygun = secondOrderBook.total >= this.ortak.limits[secondMarketName.split('/')[1]]
