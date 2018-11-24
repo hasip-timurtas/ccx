@@ -55,7 +55,7 @@ class WsMongo {
     }
 */
     SteamHandler(coin){
-        if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing ) return
+        if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$')) return
         //this.FiyatFarkKontrolYeni(coin, 'BTC', 'LTC', 'DOGE')
         this.YesYeniFunk(coin)
     }
