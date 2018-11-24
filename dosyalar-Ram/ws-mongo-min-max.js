@@ -62,8 +62,8 @@ class WsMongo {
             altiTickers[e].bid = {price: mrkt.bids[0].rate, amount: mrkt.bids[0].amount, total: mrkt.bids[0].rate * mrkt.bids[0].amount }
         }) 
         
-        const { enUcuzSell, enPahaliBuy} =  this.UygunMarketleriGetir(altiTickers)
-        if(!enUcuzSell || !enPahaliBuy || enUcuzSell.market == enPahaliBuy.market) return false
+        const sonuc =  this.UygunMarketleriGetir(altiTickers)
+        if(!sonuc) return false
 
         const firstBase = enUcuzSell.market.split('/')[1]
         const secondBase = enPahaliBuy.market.split('/')[1]
@@ -385,8 +385,11 @@ class WsMongo {
 
     UygunMarketleriGetir(altiTickers){
         const enUcuzSell = this.GetTotals('ask', altiTickers, null) // buy fiyarına bakacağımız için bid
+        if(!enUcuzSell) return false
         const enPahaliBuy = this.GetTotals('bid', altiTickers, enUcuzSell.market) // buy fiyarına bakacağımız için bid
-        return {enUcuzSell, enPahaliBuy}
+        if(!enPahaliBuy) return false
+        if(enUcuzSell.market == enPahaliBuy.market) return false
+        return { enUcuzSell, enPahaliBuy }
     }
 
     GetTotals(type, altiTickers, firstMarketName){ // type ask yada bid. 
