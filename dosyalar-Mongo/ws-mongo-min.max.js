@@ -28,7 +28,6 @@ class WsMongo {
     }
 
     cryWsBasla(){
-    
         this.SetFbdDebug()
         this.ortak.db.ref(`cry/min-max`).set(null)
         //this.ortak.wsDepth.WsBaslat(coin=> this.SteamHandler(coin))
@@ -37,9 +36,7 @@ class WsMongo {
 
     async RunForAllCoins(){
         this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
-        while(this.ortak.wsDataProcessing){
-            await this.ortak.sleep(2)
-        }
+        this.coins = this.coins.filter(e=>e == 'SMC')
         for (const coin of this.coins) {
             this.SteamHandler(coin)
         }
@@ -48,13 +45,13 @@ class WsMongo {
     }
 
     SteamHandler(coin){
-        if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$')) return
+        if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || coin.includes('$')) return
         //this.MinMaxFunk(coin)
         this.YesYeniFunk(coin)
     }
 
-    GetEnUcuzVeEnPahaliMarket(coin){ // mix max v2
-        const altiTickers = this.ortak.GetAltiMarketTickers(coin)
+    async GetEnUcuzVeEnPahaliMarket(coin){ // mix max v2
+        const altiTickers = await this.ortak.GetAltiMarketTickers(coin)
         Object.keys(altiTickers).filter(e=> {
             const mrkt = altiTickers[e]
             // BURADA SADECE TEKLİ PRİCELERİ GİRİYORUZ birinci ask ve birinci bid gibi
@@ -94,7 +91,7 @@ class WsMongo {
     async YesYeniFunk(coin){
         this.islemdekiler.push(coin)
         const result = this.GetMarketList(coin)
-        let allMarkets = this.ortak.GetOrderBooks(result.marketList)
+        let allMarkets = await this.ortak.GetOrderBooks(result.marketList)
         if(allMarkets.length != 6) return this.IslemdekilerCikar(coin)
 
         const data = this.ortak.OrderBooksDataKontrol(allMarkets)
@@ -105,7 +102,7 @@ class WsMongo {
             allMarkets = await this.ortak.GetOrderBookGroupRest(coin)
         }
 
-        const datam = this.GetEnUcuzVeEnPahaliMarket(coin)
+        const datam = await this.GetEnUcuzVeEnPahaliMarket(coin)
         if(!datam) return this.IslemdekilerCikar(coin)
         const {firstMarketName, secondMarketName, thirdMarketName, btcMarketName, type} = datam
         await this.MarketGir(coin, firstMarketName, secondMarketName, thirdMarketName, btcMarketName, type, allMarkets)
@@ -466,7 +463,7 @@ let cryBuy
 async function Basla(){
     sayac++
     cryBuy = new WsMongo()
-    await cryBuy.LoadVeriables()
+    await cryBuy.LoadVeriables('MONGO')
     cryBuy.ortak.wsZamanlayici = 10 // dakika
     cryBuy.cryWsBasla()
     

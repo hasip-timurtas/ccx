@@ -1,7 +1,6 @@
 const mongodb = require('mongodb')
 const rp = require('request-promise')
 const MhtCcxt = require('../dll/mhtCcxt')
-const WsDepth = require('./ws-depth')
 const firebase = require('firebase-admin')
 const serviceAccount = require("./firebase.json")
 firebase.initializeApp({
@@ -13,7 +12,7 @@ const mongoUrl = "mongodb://144.202.125.69:1453/";
 
 class Ortak {
     async LoadVeriables(type){
-        if(!type) console.log('LÜTFEN ORTAK CLASS İÇİN TYPE GİRİN.')
+        if(!type) throw 'LÜTFEN ORTAK CLASS İÇİN TYPE GİRİN.'
         this.type = type
         this.minFark = 1
         this.mainMarkets = ['BTC', 'LTC', 'DOGE']
@@ -27,7 +26,14 @@ class Ortak {
         this.db = firebase.database()
         const connection = await mongodb.MongoClient.connect(mongoUrl, { useNewUrlParser: true });
         const cnn = connection.db('cry')
-        this.depths = [] //cnn.collection('ws-depths')
+        if(type == 'MONGO'){
+            this.depths = cnn.collection('ws-depths')
+        }else{
+            this.depths = []
+            const WsDepth = require('./ws-depth')
+            this.wsDepth = new WsDepth()
+            await this.wsDepth.LoadVeriables(this)
+        }
         this.fbBalances = cnn.collection('balances')
         this.history = cnn.collection('history')
         this.mailData = cnn.collection('mailData')
@@ -37,6 +43,7 @@ class Ortak {
         this.mailDataHata = cnn.collection('mailData-hata')
         this.openOrders = cnn.collection('openOrders')
         this.testler = cnn.collection('testler')
+        this.variables = cnn.collection('variables')
         this.marketsInfos = await this.ccx.exchange.load_markets().catch(e=> console.log(e) )
         this.marketsInfos = this.marketsInfos && Object.keys(this.marketsInfos).map(e=> this.marketsInfos[e])
         this.marketTickers = await this.ccx.GetMarkets().catch(e=> console.log(e))
@@ -44,11 +51,13 @@ class Ortak {
         this.allData = []
         this.allActiveCoins = []//this.marketsInfos && this.marketsInfos.filter(e=> e.active &&  e.quote == 'BTC').map(e=>e.baseId.toUpperCase()).filter(e=> !this.mainMarkets.includes(e))
         this.testAmount = 100
-        this.wsDepth = new WsDepth()
-        await this.wsDepth.LoadVeriables(this)
         this.wsDataProcessing = true // ilk başta true diyoruz. ilk çalıştığında beklesin diye.
         this.ws
         this.wsZamanlayici = 30 // DAKİKA
+    }
+
+    async GetVariable(key){
+       return await this.variables.findOne({key})
     }
 
     InsertTestler(data){
@@ -155,7 +164,7 @@ class Ortak {
         return markets[0] || false // sıraya dizdikten sonra ilk en KÜÇÜK marketi döndürüyoruz.
     }
 
-    GetAltiMarketTickers(coin){
+    async GetAltiMarketTickers(coin){
         // mainMarkets -> ['BTC', 'LTC', 'DOGE']
         const marketler = [
             coin + "/" + this.mainMarkets[0], // ADA/BTC
@@ -166,13 +175,15 @@ class Ortak {
             this.mainMarkets[2] + "/" + this.mainMarkets[1]  // DOGE/LTC
         ]
 
-        let orderBooks = this.GetOrderBooks(marketler)
+        let orderBooks = await this.GetOrderBooks(marketler)
         const result = this.OrderBooksDataKontrol(orderBooks)
         
         if(!result || orderBooks.length < 6){
             return false
             //orderBooks = await this.GetOrderBookGroupRest(coin)
         }
+
+        if(!orderBooks) return false
         
         //coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc
         return { 
@@ -203,7 +214,7 @@ class Ortak {
         
         return orderBooks
     }
-    
+
     async GetDepths(type, data){
         switch (type) {
             case 'all':
@@ -703,7 +714,6 @@ class Ortak {
         return total
     }
 
-    
     Kontrol(d, rob){
         const { alisOrderBook, firstOrderBook, secondOrderBook, thirdOrderBook } = rob
         const alisMainCoin = d.alisMarketName.split('/')[1]
