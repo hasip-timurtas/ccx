@@ -64,14 +64,17 @@ class WsMongo {
         this.islemdekiler.push(coin)
         const result = this.GetMarketList(coin)
         let allMarkets = await this.ortak.GetOrderBooks(result.marketList)
-        if(allMarkets.length != 6) return this.IslemdekilerCikar(coin)
+        if(allMarkets.length != 6){
+            this.FdbCoiniSil(coin)
+            return this.IslemdekilerCikar(coin)
+        }
 
         const data = this.ortak.OrderBooksDataKontrol(allMarkets)
         if(!data){
             console.log('Data uygun değil. ÇIK.')
-            this.IslemdekilerCikar(coin)
-            return
-            allMarkets = await this.ortak.GetOrderBookGroupRest(coin)
+            this.FdbCoiniSil(coin)
+            return this.IslemdekilerCikar(coin)
+            //allMarkets = await this.ortak.GetOrderBookGroupRest(coin)
         }
         const promises = []
         for (const item of result.listForFunction) {
@@ -84,12 +87,12 @@ class WsMongo {
     }
 
     async MarketGir(coin, firstMarketName, secondMarketName, thirdMarketName, btcMarketName, type, orderBooks ){
-        //Volume kontrol
+        const fdbName = firstMarketName.replace('/','-') + '--' + secondMarketName.replace('/','-')
         const volumeUygun = this.ortak.marketTickers.Data.find(e=> e.Label == thirdMarketName && e.Volume > 0.01)
-        if(!volumeUygun) return
+        if(!volumeUygun) return this.FdbCoiniSil(coin, fdbName)
         const d = {coin, firstMarketName, secondMarketName, thirdMarketName, btcMarketName, type }
         const rob = await this.GetOrderBookGroup(d, orderBooks) // result order book yani rob
-        if(!rob) return 
+        if(!rob) return this.FdbCoiniSil(coin, fdbName)
         const sonuc = this.Kontrol(d, rob)
         if(sonuc) await this.UygunMarketEkle(d, rob)
     }
@@ -336,9 +339,16 @@ class WsMongo {
         this.IslemdekilerCikar(coin)
     }
 
-    IslemdekilerCikar(coin){
+    IslemdekilerCikar(coin, fdb){
         this.islemdekiler = this.islemdekiler.filter(a => a != coin)
-        this.ortak.db.ref(`cry/min-max-eski`).child(coin).set(null)
+    }
+
+    FdbCoiniSil(coin, marketName){
+        if(coinName){
+            this.ortak.db.ref(`cry/min-max-eski`).child(coin).child(marketName).set(null)
+        }else{
+            this.ortak.db.ref(`cry/min-max-eski`).child(coin).set(null)
+        }
     }
 
     GetMarketList(coin){
