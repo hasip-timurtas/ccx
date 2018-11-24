@@ -32,7 +32,7 @@ class WsMongo {
         this.SetFbdDebug()
         this.ortak.db.ref(`cry/min-max-eski`).set(null)
         this.ortak.wsDepth.WsBaslat(coin=> this.SteamHandler(coin))
-        //this.RunForAllCoins()
+        this.RunForAllCoins()
     }
 
     async RunForAllCoins(){
@@ -43,7 +43,7 @@ class WsMongo {
         for (const coin of this.coins) {
             this.SteamHandler(coin)
         }
-        await this.ortak.sleep(10)
+        await this.ortak.sleep(60 * 5) // 5 dakikada bir toplu girsin.
         this.RunForAllCoins()
     }
 
