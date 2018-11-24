@@ -63,7 +63,7 @@ class WsMongo {
     async YesYeniFunk(coin){
         this.islemdekiler.push(coin)
         const result = this.GetMarketList(coin)
-        let allMarkets = await this.ortak.GetOrderBooks(result.marketList)
+        let allMarkets = this.ortak.GetOrderBooks(result.marketList)
         if(allMarkets.length != 6){
             this.FdbCoiniSil(coin)
             return this.IslemdekilerCikar(coin)
@@ -91,7 +91,7 @@ class WsMongo {
         const volumeUygun = this.ortak.marketTickers.Data.find(e=> e.Label == thirdMarketName && e.Volume > 0.01)
         if(!volumeUygun) return this.FdbCoiniSil(coin, fdbName)
         const d = {coin, firstMarketName, secondMarketName, thirdMarketName, btcMarketName, type }
-        const rob = await this.GetOrderBookGroup(d, orderBooks) // result order book yani rob
+        const rob = this.GetOrderBookGroup(d, orderBooks) // result order book yani rob
         if(!rob) return this.FdbCoiniSil(coin, fdbName)
         const sonuc = this.Kontrol(d, rob)
         if(sonuc) await this.UygunMarketEkle(d, rob)
