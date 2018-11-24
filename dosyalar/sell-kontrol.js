@@ -17,7 +17,7 @@ class SellKontrol {
         const balances = await this.ortak.GetBalance()
         let totalBalances = balances.filter(e=> e.Total > 0)
         await this.ortak.fbBalancesUpdate(totalBalances)
-        const openOrders = await this.ortak.GetFbData(`cry/sell-open-orders`) 
+        const openOrders = await this.ortak.GetFbData() 
         const mainBalances = balances.filter(e=> this.ortak.mainMarkets.includes(e.Symbol))
         await this.BalanceEsitle(mainBalances) // Şimdilik kapalı. Hangi coin en az gidiyorsa ona çevrilecek.
 
