@@ -74,6 +74,7 @@ class WsMongo {
         //const orderBooks = await this.ortak.GetOrderBooks(null, true)
         
         const findMarket = (marketName) =>{
+            if(!this.ortak.depths[marketName]) return
             const orderbook = this.ortak.depths[marketName].depths
             orderbook.market = marketName
             if(!orderbook.bids || !orderbook.bids[0] || !orderbook.asks || !orderbook.asks[0]) return false
