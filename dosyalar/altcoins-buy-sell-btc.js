@@ -90,14 +90,12 @@ class WsMongo {
             const checkTamUygun = anaCoinLtc.ask.total >= this.ortak.limits[firstBase] && anaCoinBtc.bid.total >= this.ortak.limits[secondBase] // CHECK TAM UYGUN
             const checkTamUygun2 = coinBtc.ask.total >= this.ortak.limits[secondBase] && coinLtc.bid.total >= this.ortak.limits[firstBase] // CHECK TAM UYGUN
 
-            if(fark > 2 && checkTamUygun && checkTamUygun2){  // %1 den fazla fark varsa tamam.
+            if(fark > 2){  // %1 den fazla fark varsa tamam.
                 this.FdbIslemleri(coin, anaCoinLtc, coinBtc, fark)
-
-                    /*
+                if(checkTamUygun && checkTamUygun2){
                     this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(coin).set({fark, coin, anaCoin, first: anaCoinLtc, second: anaCoinBtc, third: coinBtc, fourth: coinLtc})
                     console.log(`${anaCoin} coini > ${coin} coinine ${firstBase} > ${secondBase} ile çevirince fark: `+ fark)
-                    */
-                
+                }
             }
         }
     }
