@@ -120,7 +120,7 @@ class WsMongo {
             const testAmount  = 100
             const fdbName = anaCoinLtc.market.replace('/','-') + '--' + coinBtc.market.replace('/','-')
             if(!anaCoinLtc || !anaCoinBtc || !coinBtc || !coinLtc){
-                this.FdbCoiniSil(anaCoin, fdbName)
+                this.FdbCoiniSil(anaCoin)
                 continue
             }
 
