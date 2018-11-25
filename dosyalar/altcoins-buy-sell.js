@@ -71,7 +71,7 @@ class WsMongo {
 
     async AltcoinCheck(anaCoin){
         if(this.islemdekiler.includes(anaCoin) || this.ortak.mainMarkets.includes(anaCoin) || this.ortak.wsDataProcessing || anaCoin.includes('$')) return
-        const orderBooks = await this.ortak.GetOrderBooks(null, true)
+        //const orderBooks = await this.ortak.GetOrderBooks(null, true)
         /*
         const lenBooks = orderBooks.length
         const findMarket = (market) =>{
@@ -90,10 +90,10 @@ class WsMongo {
         const lenCoin = this.allCoins.length
         for (let i = 0; i < lenCoin; i++) {
             const coin = this.allCoins[i]
-            const anaCoinLtc  = orderBooks[anaCoin + '/LTC']// findMarket(anaCoin + '/LTC')
-            const anaCoinBtc  = orderBooks[anaCoin + '/BTC']
-            const coinBtc     = orderBooks[coin + '/BTC']
-            const coinLtc     = orderBooks[coin + '/LTC']
+            const anaCoinLtc  = this.ortak.depths[anaCoin + '/LTC']// findMarket(anaCoin + '/LTC')
+            const anaCoinBtc  = this.ortak.depths[anaCoin + '/BTC']
+            const coinBtc     = this.ortak.depths[coin + '/BTC']
+            const coinLtc     = this.ortak.depths[coin + '/LTC']
             const testAmount  = 100
 
             if(!anaCoinLtc || !anaCoinBtc || !coinBtc || !coinLtc || !anaCoinBtc.bids || !coinBtc.bids ) continue
