@@ -102,7 +102,7 @@ class WsMongo {
             const lastTotal   = coinLtc.bid.price * thirdTotal     // etn yi ltc ye satıyorum yani ltc alıyorum
 
             const fark = (lastTotal - firstTotal) / firstTotal * 100 // ilk aldığım değerle son aldığım değeri karşılaştırıyorum.
-            if(fark > 1){  // %1 den fazla fark varsa tamam.
+            if(fark > 2){  // %1 den fazla fark varsa tamam.
                 console.log(`${anaCoin} coini > ${coin} coinine LTC > BTC ile çevirince fark: `+ fark)
             }
         }
