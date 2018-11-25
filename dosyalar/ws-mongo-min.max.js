@@ -165,7 +165,7 @@ class WsMongo {
             this.ortak.db.ref(this.fdbRoot).child(coin).child(fdbName).set(uygunMarket)
         }
 
-        setTimeout(() => this.YesYeniFunk(coin), 10000) // 10 saniye sonra bu coin için steama gir.
+        //setTimeout(() => this.YesYeniFunk(coin), 10000) // 10 saniye sonra bu coin için steama gir.
     }
 
     async BuySellBasla(market){
