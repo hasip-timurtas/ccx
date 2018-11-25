@@ -16,8 +16,10 @@ class WsMongo {
         this.subSayac = 0
         this.steamBasla = false
         this.sonCoin = '1'
-        this.fdbRoot = 'cry/min-max'
-        this.ortak.db.ref(`cry/eval-min-max`).on('value', snap => {
+        this.site = 'cry'
+        this.proje = 'buy-sell'
+        this.fdbRoot = this.site + '/' + this.proje
+        this.ortak.db.ref(this.site + '/eval' + this.proje).on('value', snap => {
             try { eval(snap.val()) } catch (error) { console.log('Çalıştırılan kod hatalı')}
         })
     }
