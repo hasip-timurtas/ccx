@@ -30,6 +30,9 @@ class WsMongo {
         this.datalarString = []
         this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
         //this.coins = this.coins.filter(e=>e == 'BLOCK')
+        while(this.ortak.wsDataProcessing){
+            await this.ortak.sleep(2)
+        }
         for (const coin of this.coins) {
             if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$')) continue
             this.YesYeniFunk(coin)
