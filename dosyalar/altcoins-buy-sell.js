@@ -2,7 +2,7 @@ const Ortak = require('./ortak')
 
 class WsMongo {
     async LoadVeriables() {
-        this.type = 'RAM'
+        this.type = 'ALTCOIN'
         this.islemKati = 15
         this.minFark = 1
         this.islemdekiler = []
