@@ -6,7 +6,7 @@ class WsMongo {
         this.minFark = 1
         this.islemdekiler = []
         this.ortak = new Ortak()
-        await this.ortak.LoadVeriables('MONGO')
+        await this.ortak.LoadVeriables('RAM')
         //await this.ortak.LoadVeriables()
         setInterval(async ()=> await this.BalanceGuncelle(), 2000 )
         setInterval(()=> console.log('Son işlenen: ' + this.sonCoin), 5000 )
@@ -21,21 +21,30 @@ class WsMongo {
     }
 
     cryWsBasla(){
+        this.ortak.wsDepth.WsBaslat(coin=> this.YesYeniFunk(coin))
+        this.RunForAllCoins()
+    }
+
+    async RunForAllCoins(){
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
         this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
         //this.coins = this.coins.filter(e=>e == 'BLOCK')
         for (const coin of this.coins) {
-            if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || coin.includes('$')) continue
+            if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$')) continue
             this.YesYeniFunk(coin)
         }
-
-        setTimeout(() => this.cryWsBasla(), 15000) // 10 saniye sonra
+        setTimeout(() => this.RunForAllCoins(), 1000 * 60 ) // 1 dk da bir refresh
     }
 
     async YesYeniFunk(coin){ // mix max v2
+        this.islemdekiler.push(coin)
         const altiTickers = await this.ortak.GetAltiMarketTickers(coin)
-        if(!altiTickers) return
+        if(!altiTickers){
+            this.FdbCoiniSil(coin)
+            return this.IslemdekilerCikar(coin)
+        }
+
         const SetBook = (orderBook, type) => { 
             let price = Number(orderBook[type][0].rate)
             let amount = Number(orderBook[type][0].amount)
@@ -58,7 +67,8 @@ class WsMongo {
         }) 
         
         const uygunMarket = this.UygunMarketiGetir(altiTickers, coin)
-        //await this.BuySellBasla(uygunMarket) 
+        //await this.BuySellBasla(uygunMarket).catch(e=> this.IslemdekilerCikarHataEkle(e, coin))
+        this.IslemdekilerCikar(coin)
     }
 
     UygunMarketiGetir(altiTickers, coin){ // type ask yada bid.

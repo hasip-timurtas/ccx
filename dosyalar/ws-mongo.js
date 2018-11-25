@@ -35,19 +35,11 @@ class WsMongo {
         for (const coin of this.coins) {
             this.SteamHandler(coin)
         }
-        await this.ortak.sleep(15) // 5 dakikada bir toplu girsin.
-        this.RunForAllCoins()
+        setTimeout(() => this.RunForAllCoins(), 1000 * 60) // 1 dk da bir refresh
     }
 
-/*
-    cryWsBasla(){
-        this.ortak.db.ref(this.fdbRoot).set(null)
-        this.ortak.wsDepth.WsBaslat(coin=> this.SteamHandler(coin))
-    }
-*/
     SteamHandler(coin){
         if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$')) return
-        //this.FiyatFarkKontrolYeni(coin, 'BTC', 'LTC', 'DOGE')
         this.YesYeniFunk(coin)
     }
 
