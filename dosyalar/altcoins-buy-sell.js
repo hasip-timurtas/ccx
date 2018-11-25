@@ -118,7 +118,10 @@ class WsMongo {
 
             if(fark > 2){  // %1 den fazla fark varsa tamam.
                 this.FdbIslemleri(coin, anaCoinLtc, coinBtc, fark)
-                if(checkTamUygun && checkTamUygun2) console.log(`${anaCoin} coini > ${coin} coinine ${firstBase} > ${secondBase} ile çevirince fark: `+ fark)
+                if(checkTamUygun && checkTamUygun2) {
+                    this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(coin).set({coin, anaCoin, first: anaCoinLtc, second: anaCoinBtc, third: coinBtc, fourth: coinLtc})
+                    console.log(`${anaCoin} coini > ${coin} coinine ${firstBase} > ${secondBase} ile çevirince fark: `+ fark)
+                }
             }
         }
     }
