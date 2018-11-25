@@ -9,7 +9,7 @@ class WsMongo {
         this.ortak = new Ortak()
         await this.ortak.LoadVeriables(this.type)
         //await this.ortak.LoadVeriables()
-        setInterval(async ()=> await this.BalanceGuncelle(), 3000 )
+        setInterval(async ()=> await this.BalanceGuncelle(), 2000 )
         setInterval(()=> console.log('Son işlenen: ' + this.sonCoin), 5000 )
         this.balances = []
         this.oncekiCoin = null
@@ -27,7 +27,7 @@ class WsMongo {
     }
 
     cryWsBasla(){
-        this.ortak.db.ref(this.fdbRoot).set(null)
+        //this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
         //this.AltcoinCheck('RDD')
         if(this.type == 'RAM' || this.type == 'ALTCOIN') this.ortak.wsDepth.WsBaslat(coin=> this.AltcoinCheck(coin))
@@ -48,13 +48,13 @@ class WsMongo {
         return { price, amount, total, eksik }
     }
 
-    AltcoinCheck(anaCoin){
+    async AltcoinCheck(anaCoin){
         if(this.islemdekiler.includes(anaCoin) || this.ortak.mainMarkets.includes(anaCoin) || this.ortak.wsDataProcessing || anaCoin.includes('$')) return
         //const orderBooks = await this.ortak.GetOrderBooks(null, true)
         this.sonCoin = anaCoin
         this.islemdekiler.push(anaCoin)
-        this.CheckForMainMarket(anaCoin, 'BTC', 'LTC')
-        this.CheckForMainMarket(anaCoin, 'BTC', 'DOGE')
+        await this.CheckForMainMarket(anaCoin, 'BTC', 'LTC')
+        await this.CheckForMainMarket(anaCoin, 'BTC', 'DOGE')
         this.IslemdekilerCikar(anaCoin)
     }
 
@@ -68,7 +68,7 @@ class WsMongo {
         }
     }
 
-    CheckForMainMarket(anaCoin, firstBase, secondBase){
+    async CheckForMainMarket(anaCoin, firstBase, secondBase){
         const lenCoin = this.allCoins.length
         for (let i = 0; i < lenCoin; i++) {
             const coin = this.allCoins[i]

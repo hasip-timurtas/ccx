@@ -27,7 +27,7 @@ class WsMongo {
     }
 
     cryWsBasla(){
-        this.ortak.db.ref(this.fdbRoot).set(null)
+        //this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
         //this.AltcoinCheck('RDD')
         if(this.type == 'RAM' || this.type == 'ALTCOIN') this.ortak.wsDepth.WsBaslat(coin=> this.AltcoinCheck(coin))
