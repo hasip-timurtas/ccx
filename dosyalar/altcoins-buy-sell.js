@@ -72,11 +72,20 @@ class WsMongo {
     async AltcoinCheck(anaCoin){
         if(this.islemdekiler.includes(anaCoin) || this.ortak.mainMarkets.includes(anaCoin) || this.ortak.wsDataProcessing || anaCoin.includes('$')) return
         //const orderBooks = await this.ortak.GetOrderBooks(null, true)
-        
+        this.CheckForMainMarket(anaCoin, 'BTC', 'LTC')
+        this.CheckForMainMarket(anaCoin, 'BTC', 'DOGE')
+        this.CheckForMainMarket(anaCoin, 'LTC', 'BTC')
+        this.CheckForMainMarket(anaCoin, 'LTC', 'DOGE')
+        this.CheckForMainMarket(anaCoin, 'DOGE', 'LTC')
+        this.CheckForMainMarket(anaCoin, 'DOGE', 'BTC')
+    }
+
+    CheckForMainMarket(anaCoin, firstBase, secondBase){
         const findMarket = (marketName) =>{
-            if(!this.ortak.depths[marketName]) return
-            if(!this.ortak.depths[marketName].depths) return
-            const orderbook = this.ortak.depths[marketName].depths
+            const market = this.ortak.depths[marketName]
+            if(!market) return
+            if(!market.depths) return
+            const orderbook = market.depths
             orderbook.market = marketName
             if(!orderbook.bids || !orderbook.bids[0] || !orderbook.asks || !orderbook.asks[0]) return false
             orderbook.ask = this.SetBook(orderbook, 'asks')
@@ -87,13 +96,16 @@ class WsMongo {
         const lenCoin = this.allCoins.length
         for (let i = 0; i < lenCoin; i++) {
             const coin = this.allCoins[i]
-            const anaCoinLtc  = findMarket(anaCoin + '/LTC')
-            const anaCoinBtc  = findMarket(anaCoin + '/BTC')
-            const coinBtc     = findMarket(coin + '/BTC')
-            const coinLtc     = findMarket(coin + '/LTC')
+            const anaCoinLtc  = findMarket(anaCoin + '/' + firstBase)
+            const anaCoinBtc  = findMarket(anaCoin + '/' + secondBase)
+            const coinBtc     = findMarket(coin + '/'+ secondBase)
+            const coinLtc     = findMarket(coin + '/' + firstBase)
             const testAmount  = 100
 
             if(!anaCoinLtc || !anaCoinBtc || !coinBtc || !coinLtc) continue
+            if(firstBase == 'BTC'){
+                var dur = true
+            }
             // LTC > BTC
             const firstTotal  = anaCoinLtc.ask.price * testAmount  // LTC ile ada alıyorum
             const secondTotal = anaCoinBtc.bid.price * testAmount  // Adayi btc ye çeviriyorun- ada ile btc alıyorum
@@ -101,7 +113,10 @@ class WsMongo {
             const lastTotal   = coinLtc.bid.price * thirdTotal     // etn yi ltc ye satıyorum yani ltc alıyorum
 
             const fark = (lastTotal - firstTotal) / firstTotal * 100 // ilk aldığım değerle son aldığım değeri karşılaştırıyorum.
-            if(fark > 2){  // %1 den fazla fark varsa tamam.
+            const checkTamUygun = anaCoinLtc.ask.total >= this.ortak.limits[firstBase] && anaCoinBtc.bid.total >= this.ortak.limits[secondBase] // CHECK TAM UYGUN
+            const checkTamUygun2 = thirdTotal.ask.total >= this.ortak.limits[secondBase] && lastTotal.bid.total >= this.ortak.limits[firstBase] // CHECK TAM UYGUN
+
+            if(fark > 2 && checkTamUygun && checkTamUygun2){  // %1 den fazla fark varsa tamam.
                 console.log(`${anaCoin} coini > ${coin} coinine LTC > BTC ile çevirince fark: `+ fark)
             }
         }
