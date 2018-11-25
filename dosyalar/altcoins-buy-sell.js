@@ -92,6 +92,8 @@ class WsMongo {
             if(!orderbook.bids || !orderbook.bids[0] || !orderbook.asks || !orderbook.asks[0]) return false
             orderbook.ask = this.SetBook(orderbook, 'asks')
             orderbook.bid = this.SetBook(orderbook, 'bids')
+            delete orderbook.bids
+            delete orderbook.asks
             return orderbook
         }
         
@@ -119,7 +121,7 @@ class WsMongo {
             if(fark > 2){  // %1 den fazla fark varsa tamam.
                 this.FdbIslemleri(coin, anaCoinLtc, coinBtc, fark)
                 if(checkTamUygun && checkTamUygun2) {
-                    this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(coin).set({coin, anaCoin, first: anaCoinLtc, second: anaCoinBtc, third: coinBtc, fourth: coinLtc})
+                    this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(coin).set({fark, coin, anaCoin, first: anaCoinLtc, second: anaCoinBtc, third: coinBtc, fourth: coinLtc})
                     console.log(`${anaCoin} coini > ${coin} coinine ${firstBase} > ${secondBase} ile çevirince fark: `+ fark)
                 }
             }
