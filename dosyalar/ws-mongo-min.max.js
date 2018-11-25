@@ -70,12 +70,7 @@ class WsMongo {
         }) 
         
         const uygunMarket = this.UygunMarketiGetir(altiTickers, coin)
-        if(uygunMarket){
-            await this.BuySellBasla(uygunMarket).catch(e=> this.IslemdekilerCikarHataEkle(e, coin))
-            this.IslemdekilerCikar(coin)
-            this.YesYeniFunk(coin) // eğer buy sell yaptıysa birdaha girsin yeterince miktar varsa birdaha aynı coini buy sell yapsın.
-            return
-        }
+        if(uygunMarket) await this.BuySellBasla(uygunMarket).catch(e=> this.IslemdekilerCikarHataEkle(e, coin))
         this.IslemdekilerCikar(coin)
         this.sonCoin = coin
     }
