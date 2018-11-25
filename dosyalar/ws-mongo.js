@@ -16,7 +16,6 @@ class WsMongo {
         this.subSayac = 0
         this.steamBasla = false
         this.sonCoin = '1'
-        this.datalarString = []
         this.fdbRoot = 'cry/min-max-eski'
         this.ortak.db.ref(`cry/eval-eski`).on('value', snap => eval(snap.val()))
     }
