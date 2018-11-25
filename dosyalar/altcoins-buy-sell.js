@@ -118,7 +118,7 @@ class WsMongo {
             const coinBtc     = findMarket(coin + '/'+ secondBase)
             const coinLtc     = findMarket(coin + '/' + firstBase)
             const testAmount  = 100
-            const fdbName = anaCoinLtc.market.replace('/','-') + '--' + coinBtc.market.replace('/','-')
+            
             if(!anaCoinLtc || !anaCoinBtc || !coinBtc || !coinLtc){
                 this.FdbCoiniSil(anaCoin)
                 continue
@@ -143,6 +143,7 @@ class WsMongo {
                 }
                 */
             }else{
+                const fdbName = anaCoinLtc.market.replace('/','-') + '--' + coinBtc.market.replace('/','-')
                 this.FdbCoiniSil(anaCoin, fdbName)
             }
         }
