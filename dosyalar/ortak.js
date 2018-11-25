@@ -30,9 +30,14 @@ class Ortak {
         if(type == 'MONGO'){
             this.wsDataProcessing = false // boşuna beklemesinler çünkü ws yok.
             this.depths = cnn.collection('ws-depths')
-        }else{
+        }else if(type == 'RAM'){
             this.depths = []
             const WsDepth = require('./ws-depth-ram')
+            this.wsDepth = new WsDepth()
+            await this.wsDepth.LoadVeriables(this)
+        }else if(type == 'ALTCOIN'){
+            this.depths = []
+            const WsDepth = require('./ws-depth-ram-altcoin')
             this.wsDepth = new WsDepth()
             await this.wsDepth.LoadVeriables(this)
         }

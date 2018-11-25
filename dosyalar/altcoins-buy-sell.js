@@ -2,7 +2,7 @@ const Ortak = require('./ortak')
 
 class WsMongo {
     async LoadVeriables() {
-        this.type = 'RAM'
+        this.type = 'ALTCOIN'
         this.islemKati = 15
         this.minFark = 1
         this.islemdekiler = []
@@ -30,7 +30,7 @@ class WsMongo {
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
         //this.AltcoinCheck('RDD')
-        if(this.type == 'RAM') this.ortak.wsDepth.WsBaslat(coin=> this.AltcoinCheck(coin))
+        if(this.type == 'RAM' || this.type == 'ALTCOIN') this.ortak.wsDepth.WsBaslat(coin=> this.AltcoinCheck(coin))
     }
 
     SetBook(orderBook, type){ 
@@ -72,6 +72,7 @@ class WsMongo {
     async AltcoinCheck(anaCoin){
         if(this.islemdekiler.includes(anaCoin) || this.ortak.mainMarkets.includes(anaCoin) || this.ortak.wsDataProcessing || anaCoin.includes('$')) return
         const orderBooks = await this.ortak.GetOrderBooks(null, true)
+        /*
         const lenBooks = orderBooks.length
         const findMarket = (market) =>{
             for (let i = 0; i < lenBooks; i++) {
@@ -84,17 +85,18 @@ class WsMongo {
                 }
             }
         }
+        */
 
         const lenCoin = this.allCoins.length
         for (let i = 0; i < lenCoin; i++) {
             const coin = this.allCoins[i]
-            const anaCoinLtc  = findMarket(anaCoin + '/LTC')
-            const anaCoinBtc  = findMarket(anaCoin + '/BTC')
-            const coinBtc     = findMarket(coin + '/BTC')
-            const coinLtc     = findMarket(coin + '/LTC')
+            const anaCoinLtc  = orderBooks[anaCoin + '/LTC']// findMarket(anaCoin + '/LTC')
+            const anaCoinBtc  = orderBooks[anaCoin + '/BTC']
+            const coinBtc     = orderBooks[coin + '/BTC']
+            const coinLtc     = orderBooks[coin + '/LTC']
             const testAmount  = 100
 
-            if(!anaCoinLtc || !anaCoinBtc || !coinBtc || !coinLtc ) continue
+            if(!anaCoinLtc || !anaCoinBtc || !coinBtc || !coinLtc || !anaCoinBtc.bids || !coinBtc.bids ) continue
             // LTC > BTC
             const firstTotal  = anaCoinLtc.ask.price * testAmount  // LTC ile ada alıyorum
             const secondTotal = anaCoinBtc.bid.price * testAmount  // Adayi btc ye çeviriyorun- ada ile btc alıyorum
