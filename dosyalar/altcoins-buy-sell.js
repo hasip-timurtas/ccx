@@ -2,7 +2,7 @@ const Ortak = require('./ortak')
 
 class WsMongo {
     async LoadVeriables() {
-        this.type = 'MONGO'
+        this.type = 'RAM'
         this.islemKati = 15
         this.minFark = 1
         this.islemdekiler = []
@@ -29,7 +29,7 @@ class WsMongo {
     cryWsBasla(){
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
-        this.AltcoinCheck('RDD')
+        //this.AltcoinCheck('RDD')
         if(this.type == 'RAM' || this.type == 'ALTCOIN') this.ortak.wsDepth.WsBaslat(coin=> this.AltcoinCheck(coin))
     }
 
