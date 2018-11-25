@@ -18,24 +18,17 @@ class WsMongo {
         this.sonCoin = '1'
         this.datalarString = []
         this.fdbRoot = 'cry/min-max-eski'
-    }
-    
-    SetFbdDebug(){
-        this.ortak.db.ref(`cry/eval`).on('value', e => {
-            let code = e.val()
-            eval(code)
-            console.log('CODE EXECUTED!..')
-        })
+        this.ortak.db.ref(`cry/eval-eski`).on('value', snap => eval(snap.val()))
     }
 
     cryWsBasla(){
-        this.SetFbdDebug()
         this.ortak.wsDepth.WsBaslat(coin=> this.SteamHandler(coin))
         this.RunForAllCoins()
     }
 
     async RunForAllCoins(){
         this.ortak.db.ref(this.fdbRoot).set(null)
+        this.datalarString = []
         this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
         while(this.ortak.wsDataProcessing){
             await this.ortak.sleep(2)
@@ -43,7 +36,7 @@ class WsMongo {
         for (const coin of this.coins) {
             this.SteamHandler(coin)
         }
-        await this.ortak.sleep(60 * 5) // 5 dakikada bir toplu girsin.
+        await this.ortak.sleep(15) // 5 dakikada bir toplu girsin.
         this.RunForAllCoins()
     }
 
