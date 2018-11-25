@@ -82,8 +82,8 @@ class WsMongo {
         this.CheckForMainMarket(anaCoin, 'DOGE', 'BTC')
     }
 
-    async CheckForMainMarket(anaCoin, firstBase, secondBase){
-        const findMarket = async (marketName) =>{
+    CheckForMainMarket(anaCoin, firstBase, secondBase){
+        const findMarket = (marketName) =>{
             const market = this.ortak.depths[marketName]
             if(!market) return
             if(!market.depths) return
