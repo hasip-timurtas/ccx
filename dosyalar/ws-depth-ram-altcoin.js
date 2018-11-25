@@ -99,7 +99,7 @@ class WsDepth {
         const indexim = data['Type'] == 1 ? asks.findIndex(e=> e['rate'] == data['Rate']) :  bids.findIndex(e=> e['rate'] == data['Rate'])
 
         if(callback && !this.ortak.wsDataProcessing && data.Action == 0 && indexim == 0 && ratem){// #and steamBasla:
-            const coin = depth.market.split('/')[0]
+            const coin = marketName.split('/')[0]
             callback(coin)
         }
     }
