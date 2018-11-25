@@ -36,6 +36,7 @@ class WsMongo {
     }
 
     async RunForAllCoins(){
+        this.ortak.db.ref(`cry/min-max-eski`).set(null)
         this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
         while(this.ortak.wsDataProcessing){
             await this.ortak.sleep(2)
@@ -121,34 +122,6 @@ class WsMongo {
         //if(sonuc && !checkTamUygun) console.log(`Market: ${d.firstMarketName} >  ${d.secondMarketName} # Fark: % ${fark.toFixed(2)}`)
         this.FdbIslemleri(d, farkKontrol, fark, rob)
         return farkKontrol && checkTamUygun
-    }
-
-    async FdbIslemleri(d, farkKontrol, fark, data){
-        //const {enUcuzSell, enPahaliBuy, fark } = data
-        const {firstOrderBook, secondOrderBook } = data
-        const {coin, firstMarketName, secondMarketName } = d
-        const fdbName = firstMarketName.replace('/','-') + '--' + secondMarketName.replace('/','-')
-        if(!farkKontrol) return this.FdbCoiniSil(d.coin, fdbName)
-
-        const firstTotalUygun = firstOrderBook.total >= this.ortak.limits[firstMarketName.split('/')[1]]
-        const secondTotalUygun = secondOrderBook.total >= this.ortak.limits[secondMarketName.split('/')[1]]
-        const totalUygun = firstTotalUygun && secondTotalUygun
-        const uygunMarket = {
-            firstName: firstMarketName,
-            secondName: secondMarketName,
-            firstMarket:  { price: firstOrderBook.price.toFixed(8), amount: firstOrderBook.amount.toFixed(8), total: firstOrderBook.total.toFixed(8), totalUygun: firstTotalUygun  }, // TODO: tofixed kaldır.
-            secondMarket: { price: secondOrderBook.price.toFixed(8), amount: secondOrderBook.amount.toFixed(8), total: secondOrderBook.total.toFixed(8), totalUygun: secondTotalUygun },// TODO: tofixed kaldır.
-            totalUygun,
-            fark: fark.toFixed(2)
-        }
-
-        if(this.datalarString[fdbName] != JSON.stringify(uygunMarket)){ // Datalar aynı değilse ise kaydet değilse tekrar kontrole git.
-            this.datalarString[fdbName] = JSON.stringify(uygunMarket)
-            await this.ortak.db.ref(`cry/min-max-eski`).child(coin).child(fdbName).set(uygunMarket)
-        }
-
-        await this.ortak.sleep(10)
-        this.SteamHandler(coin)
     }
 
     async UygunMarketEkle(d, rob){
@@ -372,6 +345,34 @@ class WsMongo {
         ]
 
         return { marketList, listForFunction }
+    }
+
+    async FdbIslemleri(d, farkKontrol, fark, data){
+        //const {enUcuzSell, enPahaliBuy, fark } = data
+        const {firstOrderBook, secondOrderBook } = data
+        const {coin, firstMarketName, secondMarketName } = d
+        const fdbName = firstMarketName.replace('/','-') + '--' + secondMarketName.replace('/','-')
+        if(!farkKontrol) return this.FdbCoiniSil(d.coin, fdbName)
+
+        const firstTotalUygun = firstOrderBook.total >= this.ortak.limits[firstMarketName.split('/')[1]]
+        const secondTotalUygun = secondOrderBook.total >= this.ortak.limits[secondMarketName.split('/')[1]]
+        const totalUygun = firstTotalUygun && secondTotalUygun
+        const uygunMarket = {
+            firstName: firstMarketName,
+            secondName: secondMarketName,
+            firstMarket:  { price: firstOrderBook.price.toFixed(8), amount: firstOrderBook.amount.toFixed(8), total: firstOrderBook.total.toFixed(8), totalUygun: firstTotalUygun  }, // TODO: tofixed kaldır.
+            secondMarket: { price: secondOrderBook.price.toFixed(8), amount: secondOrderBook.amount.toFixed(8), total: secondOrderBook.total.toFixed(8), totalUygun: secondTotalUygun },// TODO: tofixed kaldır.
+            totalUygun,
+            fark: fark.toFixed(2)
+        }
+
+        if(this.datalarString[fdbName] != JSON.stringify(uygunMarket)){ // Datalar aynı değilse ise kaydet değilse tekrar kontrole git.
+            this.datalarString[fdbName] = JSON.stringify(uygunMarket)
+            await this.ortak.db.ref(`cry/min-max-eski`).child(coin).child(fdbName).set(uygunMarket)
+        }
+
+        await this.ortak.sleep(10)
+        this.SteamHandler(coin)
     }
 }
 

@@ -36,7 +36,7 @@ class WsMongo {
 
     async RunForAllCoins(){
         this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
-        this.coins = this.coins.filter(e=>e == 'SMC')
+        this.coins = this.coins.filter(e=>e == 'UNO')
         for (const coin of this.coins) {
             this.SteamHandler(coin)
         }
@@ -65,7 +65,7 @@ class WsMongo {
         const firstBase = enUcuzSell.market.split('/')[1]
         const secondBase = enPahaliBuy.market.split('/')[1]
         const depthType = this.GetAltOrUst(firstBase, secondBase)
-
+        const minMaxFark = (enPahaliBuy.testTotalPahali - enUcuzSell.testTotalUcuz) / enUcuzSell.testTotalUcuz * 100
         return {
             firstMarketName: enUcuzSell.market,
             secondMarketName: enPahaliBuy.market,
@@ -389,7 +389,14 @@ class WsMongo {
         return { enUcuzSell, enPahaliBuy }
     }
 
-    GetTotals(type, altiTickers, firstMarketName){ // type ask yada bid. 
+    GetTotals(type, altiTickers, firstMarketName){ // type ask yada bid.
+        let ltcBtcType, dogeBtcType
+        if(firstMarketName){
+            const firtBase = firstMarketName.split('/')[1]
+            ltcBtcType = firtBase == 'BTC' ? 'bid' : 'ask'
+            dogeBtcType = 'bid' // burası hep bid çünkü altustte hep doge alt olur. kaynak > GetAltOrUst
+        }
+        
         const testAmount = 100
         const {coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc} = altiTickers
         let totalBtc, totalLtc, toalDoge, ltcBtcTotal, dogeBtcTotal, dogeLtcTotal, dogeLtcBtcTotal
@@ -404,15 +411,18 @@ class WsMongo {
         dogeLtcTotal = dogeLtc[btcyeCevirType].price * toalDoge  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
         dogeLtcBtcTotal = ltcBtc[btcyeCevirType].price * dogeLtcTotal  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
 
-        coinBtc.testTotalPahali = totalBtc
-        coinLtc.testTotalPahali = ltcBtcTotal
+        
         let markets, vUygunlar, uygunMarket
         if(type == 'ask'){
+            coinBtc.testTotalUcuz = totalBtc
+            coinLtc.testTotalUcuz = ltcBtcTotal
             coinDoge.testTotalUcuz = [dogeBtcTotal, dogeLtcBtcTotal].sort((a,b)=> a - b)[0] // coin/doge -> doge/btc ve coin/doge -> doge/ltc -> ltc/btc var hangisi KÜÇÜKSE onu koyacak.
             markets = [coinBtc, coinLtc, coinDoge]
             vUygunlar = markets.filter(e=> this.ortak.marketTickers.Data.find(a=> a.Label == e.market && a.Volume > 0)) // Bu volumesi uygun marketleri alır.
             uygunMarket = vUygunlar.sort((a,b)=> a.testTotalUcuz - b.testTotalUcuz)[0] // b-a büyükten küçüğe
         }else if(type == 'bid'){
+            coinBtc.testTotalPahali = totalBtc
+            coinLtc.testTotalPahali = ltcBtcTotal
             coinDoge.testTotalPahali = [dogeBtcTotal, dogeLtcBtcTotal].sort((a,b)=> b - a)[0] // coin/doge -> doge/btc ve coin/doge -> doge/ltc -> ltc/btc var hangisi BÜYÜKSE onu koyacak.
             markets = [coinBtc, coinLtc, coinDoge].filter(e=> e.market != firstMarketName) // first marketi çıkartıyoruz firstten alıp tekrar firste satmamak için.
             vUygunlar = markets.filter(e=> this.ortak.marketTickers.Data.find(a=> a.Label == e.market && a.Volume > 0)) // Bu volumesi uygun marketleri alır.
@@ -420,6 +430,16 @@ class WsMongo {
         } 
 
         return uygunMarket
+    }
+
+    GetAltOrUst(fistBase, secondBase){
+        // UST = BİDS -- ALT > ASK
+        if(fistBase == 'BTC' && secondBase == 'LTC') return 'ust' // ust
+        if(fistBase == 'BTC' && secondBase == 'DOGE') return 'ust' // ust
+        if(fistBase == 'LTC' && secondBase == 'BTC') return 'alt' // alt
+        if(fistBase == 'LTC' && secondBase == 'DOGE') return 'ust' // ust
+        if(fistBase == 'DOGE' && secondBase == 'BTC') return 'alt' // alt
+        if(fistBase == 'DOGE' && secondBase == 'LTC') return 'alt' // alt
     }
 
     GetMarketList(coin){
@@ -444,15 +464,6 @@ class WsMongo {
         ]
 
         return { marketList, listForFunction }
-    }
-
-    GetAltOrUst(fistBase, secondBase){
-        if(fistBase == 'BTC' && secondBase == 'LTC') return 'ust' // ust
-        if(fistBase == 'BTC' && secondBase == 'DOGE') return 'ust' // ust
-        if(fistBase == 'LTC' && secondBase == 'BTC') return 'alt' // alt
-        if(fistBase == 'LTC' && secondBase == 'DOGE') return 'ust' // ust
-        if(fistBase == 'DOGE' && secondBase == 'BTC') return 'alt' // alt
-        if(fistBase == 'DOGE' && secondBase == 'LTC') return 'alt' // alt
     }
 }
 
