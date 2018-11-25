@@ -17,7 +17,9 @@ class WsMongo {
         this.steamBasla = false
         this.sonCoin = '1'
         this.fdbRoot = 'cry/min-max'
-        this.ortak.db.ref(`cry/eval-min-max`).on('value', snap => eval(snap.val()))
+        this.ortak.db.ref(`cry/eval-min-max`).on('value', snap => {
+            try { eval(snap.val()) } catch (error) { console.log('Çalıştırılan kod hatalı')}
+        })
     }
 
     cryWsBasla(){
@@ -78,11 +80,7 @@ class WsMongo {
     UygunMarketiGetir(altiTickers, coin){ // type ask yada bid.
         const {coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc} = altiTickers
         const uygunMarkets = []
-        const markets = {
-            btc: {ltc:{}, doge:{}}, 
-            ltc: {btc:{}, doge:{}}, 
-            doge:{btc:{}, ltc:{}}
-        }
+        const markets = { btc: {ltc:{}, doge:{}}, ltc: {btc:{}, doge:{}}, doge:{btc:{}, ltc:{}} }
         const testAmount = 100
         const getUygunMarketFormat = (first, second, fark) => ({
             firstMarket:  { name: first.market,   price: first.ask.price,   total: first.ask.total },
