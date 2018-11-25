@@ -48,7 +48,7 @@ class WsMongo {
         return { price, amount, total, eksik }
     }
 
-    async AltcoinCheck(anaCoin){
+    AltcoinCheck(anaCoin){
         if(this.islemdekiler.includes(anaCoin) || this.ortak.mainMarkets.includes(anaCoin) || this.ortak.wsDataProcessing || anaCoin.includes('$')) return
         //const orderBooks = await this.ortak.GetOrderBooks(null, true)
         this.sonCoin = anaCoin
