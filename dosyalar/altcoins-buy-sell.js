@@ -2,7 +2,7 @@ const Ortak = require('./ortak')
 
 class WsMongo {
     async LoadVeriables() {
-        this.type = 'ALTCOIN'
+        this.type = 'MONGO'
         this.islemKati = 15
         this.minFark = 1
         this.islemdekiler = []
@@ -29,7 +29,7 @@ class WsMongo {
     cryWsBasla(){
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
-        //this.AltcoinCheck('RDD')
+        this.AltcoinCheck('RDD')
         if(this.type == 'RAM' || this.type == 'ALTCOIN') this.ortak.wsDepth.WsBaslat(coin=> this.AltcoinCheck(coin))
     }
 
@@ -72,16 +72,18 @@ class WsMongo {
     async AltcoinCheck(anaCoin){
         if(this.islemdekiler.includes(anaCoin) || this.ortak.mainMarkets.includes(anaCoin) || this.ortak.wsDataProcessing || anaCoin.includes('$')) return
         //const orderBooks = await this.ortak.GetOrderBooks(null, true)
+        /*
         this.CheckForMainMarket(anaCoin, 'BTC', 'LTC')
         this.CheckForMainMarket(anaCoin, 'BTC', 'DOGE')
         this.CheckForMainMarket(anaCoin, 'LTC', 'BTC')
         this.CheckForMainMarket(anaCoin, 'LTC', 'DOGE')
+        */
         this.CheckForMainMarket(anaCoin, 'DOGE', 'LTC')
         this.CheckForMainMarket(anaCoin, 'DOGE', 'BTC')
     }
 
-    CheckForMainMarket(anaCoin, firstBase, secondBase){
-        const findMarket = (marketName) =>{
+    async CheckForMainMarket(anaCoin, firstBase, secondBase){
+        const findMarket = async (marketName) =>{
             const market = this.ortak.depths[marketName]
             if(!market) return
             if(!market.depths) return
@@ -103,9 +105,7 @@ class WsMongo {
             const testAmount  = 100
 
             if(!anaCoinLtc || !anaCoinBtc || !coinBtc || !coinLtc) continue
-            if(firstBase == 'BTC'){
-                var dur = true
-            }
+
             // LTC > BTC
             const firstTotal  = anaCoinLtc.ask.price * testAmount  // LTC ile ada alıyorum
             const secondTotal = anaCoinBtc.bid.price * testAmount  // Adayi btc ye çeviriyorun- ada ile btc alıyorum
@@ -117,7 +117,7 @@ class WsMongo {
             const checkTamUygun2 = coinBtc.ask.total >= this.ortak.limits[secondBase] && coinLtc.bid.total >= this.ortak.limits[firstBase] // CHECK TAM UYGUN
 
             if(fark > 2 && checkTamUygun && checkTamUygun2){  // %1 den fazla fark varsa tamam.
-                console.log(`${anaCoin} coini > ${coin} coinine LTC > BTC ile çevirince fark: `+ fark)
+                console.log(`${anaCoin} coini > ${coin} coinine ${firstBase} > ${secondBase} ile çevirince fark: `+ fark)
             }
         }
     }

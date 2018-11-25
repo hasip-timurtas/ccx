@@ -239,7 +239,7 @@ class Ortak {
                 if(this.type == 'MONGO'){
                     return await this.depths.findOne({ market: data } )
                 }else{
-                    return this.depths.find(e=> e.market == data)
+                    return this.depths[data]
                 }
         }
     }
