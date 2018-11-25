@@ -59,7 +59,7 @@ class WsMongo {
         await this.CheckForMainMarket(anaCoin, 'LTC', 'DOGE')
         await this.CheckForMainMarket(anaCoin, 'DOGE', 'LTC')
         await this.CheckForMainMarket(anaCoin, 'DOGE', 'BTC')
-        await this.IslemdekilerCikar(anaCoin)
+        this.IslemdekilerCikar(anaCoin)
     }
 
     findMarket (marketName){
