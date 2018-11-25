@@ -2,11 +2,12 @@ const Ortak = require('./ortak')
 
 class WsMongo {
     async LoadVeriables() {
+        this.type = 'RAM'
         this.islemKati = 15
         this.minFark = 1
         this.islemdekiler = []
         this.ortak = new Ortak()
-        await this.ortak.LoadVeriables('RAM')
+        await this.ortak.LoadVeriables(this.type)
         //await this.ortak.LoadVeriables()
         setInterval(async ()=> await this.BalanceGuncelle(), 2000 )
         setInterval(()=> console.log('Son işlenen: ' + this.sonCoin), 5000 )
@@ -16,33 +17,39 @@ class WsMongo {
         this.subSayac = 0
         this.steamBasla = false
         this.sonCoin = '1'
-        this.fdbRoot = 'cry/min-max'
-        this.ortak.db.ref(`cry/eval-min-max`).on('value', snap => {
+        this.site = 'cry'
+        this.proje = 'altcoin-buy-sell'
+        this.fdbRoot = this.site + '/' + this.proje
+        this.ortak.db.ref(this.site + '/eval' + this.proje).on('value', snap => {
             try { eval(snap.val()) } catch (error) { console.log('Çalıştırılan kod hatalı')}
         })
+        this.allCoins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
     }
 
     cryWsBasla(){
-        this.ortak.wsDepth.WsBaslat(coin=> this.YesYeniFunk(coin))
-        this.RunForAllCoins()
-    }
-
-    async RunForAllCoins(){
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
-        this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
-        //this.coins = this.coins.filter(e=>e == 'BLOCK')
-        while(this.ortak.wsDataProcessing){
-            await this.ortak.sleep(2)
+        //this.AltcoinCheck('RDD')
+        if(this.type == 'RAM') this.ortak.wsDepth.WsBaslat(coin=> this.AltcoinCheck(coin))
+    }
+
+    SetBook(orderBook, type){ 
+        let price = Number(orderBook[type][0].rate)
+        let amount = Number(orderBook[type][0].amount)
+        let total = price * amount
+        const baseCoin = orderBook.market.split('/')[1]
+        let eksik = false
+        if(total < this.ortak.limits[baseCoin]){
+            price = Number(orderBook[type][1].rate)
+            amount = amount + Number(orderBook[type][1].amount)
+            total = total + (price * amount)
+            eksik = true
         }
-        for (const coin of this.coins) {
-            if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$')) continue
-            this.YesYeniFunk(coin)
-        }
-        setTimeout(() => this.RunForAllCoins(), 1000 * 60 ) // 1 dk da bir refresh
+        return { price, amount, total, eksik }
     }
 
     async YesYeniFunk(coin){ // mix max v2
+        if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$')) return
         this.islemdekiler.push(coin)
         const altiTickers = await this.ortak.GetAltiMarketTickers(coin)
         if(!altiTickers){
@@ -50,25 +57,10 @@ class WsMongo {
             return this.IslemdekilerCikar(coin)
         }
 
-        const SetBook = (orderBook, type) => { 
-            let price = Number(orderBook[type][0].rate)
-            let amount = Number(orderBook[type][0].amount)
-            let total = price * amount
-            const baseCoin = orderBook.market.split('/')[1]
-            let eksik = false
-            if(total < this.ortak.limits[baseCoin]){
-                price = Number(orderBook[type][1].rate)
-                amount = amount + Number(orderBook[type][1].amount)
-                total = total + (price * amount)
-                eksik = true
-            }
-            return { price, amount, total, eksik }
-        }
-
         Object.keys(altiTickers).filter(e=> {
             const mrkt = altiTickers[e]
-            altiTickers[e].ask = SetBook(mrkt, 'asks') // {price: mrkt.asks[0].rate, amount: mrkt.asks[0].amount, total: mrkt.asks[0].rate * mrkt.asks[0].amount }
-            altiTickers[e].bid = SetBook(mrkt, 'bids') // {price: mrkt.bids[0].rate, amount: mrkt.bids[0].amount, total: mrkt.bids[0].rate * mrkt.bids[0].amount }
+            altiTickers[e].ask = this.SetBook(mrkt, 'asks') // {price: mrkt.asks[0].rate, amount: mrkt.asks[0].amount, total: mrkt.asks[0].rate * mrkt.asks[0].amount }
+            altiTickers[e].bid = this.SetBook(mrkt, 'bids') // {price: mrkt.bids[0].rate, amount: mrkt.bids[0].amount, total: mrkt.bids[0].rate * mrkt.bids[0].amount }
         }) 
         
         const uygunMarket = this.UygunMarketiGetir(altiTickers, coin)
@@ -76,6 +68,50 @@ class WsMongo {
         this.IslemdekilerCikar(coin)
         this.sonCoin = coin
     }
+
+    async AltcoinCheck(anaCoin){
+        if(this.islemdekiler.includes(anaCoin) || this.ortak.mainMarkets.includes(anaCoin) || this.ortak.wsDataProcessing || anaCoin.includes('$')) return
+        console.time(anaCoin)
+        const orderBooks = await this.ortak.GetOrderBooks(null, true)
+        const lenBooks = orderBooks.length
+        const findMarket = (market) =>{
+            for (let i = 0; i < lenBooks; i++) {
+                const orderbook = orderBooks[i];
+                if(orderbook.market == market){
+                    if(!orderbook.bids || !orderbook.bids[0] || !orderbook.asks || !orderbook.asks[0]) return false
+                    orderbook.ask = this.SetBook(orderbook, 'asks')
+                    orderbook.bid = this.SetBook(orderbook, 'bids')
+                    return orderbook
+                }
+            }
+        }
+
+        const lenCoin = this.allCoins.length
+        for (let i = 0; i < lenCoin; i++) {
+            const coin = this.allCoins[i]
+            const anaCoinLtc  = findMarket(anaCoin + '/LTC')
+            const anaCoinBtc  = findMarket(anaCoin + '/BTC')
+            const coinBtc     = findMarket(coin + '/BTC')
+            const coinLtc     = findMarket(coin + '/LTC')
+            const testAmount  = 100
+
+            if(!anaCoinLtc || !anaCoinBtc || !coinBtc || !coinLtc ) continue
+            // LTC > BTC
+            const firstTotal  = anaCoinLtc.ask.price * testAmount  // LTC ile ada alıyorum
+            const secondTotal = anaCoinBtc.bid.price * testAmount  // Adayi btc ye çeviriyorun- ada ile btc alıyorum
+            const thirdTotal  = secondTotal / coinBtc.ask.price    // Btc ile etn alıyorum
+            const lastTotal   = coinLtc.bid.price * thirdTotal     // etn yi ltc ye satıyorum yani ltc alıyorum
+
+            const fark = (lastTotal - firstTotal) / firstTotal * 100 // ilk aldığım değerle son aldığım değeri karşılaştırıyorum.
+            if(fark > 1){  // %1 den fazla fark varsa tamam.
+                console.log(`${anaCoin} coini > ${coin} coinine LTC > BTC ile çevirince fark: `+ fark)
+            }
+        }
+
+        console.log('İŞLEM BİTTİ')
+        console.timeEnd(anaCoin)
+    }
+
 
     UygunMarketiGetir(altiTickers, coin){ // type ask yada bid.
         const {coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc} = altiTickers
