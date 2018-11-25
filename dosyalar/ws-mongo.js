@@ -6,7 +6,7 @@ class WsMongo {
         this.minFark = 1
         this.islemdekiler = []
         this.ortak = new Ortak()
-        await this.ortak.LoadVeriables('RAM')
+        await this.ortak.LoadVeriables('MONGO')
         //await this.ortak.LoadVeriables()
         setInterval(async ()=> await this.BalanceGuncelle(), 2000 )
         setInterval(()=> console.log('Son işlenen: ' + this.sonCoin), 5000 )
@@ -16,12 +16,12 @@ class WsMongo {
         this.subSayac = 0
         this.steamBasla = false
         this.sonCoin = '1'
-        this.fdbRoot = 'cry/min-max-eski'
-        this.ortak.db.ref(`cry/eval-eski`).on('value', snap => eval(snap.val()))
+        this.fdbRoot = 'cry/min-max-eski-test'
+        this.ortak.db.ref(`cry/eval-eski-test`).on('value', snap => eval(snap.val()))
     }
 
     cryWsBasla(){
-        this.ortak.wsDepth.WsBaslat(coin=> this.SteamHandler(coin))
+        //this.ortak.wsDepth.WsBaslat(coin=> this.SteamHandler(coin))
         this.RunForAllCoins()
     }
 
@@ -29,6 +29,7 @@ class WsMongo {
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
         this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
+        this.coins = this.coins.filter(e=>e == 'CDM')
         while(this.ortak.wsDataProcessing){
             await this.ortak.sleep(2)
         }
@@ -115,7 +116,7 @@ class WsMongo {
             btcMarket:    { name: d.btcMarketName,    price: rob.btcOrderBook.price,    total: rob.btcOrderBook.total }
         }
 
-        await this.BuySellBasla(uygunMarket)         
+        //await this.BuySellBasla(uygunMarket)         
     }
 
     GetOrderBookGroup(d, orderBooks){

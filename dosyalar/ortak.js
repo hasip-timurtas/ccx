@@ -26,7 +26,9 @@ class Ortak {
         this.db = firebase.database()
         const connection = await mongodb.MongoClient.connect(mongoUrl, { useNewUrlParser: true });
         const cnn = connection.db('cry')
+        this.wsDataProcessing = true // ilk başta true diyoruz. ilk çalıştığında beklesin diye.
         if(type == 'MONGO'){
+            this.wsDataProcessing = false // boşuna beklemesinler çünkü ws yok.
             this.depths = cnn.collection('ws-depths')
         }else{
             this.depths = []
@@ -51,7 +53,6 @@ class Ortak {
         this.allData = []
         this.allActiveCoins = []//this.marketsInfos && this.marketsInfos.filter(e=> e.active &&  e.quote == 'BTC').map(e=>e.baseId.toUpperCase()).filter(e=> !this.mainMarkets.includes(e))
         this.testAmount = 100
-        this.wsDataProcessing = true // ilk başta true diyoruz. ilk çalıştığında beklesin diye.
         this.ws
         this.wsZamanlayici = 30 // DAKİKA
     }

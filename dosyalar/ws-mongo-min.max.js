@@ -70,8 +70,9 @@ class WsMongo {
         }) 
         
         const uygunMarket = this.UygunMarketiGetir(altiTickers, coin)
-        //await this.BuySellBasla(uygunMarket).catch(e=> this.IslemdekilerCikarHataEkle(e, coin))
+        await this.BuySellBasla(uygunMarket).catch(e=> this.IslemdekilerCikarHataEkle(e, coin))
         this.IslemdekilerCikar(coin)
+        this.sonCoin = coin
     }
 
     UygunMarketiGetir(altiTickers, coin){ // type ask yada bid.
