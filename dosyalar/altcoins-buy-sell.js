@@ -48,11 +48,11 @@ class WsMongo {
         setTimeout(() => this.RunForAllCoins(), 1000 * 60 ) // 1 dk da bir refresh
     }
 
-    SetBook(orderBook, type){ 
+    SetBook(orderBook, type, marketName){ 
         let price = Number(orderBook[type][0].rate)
         let amount = Number(orderBook[type][0].amount)
         let total = price * amount
-        const baseCoin = orderBook.market.split('/')[1]
+        const baseCoin = marketName.split('/')[1]
         let eksik = false
         if(total < this.ortak.limits[baseCoin] && orderBook[type][1]){
             price = Number(orderBook[type][1].rate)
@@ -102,11 +102,10 @@ class WsMongo {
         const findMarket = (marketName) =>{
             const market = this.ortak.depths[marketName]
             if(!market || !market.depths || !market.depths.bids || !market.depths.bids[0] || !market.depths.asks || !market.depths.asks[0]) return false
-            market.depths.market = marketName
             const orderbook = {}
             orderbook.market = marketName
-            orderbook.ask = this.SetBook(market.depths, 'asks')
-            orderbook.bid = this.SetBook(market.depths, 'bids')
+            orderbook.ask = this.SetBook(market.depths, 'asks', marketName)
+            orderbook.bid = this.SetBook(market.depths, 'bids', marketName)
             return orderbook
         }
         
