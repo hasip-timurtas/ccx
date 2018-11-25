@@ -138,9 +138,6 @@ class WsMongo {
                     this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(coin).set({fark, coin, anaCoin, first: anaCoinLtc, second: anaCoinBtc, third: coinBtc, fourth: coinLtc})
                     console.log(`${anaCoin} coini > ${coin} coinine ${firstBase} > ${secondBase} ile çevirince fark: `+ fark)
                     */
-                }else{
-                    const fdbName = anaCoinLtc.market.replace('/','-') + '--' + coinBtc.market.replace('/','-')
-                    this.FdbCoiniSil(anaCoin, fdbName)
                 }
             }
         }
