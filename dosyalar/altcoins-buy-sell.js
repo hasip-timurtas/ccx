@@ -87,15 +87,11 @@ class WsMongo {
     CheckForMainMarket(anaCoin, firstBase, secondBase){
         const findMarket = (marketName) =>{
             const market = this.ortak.depths[marketName]
-            if(!market) return
-            if(!market.depths) return
-            const orderbook = market.depths
+            if(!market || !market.depths || !market.depths.bids || !market.depths.bids[0] || !market.depths.asks || !market.depths.asks[0]) return false
+            const orderbook = {}
             orderbook.market = marketName
-            if(!orderbook.bids || !orderbook.bids[0] || !orderbook.asks || !orderbook.asks[0]) return false
-            orderbook.ask = this.SetBook(orderbook, 'asks')
-            orderbook.bid = this.SetBook(orderbook, 'bids')
-            delete orderbook.bids
-            delete orderbook.asks
+            orderbook.ask = this.SetBook(market.depths, 'asks')
+            orderbook.bid = this.SetBook(market.depths, 'bids')
             return orderbook
         }
         
