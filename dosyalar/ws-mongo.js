@@ -17,6 +17,7 @@ class WsMongo {
         this.steamBasla = false
         this.sonCoin = '1'
         this.datalarString = []
+        this.fdbRoot = 'cry/min-max-eski'
     }
     
     SetFbdDebug(){
@@ -28,15 +29,13 @@ class WsMongo {
     }
 
     cryWsBasla(){
-    
         this.SetFbdDebug()
-        this.ortak.db.ref(`cry/min-max-eski`).set(null)
         this.ortak.wsDepth.WsBaslat(coin=> this.SteamHandler(coin))
         this.RunForAllCoins()
     }
 
     async RunForAllCoins(){
-        this.ortak.db.ref(`cry/min-max-eski`).set(null)
+        this.ortak.db.ref(this.fdbRoot).set(null)
         this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
         while(this.ortak.wsDataProcessing){
             await this.ortak.sleep(2)
@@ -50,7 +49,7 @@ class WsMongo {
 
 /*
     cryWsBasla(){
-        this.ortak.db.ref(`cry/min-max-eski`).set(null)
+        this.ortak.db.ref(this.fdbRoot).set(null)
         this.ortak.wsDepth.WsBaslat(coin=> this.SteamHandler(coin))
     }
 */
@@ -317,9 +316,9 @@ class WsMongo {
 
     FdbCoiniSil(coin, marketName){
         if(marketName){
-            this.ortak.db.ref(`cry/min-max-eski`).child(coin).child(marketName).set(null)
+            this.ortak.db.ref(this.fdbRoot).child(coin).child(marketName).set(null)
         }else{
-            this.ortak.db.ref(`cry/min-max-eski`).child(coin).set(null)
+            this.ortak.db.ref(this.fdbRoot).child(coin).set(null)
         }
     }
 
@@ -368,7 +367,7 @@ class WsMongo {
 
         if(this.datalarString[fdbName] != JSON.stringify(uygunMarket)){ // Datalar aynı değilse ise kaydet değilse tekrar kontrole git.
             this.datalarString[fdbName] = JSON.stringify(uygunMarket)
-            await this.ortak.db.ref(`cry/min-max-eski`).child(coin).child(fdbName).set(uygunMarket)
+            await this.ortak.db.ref(this.fdbRoot).child(coin).child(fdbName).set(uygunMarket)
         }
 
         await this.ortak.sleep(10)

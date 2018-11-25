@@ -17,6 +17,7 @@ class WsMongo {
         this.steamBasla = false
         this.sonCoin = '1'
         this.datalarString = []
+        this.fdbRoot = 'cry/min-max'
     }
 
     SetFbdDebug(){
@@ -29,18 +30,17 @@ class WsMongo {
 
     cryWsBasla(){
         this.SetFbdDebug()
-        this.ortak.db.ref(`cry/min-max`).set(null)
-        //this.ortak.wsDepth.WsBaslat(coin=> this.SteamHandler(coin))
         this.RunForAllCoins()
     }
 
     async RunForAllCoins(){
+        this.ortak.db.ref(this.fdbRoot).set(null)
         this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
-        this.coins = this.coins.filter(e=>e == 'UNO')
+        //this.coins = this.coins.filter(e=>e == 'UNO')
         for (const coin of this.coins) {
             this.SteamHandler(coin)
         }
-        await this.ortak.sleep(10)
+        await this.ortak.sleep(10) // 5 dakikada bir toplu girsin.
         this.RunForAllCoins()
     }
 
@@ -163,7 +163,7 @@ class WsMongo {
         const {coin, firstMarketName, secondMarketName } = d
         const fdbName = firstMarketName.replace('/','-') + '--' + secondMarketName.replace('/','-')
         if(!farkKontrol){
-            return this.ortak.db.ref(`cry/min-max`).child(d.coin).child(fdbName).set(null)
+            return this.ortak.db.ref(this.fdbRoot).child(d.coin).child(fdbName).set(null)
         }
 
         const firstTotalUygun = firstOrderBook.total >= this.ortak.limits[firstMarketName.split('/')[1]]
@@ -180,7 +180,7 @@ class WsMongo {
 
         if(this.datalarString[fdbName] != JSON.stringify(uygunMarket)){ // Datalar aynı değilse ise kaydet değilse tekrar kontrole git.
             this.datalarString[fdbName] = JSON.stringify(uygunMarket)
-            await this.ortak.db.ref(`cry/min-max`).child(coin).child(fdbName).set(uygunMarket)
+            await this.ortak.db.ref(this.fdbRoot).child(coin).child(fdbName).set(uygunMarket)
         }
 
         await this.ortak.sleep(10)
@@ -377,7 +377,7 @@ class WsMongo {
     // #################       -- MIN MAX --       #################
 
     FdbMarketSil(coin){
-        this.ortak.db.ref(`cry/min-max`).child(coin).set(null)
+        this.ortak.db.ref(this.fdbRoot).child(coin).set(null)
     }
 
     UygunMarketleriGetir(altiTickers){
@@ -389,14 +389,7 @@ class WsMongo {
         return { enUcuzSell, enPahaliBuy }
     }
 
-    GetTotals(type, altiTickers, firstMarketName){ // type ask yada bid.
-        let ltcBtcType, dogeBtcType
-        if(firstMarketName){
-            const firtBase = firstMarketName.split('/')[1]
-            ltcBtcType = firtBase == 'BTC' ? 'bid' : 'ask'
-            dogeBtcType = 'bid' // burası hep bid çünkü altustte hep doge alt olur. kaynak > GetAltOrUst
-        }
-        
+    GetTotals(type, altiTickers, firstMarketName){ // type ask yada bid.       
         const testAmount = 100
         const {coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc} = altiTickers
         let totalBtc, totalLtc, toalDoge, ltcBtcTotal, dogeBtcTotal, dogeLtcTotal, dogeLtcBtcTotal
@@ -404,12 +397,12 @@ class WsMongo {
         totalBtc = coinBtc[type].price * testAmount  // ADA/BTC  ->  bu hesaplamayı bunda yapacağımız ana coin. diğerlerini buna çevireceğimizden bunu birşeye çevirmemize gerek yok.
         totalLtc = coinLtc[type].price * testAmount  // ADA/LTC  ->  1000 ada x LTC yapar değeri. LTC değer
         toalDoge = coinDoge[type].price * testAmount// ADA/DOGE ->  1000 ada x Doge yapar değeri. DOGE değer  ### BUY çünkü doge de sell e bakarsak hepsinde doge çıkar.
-        const btcyeCevirType = type == 'ask' ? 'bid' : 'ask' // ana type bid ise ask, ask ise bid olsun bu.
-        ltcBtcTotal = ltcBtc[btcyeCevirType].price * totalLtc    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
-        dogeBtcTotal = dogeBtc[btcyeCevirType].price * toalDoge  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
+
+        ltcBtcTotal = ltcBtc.ask.price * totalLtc    // LTC/BTC  değeri, yukarıdaki totalLtc  nin BTC değeri
+        dogeBtcTotal = dogeBtc.bid.price * toalDoge  // DOGE/BTC değeri, yukarıdaki totalDoge nin BTC değeri.
         // DOGE > LTC > BTC total 
-        dogeLtcTotal = dogeLtc[btcyeCevirType].price * toalDoge  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
-        dogeLtcBtcTotal = ltcBtc[btcyeCevirType].price * dogeLtcTotal  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
+        dogeLtcTotal = dogeLtc.bid.price * toalDoge  // DOGE/LTC değeri, LTC doge karşılaştırması için sell alıyoruz. yukarıdaki toalDoge  nin LTC değeri.
+        dogeLtcBtcTotal = ltcBtc.ask.price * dogeLtcTotal  // DOGE/LTC nin LTC/BTC değeri , BTC değeri.
 
         
         let markets, vUygunlar, uygunMarket
