@@ -92,7 +92,6 @@ class WsMongo {
             const secondSell = markets[from][to].total
             const fark = (secondSell - firstBuy) / firstBuy * 100
             if(fark < this.minFark) return //this.FdbCoiniSil(coin)
-            console.log(coin + ` - ${from} > ${to} KOŞUL UYUYOR`)
             markets[from][to].fark = fark
             from = from.replace(/^\w/, c => c.toUpperCase())
             to = to.replace(/^\w/, c => c.toUpperCase())
@@ -101,6 +100,7 @@ class WsMongo {
             this.FdbIslemleri(coin, first, second, fark)
             const checkTamUygun = first.ask.total >= this.ortak.limits[from.toUpperCase()] && second.bid.total >= this.ortak.limits[to.toUpperCase()] // CHECK TAM UYGUN
             if(!checkTamUygun) return
+            console.log(coin + ` - ${from} > ${to} KOŞUL UYUYOR`)
             uygunMarkets.push(getUygunMarketFormat(first, second, fark))
         }
         
