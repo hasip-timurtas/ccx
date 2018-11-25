@@ -119,10 +119,7 @@ class WsMongo {
             const coinLtc     = findMarket(coin + '/' + firstBase)
             const testAmount  = 100
             
-            if(!anaCoinLtc || !anaCoinBtc || !coinBtc || !coinLtc){
-                this.FdbCoiniSil(anaCoin)
-                continue
-            }
+            if(!anaCoinLtc || !anaCoinBtc || !coinBtc || !coinLtc) continue
 
             // LTC > BTC
             const firstTotal  = anaCoinLtc.ask.price * testAmount  // LTC ile ada alıyorum
