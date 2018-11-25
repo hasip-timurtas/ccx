@@ -273,21 +273,21 @@ class WsMongo {
         await this.ortak.history.insertOne({'coin': altCoin, 'amount': amount, 'btcPrice': btcAskPrice, 'date': new Date() })
     }
 
-    MailDataInsert(uygunMarket, buyResult, sellResult){
+    async MailDataInsert(uygunMarket, buyResult, sellResult){
         this.ortak.mailData.insertOne({uygunMarket, buyResult, sellResult, 'date': new Date()})
     }
 
-    MailDataBosBuyInsert(uygunMarket){
+    async MailDataBosBuyInsert(uygunMarket){
         this.ortak.mailDataBosBuy.insertOne({uygunMarket, hata: 'BUY ALMAYA YETİŞEMEDİ', 'date': new Date()})
     }
 
-    HataEkle(e){
+    async HataEkle(e){
         if(e.message == "Cannot read property 'rate' of undefined") return
         console.log(e.message)
         this.ortak.mailDataHata.insertOne({hata : e.message})
     }
 
-    IslemdekilerCikarHataEkle(e, coin){
+    async IslemdekilerCikarHataEkle(e, coin){
         if(e.message == "Cannot read property 'rate' of undefined") return
         console.log(e.message)
         this.ortak.mailDataHata.insertOne({hata : e.message})
