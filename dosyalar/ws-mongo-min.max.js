@@ -70,7 +70,7 @@ class WsMongo {
         }) 
         
         const uygunMarket = this.UygunMarketiGetir(altiTickers, coin)
-        await this.BuySellBasla(uygunMarket).catch(e=> this.IslemdekilerCikarHataEkle(e, coin))
+        if(uygunMarket) await this.BuySellBasla(uygunMarket).catch(e=> this.IslemdekilerCikarHataEkle(e, coin))
         this.IslemdekilerCikar(coin)
         this.sonCoin = coin
     }
@@ -142,6 +142,7 @@ class WsMongo {
         markets.doge.ltc.total = markets.ltc.sellTotal / dogeLtc.ask.price     // LTC/DOGE
         kontrol('doge', 'ltc')
 
+        if(uygunMarkets.length == 0) return false
         uygunMarkets.sort((a,b)=> b.fark - a.fark)
         const farkiEnYuksekMarket = uygunMarkets[0]
         return farkiEnYuksekMarket
