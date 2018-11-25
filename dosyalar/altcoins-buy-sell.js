@@ -9,7 +9,7 @@ class WsMongo {
         this.ortak = new Ortak()
         await this.ortak.LoadVeriables(this.type)
         //await this.ortak.LoadVeriables()
-        setInterval(async ()=> await this.BalanceGuncelle(), 2000 )
+        setInterval(async ()=> await this.BalanceGuncelle(), 3000 )
         setInterval(()=> console.log('Son işlenen: ' + this.sonCoin), 5000 )
         this.balances = []
         this.oncekiCoin = null
@@ -94,7 +94,7 @@ class WsMongo {
             const checkTamUygun = anaCoinLtc.ask.total >= this.ortak.limits[firstBase] && anaCoinBtc.bid.total >= this.ortak.limits[secondBase] // CHECK TAM UYGUN
             const checkTamUygun2 = coinBtc.ask.total >= this.ortak.limits[secondBase] && coinLtc.bid.total >= this.ortak.limits[firstBase] // CHECK TAM UYGUN
 
-            if(fark > 1 && checkTamUygun && checkTamUygun2){  // %1 den fazla fark varsa tamam.
+            if(fark > 2 && checkTamUygun && checkTamUygun2){  // %1 den fazla fark varsa tamam.
                 this.FdbIslemleri(coin, anaCoinLtc, coinBtc, fark)
 
                     /*
