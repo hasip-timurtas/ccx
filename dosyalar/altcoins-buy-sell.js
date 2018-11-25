@@ -95,8 +95,10 @@ class WsMongo {
             const checkTamUygun2 = coinBtc.ask.total >= this.ortak.limits[secondBase] && coinLtc.bid.total >= this.ortak.limits[firstBase] // CHECK TAM UYGUN
 
             if(fark > 2){  // %1 den fazla fark varsa tamam.
-                this.FdbIslemleri(coin, anaCoinLtc, coinBtc, fark)
+                
                 if(checkTamUygun && checkTamUygun2){
+                    this.FdbIslemleri(coin, anaCoinLtc, coinBtc, fark)
+                    return
                     this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(coin).set({fark, coin, anaCoin, first: anaCoinLtc, second: anaCoinBtc, third: coinBtc, fourth: coinLtc})
                     console.log(`${anaCoin} coini > ${coin} coinine ${firstBase} > ${secondBase} ile çevirince fark: `+ fark)
                 }
