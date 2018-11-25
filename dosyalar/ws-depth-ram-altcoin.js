@@ -44,8 +44,8 @@ class WsDepth {
         })
 
         umFilter.filter(x=> {
-            this.marketNames[x.TradePairId] = x.label
-            this.ortak.depths[x.label] = { tradePairId: x['TradePairId'], market: x['Label']}
+            this.marketNames[x.TradePairId] = x.Label
+            this.ortak.depths[x.Label] = { tradePairId: x['TradePairId'], market: x['Label']}
         })
     }
 
