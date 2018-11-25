@@ -114,7 +114,7 @@ class WsMongo {
 
             const fark = (lastTotal - firstTotal) / firstTotal * 100 // ilk aldığım değerle son aldığım değeri karşılaştırıyorum.
             const checkTamUygun = anaCoinLtc.ask.total >= this.ortak.limits[firstBase] && anaCoinBtc.bid.total >= this.ortak.limits[secondBase] // CHECK TAM UYGUN
-            const checkTamUygun2 = thirdTotal.ask.total >= this.ortak.limits[secondBase] && lastTotal.bid.total >= this.ortak.limits[firstBase] // CHECK TAM UYGUN
+            const checkTamUygun2 = coinBtc.ask.total >= this.ortak.limits[secondBase] && coinLtc.bid.total >= this.ortak.limits[firstBase] // CHECK TAM UYGUN
 
             if(fark > 2 && checkTamUygun && checkTamUygun2){  // %1 den fazla fark varsa tamam.
                 console.log(`${anaCoin} coini > ${coin} coinine LTC > BTC ile çevirince fark: `+ fark)
