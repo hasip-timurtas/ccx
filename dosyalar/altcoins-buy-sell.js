@@ -33,21 +33,6 @@ class WsMongo {
         if(this.type == 'RAM' || this.type == 'ALTCOIN') this.ortak.wsDepth.WsBaslat(coin=> this.AltcoinCheck(coin))
     }
 
-    async RunForAllCoins(){
-        this.ortak.db.ref(this.fdbRoot).set(null)
-        this.datalarString = []
-        this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
-        //this.coins = this.coins.filter(e=>e == 'BLOCK')
-        while(this.ortak.wsDataProcessing){
-            await this.ortak.sleep(2)
-        }
-        for (const coin of this.coins) {
-            if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$')) continue
-            this.AltcoinCheck(coin)
-        }
-        setTimeout(() => this.RunForAllCoins(), 1000 * 60 ) // 1 dk da bir refresh
-    }
-
     SetBook(orderBook, type, marketName){ 
         let price = Number(orderBook[type][0].rate)
         let amount = Number(orderBook[type][0].amount)
@@ -61,27 +46,6 @@ class WsMongo {
             eksik = true
         }
         return { price, amount, total, eksik }
-    }
-
-    async YesYeniFunk(coin){ // mix max v2
-        if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$')) return
-        this.islemdekiler.push(coin)
-        const altiTickers = await this.ortak.GetAltiMarketTickers(coin)
-        if(!altiTickers){
-            this.FdbCoiniSil(coin)
-            return this.IslemdekilerCikar(coin)
-        }
-
-        Object.keys(altiTickers).filter(e=> {
-            const mrkt = altiTickers[e]
-            altiTickers[e].ask = this.SetBook(mrkt, 'asks') // {price: mrkt.asks[0].rate, amount: mrkt.asks[0].amount, total: mrkt.asks[0].rate * mrkt.asks[0].amount }
-            altiTickers[e].bid = this.SetBook(mrkt, 'bids') // {price: mrkt.bids[0].rate, amount: mrkt.bids[0].amount, total: mrkt.bids[0].rate * mrkt.bids[0].amount }
-        }) 
-        
-        const uygunMarket = this.UygunMarketiGetir(altiTickers, coin)
-        if(uygunMarket) await this.BuySellBasla(uygunMarket).catch(e=> this.IslemdekilerCikarHataEkle(e, coin))
-        this.IslemdekilerCikar(coin)
-        this.sonCoin = coin
     }
 
     async AltcoinCheck(anaCoin){
@@ -98,24 +62,24 @@ class WsMongo {
         this.IslemdekilerCikar(anaCoin)
     }
 
-    CheckForMainMarket(anaCoin, firstBase, secondBase){
-        const findMarket = (marketName) =>{
-            const market = this.ortak.depths[marketName]
-            if(!market || !market.depths || !market.depths.bids || !market.depths.bids[0] || !market.depths.asks || !market.depths.asks[0]) return false
-            const orderbook = {}
-            orderbook.market = marketName
-            orderbook.ask = this.SetBook(market.depths, 'asks', marketName)
-            orderbook.bid = this.SetBook(market.depths, 'bids', marketName)
-            return orderbook
+    findMarket (marketName){
+        const market = this.ortak.depths[marketName]
+        if(!market || !market.depths || !market.depths.bids || !market.depths.bids[0] || !market.depths.asks || !market.depths.asks[0]) return false
+        return {
+            market: marketName,
+            ask: this.SetBook(market.depths, 'asks', marketName),
+            bid: this.SetBook(market.depths, 'bids', marketName)
         }
-        
+    }
+
+    CheckForMainMarket(anaCoin, firstBase, secondBase){
         const lenCoin = this.allCoins.length
         for (let i = 0; i < lenCoin; i++) {
             const coin = this.allCoins[i]
-            const anaCoinLtc  = findMarket(anaCoin + '/' + firstBase)
-            const anaCoinBtc  = findMarket(anaCoin + '/' + secondBase)
-            const coinBtc     = findMarket(coin + '/'+ secondBase)
-            const coinLtc     = findMarket(coin + '/' + firstBase)
+            const anaCoinLtc  = this.findMarket(anaCoin + '/' + firstBase)
+            const anaCoinBtc  = this.findMarket(anaCoin + '/' + secondBase)
+            const coinBtc     = this.findMarket(coin + '/'+ secondBase)
+            const coinLtc     = this.findMarket(coin + '/' + firstBase)
             const testAmount  = 100
             
             if(!anaCoinLtc || !anaCoinBtc || !coinBtc || !coinLtc) continue
@@ -140,76 +104,6 @@ class WsMongo {
                 
             }
         }
-    }
-
-
-    UygunMarketiGetir(altiTickers, coin){ // type ask yada bid.
-        const {coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc} = altiTickers
-        const uygunMarkets = []
-        const markets = { btc: {ltc:{}, doge:{}}, ltc: {btc:{}, doge:{}}, doge:{btc:{}, ltc:{}} }
-        const testAmount = 100
-        const getUygunMarketFormat = (first, second, fark) => ({
-            firstMarket:  { name: first.market,   price: first.ask.price,   total: first.ask.total },
-            secondMarket: { name: second.market,  price: second.bid.price,  total: second.bid.total },
-            btcMarket:    { name: coinBtc.market, price: coinBtc.ask.price, total: coinBtc.ask.price },
-            fark
-        })
-
-        const kontrol = (from, to) => {
-            const firstBuy = markets[from].buyTotal
-            const secondSell = markets[from][to].total
-            const fark = (secondSell - firstBuy) / firstBuy * 100
-            if(fark < this.minFark) return //this.FdbCoiniSil(coin)
-            markets[from][to].fark = fark
-            from = from.replace(/^\w/, c => c.toUpperCase())
-            to = to.replace(/^\w/, c => c.toUpperCase())
-            const first = altiTickers['coin'+from]
-            const second = altiTickers['coin'+to]
-            this.FdbIslemleri(coin, first, second, fark)
-            const checkTamUygun = first.ask.total >= this.ortak.limits[from.toUpperCase()] && second.bid.total >= this.ortak.limits[to.toUpperCase()] // CHECK TAM UYGUN
-            if(!checkTamUygun) return
-            console.log(coin + ` - ${from} > ${to} KOŞUL UYUYOR`)
-            uygunMarkets.push(getUygunMarketFormat(first, second, fark))
-        }
-        
-        // ALINACAK MARKETLER
-        markets.btc.buyTotal   = coinBtc.ask.price  * testAmount            // ADA/BTC 
-        markets.ltc.buyTotal   = coinLtc.ask.price  * testAmount            // ADA/LTC
-        markets.doge.buyTotal  = coinDoge.ask.price * testAmount            // ADA/DOGE
-        
-        // SATILACAK MARKETLER
-        markets.btc.sellTotal  = coinBtc.bid.price  * testAmount            // ADA/BTC
-        markets.ltc.sellTotal  = coinLtc.bid.price  * testAmount            // ADA/LTC
-        markets.doge.sellTotal = coinDoge.bid.price * testAmount            // ADA/DOGE
-
-        // BTC > LTC  #
-        markets.btc.ltc.total = ltcBtc.bid.price * markets.ltc.sellTotal     // LTC/BTC
-        kontrol('btc', 'ltc')
-
-        // BTC > DOGE
-        markets.btc.doge.total = dogeBtc.bid.price * markets.doge.sellTotal  // DOGE/BTC
-        kontrol('btc', 'doge')
-
-        // LTC > BTC  #
-        markets.ltc.btc.total = markets.btc.sellTotal / ltcBtc.ask.price      // BTC/LTC
-        kontrol('ltc', 'btc')
-
-        // LTC > DOGE
-        markets.ltc.doge.total = dogeLtc.bid.price * markets.doge.sellTotal   // DOGE/LTC
-        kontrol('ltc', 'doge')
-
-        // DOGE > BTC #
-        markets.doge.btc.total = markets.btc.sellTotal / dogeBtc.ask.price    // BTC/DOGE
-        kontrol('doge', 'btc')
-
-        // DOGE > LTC 
-        markets.doge.ltc.total = markets.ltc.sellTotal / dogeLtc.ask.price     // LTC/DOGE
-        kontrol('doge', 'ltc')
-
-        if(uygunMarkets.length == 0) return false
-        uygunMarkets.sort((a,b)=> b.fark - a.fark)
-        const farkiEnYuksekMarket = uygunMarkets[0]
-        return farkiEnYuksekMarket
     }
 
     FdbIslemleri(coin, first, second, fark){
