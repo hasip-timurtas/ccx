@@ -72,7 +72,8 @@ class WsMongo {
     async AltcoinCheck(anaCoin){
         if(this.islemdekiler.includes(anaCoin) || this.ortak.mainMarkets.includes(anaCoin) || this.ortak.wsDataProcessing || anaCoin.includes('$')) return
         //const orderBooks = await this.ortak.GetOrderBooks(null, true)
-        
+        this.sonCoin = anaCoin
+        this.islemdekiler.push(anaCoin)
         this.CheckForMainMarket(anaCoin, 'BTC', 'LTC')
         this.CheckForMainMarket(anaCoin, 'BTC', 'DOGE')
         this.CheckForMainMarket(anaCoin, 'LTC', 'BTC')
@@ -80,6 +81,7 @@ class WsMongo {
         
         this.CheckForMainMarket(anaCoin, 'DOGE', 'LTC')
         this.CheckForMainMarket(anaCoin, 'DOGE', 'BTC')
+        this.IslemdekilerCikar(anaCoin)
     }
 
     CheckForMainMarket(anaCoin, firstBase, secondBase){
