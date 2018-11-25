@@ -33,6 +33,21 @@ class WsMongo {
         if(this.type == 'RAM' || this.type == 'ALTCOIN') this.ortak.wsDepth.WsBaslat(coin=> this.AltcoinCheck(coin))
     }
 
+    async RunForAllCoins(){
+        this.ortak.db.ref(this.fdbRoot).set(null)
+        this.datalarString = []
+        this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
+        //this.coins = this.coins.filter(e=>e == 'BLOCK')
+        while(this.ortak.wsDataProcessing){
+            await this.ortak.sleep(2)
+        }
+        for (const coin of this.coins) {
+            if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$')) continue
+            this.AltcoinCheck(coin)
+        }
+        setTimeout(() => this.RunForAllCoins(), 1000 * 60 ) // 1 dk da bir refresh
+    }
+
     SetBook(orderBook, type){ 
         let price = Number(orderBook[type][0].rate)
         let amount = Number(orderBook[type][0].amount)
@@ -78,7 +93,6 @@ class WsMongo {
         this.CheckForMainMarket(anaCoin, 'BTC', 'DOGE')
         this.CheckForMainMarket(anaCoin, 'LTC', 'BTC')
         this.CheckForMainMarket(anaCoin, 'LTC', 'DOGE')
-        
         this.CheckForMainMarket(anaCoin, 'DOGE', 'LTC')
         this.CheckForMainMarket(anaCoin, 'DOGE', 'BTC')
         this.IslemdekilerCikar(anaCoin)
