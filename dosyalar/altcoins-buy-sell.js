@@ -88,6 +88,7 @@ class WsMongo {
         const findMarket = (marketName) =>{
             const market = this.ortak.depths[marketName]
             if(!market || !market.depths || !market.depths.bids || !market.depths.bids[0] || !market.depths.asks || !market.depths.asks[0]) return false
+            market.depths.market = marketName
             const orderbook = {}
             orderbook.market = marketName
             orderbook.ask = this.SetBook(market.depths, 'asks')
