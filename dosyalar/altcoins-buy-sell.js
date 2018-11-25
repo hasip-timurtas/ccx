@@ -53,13 +53,13 @@ class WsMongo {
         //const orderBooks = await this.ortak.GetOrderBooks(null, true)
         this.sonCoin = anaCoin
         this.islemdekiler.push(anaCoin)
-        this.CheckForMainMarket(anaCoin, 'BTC', 'LTC')
-        this.CheckForMainMarket(anaCoin, 'BTC', 'DOGE')
-        this.CheckForMainMarket(anaCoin, 'LTC', 'BTC')
-        this.CheckForMainMarket(anaCoin, 'LTC', 'DOGE')
-        this.CheckForMainMarket(anaCoin, 'DOGE', 'LTC')
-        this.CheckForMainMarket(anaCoin, 'DOGE', 'BTC')
-        this.IslemdekilerCikar(anaCoin)
+        await this.CheckForMainMarket(anaCoin, 'BTC', 'LTC')
+        await this.CheckForMainMarket(anaCoin, 'BTC', 'DOGE')
+        await this.CheckForMainMarket(anaCoin, 'LTC', 'BTC')
+        await this.CheckForMainMarket(anaCoin, 'LTC', 'DOGE')
+        await this.CheckForMainMarket(anaCoin, 'DOGE', 'LTC')
+        await this.CheckForMainMarket(anaCoin, 'DOGE', 'BTC')
+        await this.IslemdekilerCikar(anaCoin)
     }
 
     findMarket (marketName){
@@ -72,7 +72,7 @@ class WsMongo {
         }
     }
 
-    CheckForMainMarket(anaCoin, firstBase, secondBase){
+    async CheckForMainMarket(anaCoin, firstBase, secondBase){
         const lenCoin = this.allCoins.length
         for (let i = 0; i < lenCoin; i++) {
             const coin = this.allCoins[i]
