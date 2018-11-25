@@ -55,10 +55,6 @@ class WsMongo {
         this.islemdekiler.push(anaCoin)
         this.CheckForMainMarket(anaCoin, 'BTC', 'LTC')
         this.CheckForMainMarket(anaCoin, 'BTC', 'DOGE')
-        this.CheckForMainMarket(anaCoin, 'LTC', 'BTC')
-        this.CheckForMainMarket(anaCoin, 'LTC', 'DOGE')
-        this.CheckForMainMarket(anaCoin, 'DOGE', 'LTC')
-        this.CheckForMainMarket(anaCoin, 'DOGE', 'BTC')
         this.IslemdekilerCikar(anaCoin)
     }
 
