@@ -72,31 +72,26 @@ class WsMongo {
     async AltcoinCheck(anaCoin){
         if(this.islemdekiler.includes(anaCoin) || this.ortak.mainMarkets.includes(anaCoin) || this.ortak.wsDataProcessing || anaCoin.includes('$')) return
         //const orderBooks = await this.ortak.GetOrderBooks(null, true)
-        /*
-        const lenBooks = orderBooks.length
-        const findMarket = (market) =>{
-            for (let i = 0; i < lenBooks; i++) {
-                const orderbook = orderBooks[i];
-                if(orderbook.market == market){
-                    if(!orderbook.bids || !orderbook.bids[0] || !orderbook.asks || !orderbook.asks[0]) return false
-                    orderbook.ask = this.SetBook(orderbook, 'asks')
-                    orderbook.bid = this.SetBook(orderbook, 'bids')
-                    return orderbook
-                }
-            }
+        
+        const findMarket = (marketName) =>{
+            const orderbook = this.ortak.depths[marketName].depths
+            orderbook.market = marketName
+            if(!orderbook.bids || !orderbook.bids[0] || !orderbook.asks || !orderbook.asks[0]) return false
+            orderbook.ask = this.SetBook(orderbook, 'asks')
+            orderbook.bid = this.SetBook(orderbook, 'bids')
+            return orderbook
         }
-        */
-
+        
         const lenCoin = this.allCoins.length
         for (let i = 0; i < lenCoin; i++) {
             const coin = this.allCoins[i]
-            const anaCoinLtc  = this.ortak.depths[anaCoin + '/LTC']// findMarket(anaCoin + '/LTC')
-            const anaCoinBtc  = this.ortak.depths[anaCoin + '/BTC']
-            const coinBtc     = this.ortak.depths[coin + '/BTC']
-            const coinLtc     = this.ortak.depths[coin + '/LTC']
+            const anaCoinLtc  = findMarket(anaCoin + '/LTC')
+            const anaCoinBtc  = findMarket(anaCoin + '/BTC')
+            const coinBtc     = findMarket(coin + '/BTC')
+            const coinLtc     = findMarket(coin + '/LTC')
             const testAmount  = 100
 
-            if(!anaCoinLtc || !anaCoinBtc || !coinBtc || !coinLtc || !anaCoinBtc.bids || !coinBtc.bids ) continue
+            if(!anaCoinLtc || !anaCoinBtc || !coinBtc || !coinLtc) continue
             // LTC > BTC
             const firstTotal  = anaCoinLtc.ask.price * testAmount  // LTC ile ada alıyorum
             const secondTotal = anaCoinBtc.bid.price * testAmount  // Adayi btc ye çeviriyorun- ada ile btc alıyorum
