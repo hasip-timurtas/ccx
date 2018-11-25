@@ -118,8 +118,11 @@ class WsMongo {
             const coinBtc     = findMarket(coin + '/'+ secondBase)
             const coinLtc     = findMarket(coin + '/' + firstBase)
             const testAmount  = 100
-
-            if(!anaCoinLtc || !anaCoinBtc || !coinBtc || !coinLtc) continue
+            const fdbName = anaCoinLtc.market.replace('/','-') + '--' + coinBtc.market.replace('/','-')
+            if(!anaCoinLtc || !anaCoinBtc || !coinBtc || !coinLtc){
+                this.FdbCoiniSil(anaCoin, fdbName)
+                continue
+            }
 
             // LTC > BTC
             const firstTotal  = anaCoinLtc.ask.price * testAmount  // LTC ile ada alıyorum
@@ -139,6 +142,8 @@ class WsMongo {
                     console.log(`${anaCoin} coini > ${coin} coinine ${firstBase} > ${secondBase} ile çevirince fark: `+ fark)
                 }
                 */
+            }else{
+                this.FdbCoiniSil(anaCoin, fdbName)
             }
         }
     }
