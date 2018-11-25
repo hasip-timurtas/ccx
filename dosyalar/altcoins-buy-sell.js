@@ -71,7 +71,6 @@ class WsMongo {
 
     async AltcoinCheck(anaCoin){
         if(this.islemdekiler.includes(anaCoin) || this.ortak.mainMarkets.includes(anaCoin) || this.ortak.wsDataProcessing || anaCoin.includes('$')) return
-        console.time(anaCoin)
         const orderBooks = await this.ortak.GetOrderBooks(null, true)
         const lenBooks = orderBooks.length
         const findMarket = (market) =>{
@@ -107,9 +106,6 @@ class WsMongo {
                 console.log(`${anaCoin} coini > ${coin} coinine LTC > BTC ile çevirince fark: `+ fark)
             }
         }
-
-        console.log('İŞLEM BİTTİ')
-        console.timeEnd(anaCoin)
     }
 
 
