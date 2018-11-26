@@ -76,7 +76,7 @@ class WsMongo {
         if(sonucBtcLtc) uygunMarkets.push(sonucBtcLtc)
 
         const sonucbtcDoge = this.CheckForMainMarket(anaCoin, 'BTC', 'DOGE')
-        if(kontrolBtcLtc) uygunMarkets.push(sonucbtcDoge)
+        if(sonucbtcDoge) uygunMarkets.push(sonucbtcDoge)
 
         const sonucLtcBtc =  this.CheckForMainMarket(anaCoin, 'LTC', 'BTC')
         if(sonucLtcBtc) uygunMarkets.push(sonucLtcBtc)
