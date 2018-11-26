@@ -45,8 +45,9 @@ class SellKontrol {
     async CancelAllOrders(openOrders){
         console.log('BÜTÜN ORDERLAR İPTAL EDİLİYORRRRRRRRRRRRRRRRRR.')
         for (const order of openOrders) {
-            await this.ortak.ccx.CancelTrade(order.orderId, order.market).catch(e=> console.log(e))
-            await this.ortak.DeleteOrderFb(order.market, 'sell')
+            await this.ortak.ccx.CancelTrade(order.orderId, order.market).then(e=>{
+                this.ortak.DeleteOrderFb(order.market, 'sell')
+            }).catch(e=> console.log(e))
         }
 
         this.orderYenile = false
