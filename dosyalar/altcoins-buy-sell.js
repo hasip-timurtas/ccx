@@ -89,6 +89,7 @@ class WsMongo {
                 this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(anaCoin).set(uygunMarket)
                 console.log(`${anaCoin} coini > ${uygunMarket.coin} coinine ${uygunMarket.firstBase} > ${uygunMarket.secondBase} ile çevirince fark: `+ uygunMarket.fark)
                 // BUYSELL BURAYA
+                setTimeout(() => this.AltcoinCheck(anaCoin), 2000) // 1 saniye sonra buna tekrardan bak. boşa listede durmasın
             }
         }else{
             this.FdbCoiniSil(anaCoin)
