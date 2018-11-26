@@ -4,6 +4,8 @@ class SellKontrol {
     async LoadVeriables(){
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables('MONGO')
+        this.orderYenile = true
+        setInterval(()=> this.orderYenile = true, 1000 * 60 * 60 * 2) // 2 saatte bir ordersleri sil.
     }
     
     async BaslaSell(){ // baseCoin hangi coinle alacağı
@@ -17,7 +19,12 @@ class SellKontrol {
         const balances = await this.ortak.GetBalance()
         let totalBalances = balances.filter(e=> e.Total > 0)
         await this.ortak.fbBalancesUpdate(totalBalances)
-        const openOrders = await this.ortak.GetFbData() 
+        const openOrders = await this.ortak.GetFbData()
+
+        if(this.orderYenile){
+            await this.CancelAllOrders(openOrders)
+        }
+        
         const mainBalances = balances.filter(e=> this.ortak.mainMarkets.includes(e.Symbol))
         await this.BalanceEsitle(mainBalances) // Şimdilik kapalı. Hangi coin en az gidiyorsa ona çevrilecek.
 
@@ -35,7 +42,15 @@ class SellKontrol {
         await Promise.all([promise1, promise2]).catch(e=> console.log(e))
     }
 
+    async CancelAllOrders(openOrders){
+        console.log('BÜTÜN ORDERLAR İPTAL EDİLİYORRRRRRRRRRRRRRRRRR.')
+        for (const order of openOrders) {
+            await this.ortak.ccx.CancelTrade(order.orderId, order.market).catch(e=> console.log(e))
+            await this.ortak.DeleteOrderFb(order.market, 'sell')
+        }
 
+        this.orderYenile = false
+    }
 
     async BalanceAvilableOlanlar(balances){
         for (const balance of balances) {
