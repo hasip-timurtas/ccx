@@ -122,7 +122,7 @@ class WsMongo {
         const datas = this.GetAnaMarketler(anaCoin, firstBase, secondBase)
         if(!datas) return false 
         const {firstData, secondData} = datas
-        return this.CheckForMainMarket(anaCoin, secondBase, secondBase, firstData, secondData)
+        return this.CheckForMainMarket(anaCoin, firstBase, secondBase, firstData, secondData)
     }
 
     findMarket (marketName){
