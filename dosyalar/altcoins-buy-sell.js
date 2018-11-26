@@ -65,7 +65,7 @@ class WsMongo {
             const uygunMarket = uygunMarkets.sort((a,b)=> b.fark - a.fark)[0]
             if(!uygunMarket) return this.IslemdekilerCikar(anaCoin)
             
-            this.FdbIslemleri(uygunMarket.coin, uygunMarket.first, uygunMarket.second, uygunMarket.fark)
+            this.FdbIslemleri(uygunMarket)
 
             const checkTamUygun = uygunMarket.first.ask.total >= this.ortak.limits[uygunMarket.firstBase] && uygunMarket.second.bid.total >= this.ortak.limits[uygunMarket.secondBase] // CHECK TAM UYGUN
             const checkTamUygun2 = uygunMarket.third.ask.total >= this.ortak.limits[uygunMarket.secondBase] && uygunMarket.fourth.bid.total >= this.ortak.limits[uygunMarket.firstBase] // CHECK TAM UYGUN
@@ -120,15 +120,22 @@ class WsMongo {
         return uygunMarkets.sort((a,b)=> b.fark - a.fark)[0] || false
     }
 
-    FdbIslemleri(coin, first, second, fark){
+    FdbIslemleri(data){
+        const {fark, anaCoin, coin, first, second, third, fourth} = data
         const firstTotalUygun = first.ask.total >= this.ortak.limits[first.market.split('/')[1]]
         const secondTotalUygun = second.bid.total >= this.ortak.limits[second.market.split('/')[1]]
-        const totalUygun = firstTotalUygun && secondTotalUygun
+        const thirdTotalUygun = third.ask.total >= this.ortak.limits[third.market.split('/')[1]]
+        const fourthTotalUygun = fourth.bid.total >= this.ortak.limits[fourth.market.split('/')[1]]
+        const totalUygun = firstTotalUygun && secondTotalUygun && thirdTotalUygun && fourthTotalUygun
         const uygunMarket = {
+            anaCoin,
+            coin,
             firstName: first.market,
             secondName: second.market,
-            firstMarket:  { price: first.ask.price.toFixed(8), amount: first.ask.amount.toFixed(8), total: first.ask.total.toFixed(8), totalUygun: firstTotalUygun  }, // TODO: tofixed kaldır.
-            secondMarket: { price: second.bid.price.toFixed(8), amount: second.bid.amount.toFixed(8), total: second.bid.total.toFixed(8), totalUygun: secondTotalUygun },// TODO: tofixed kaldır.
+            firstMarket:  { price: first.ask.price.toFixed(8), amount: first.ask.amount.toFixed(8), total: first.ask.total.toFixed(8), totalUygun: firstTotalUygun  }, 
+            secondMarket: { price: second.bid.price.toFixed(8), amount: second.bid.amount.toFixed(8), total: second.bid.total.toFixed(8), totalUygun: secondTotalUygun },
+            thirdrMarket: { price: third.ask.price.toFixed(8), amount: third.ask.amount.toFixed(8), total: third.ask.total.toFixed(8), totalUygun:  thirdTotalUygun},
+            fourthMarket: { price: fourth.bid.price.toFixed(8), amount: fourth.bid.amount.toFixed(8), total: fourth.bid.total.toFixed(8), totalUygun:  fourthTotalUygun},
             totalUygun,
             fark: fark.toFixed(2)
         }
