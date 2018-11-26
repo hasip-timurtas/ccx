@@ -66,30 +66,41 @@ class WsMongo {
         return { price, amount, total, eksik }
     }
 
+    GetAnaMarketler(anaCoin, firstBase, secondBase){
+        const firstData = this.findMarket(anaCoin + '/' + firstBase)
+        if(!firstData) return false
+        const secondData = this.findMarket(anaCoin + '/' + secondBase)
+        if(!secondData) return false
+        return { firstData, secondData}
+    }
+
     AltcoinCheck(anaCoin){
         if(this.islemdekiler.includes(anaCoin) || this.ortak.mainMarkets.includes(anaCoin) || this.ortak.wsDataProcessing || anaCoin.includes('$')) return
+        let firstDatas
         //const orderBooks = await this.ortak.GetOrderBooks(null, true)
         this.sonCoin = anaCoin
         this.islemdekiler.push(anaCoin)
         const uygunMarkets = []
-        
-        const sonucBtcLtc = this.CheckForMainMarket(anaCoin, 'BTC', 'LTC')
-        if(sonucBtcLtc) uygunMarkets.push(sonucBtcLtc)
+        this.lenCoins = this.allCoins.length
 
-        const sonucbtcDoge = this.CheckForMainMarket(anaCoin, 'BTC', 'DOGE')
+        const sonucBtcLtc = this.MarketeGir(anaCoin, 'BTC', 'LTC')
+        if(sonucBtcLtc) uygunMarkets.push(sonucBtcLtc)       
+
+        const sonucbtcDoge = this.MarketeGir(anaCoin, 'BTC', 'DOGE')
         if(sonucbtcDoge) uygunMarkets.push(sonucbtcDoge)
-
-        const sonucLtcBtc =  this.CheckForMainMarket(anaCoin, 'LTC', 'BTC')
+        
+        const sonucLtcBtc =  this.MarketeGir(anaCoin, 'LTC', 'BTC')
         if(sonucLtcBtc) uygunMarkets.push(sonucLtcBtc)
-
-        const sonucLtcDoge = this.CheckForMainMarket(anaCoin, 'LTC', 'DOGE')
+        
+        const sonucLtcDoge = this.MarketeGir(anaCoin, 'LTC', 'DOGE')
         if(sonucLtcDoge) uygunMarkets.push(sonucLtcDoge)
 
-        const sonucDogeBtc = this.CheckForMainMarket(anaCoin, 'DOGE', 'BTC')
+        const sonucDogeBtc = this.MarketeGir(anaCoin, 'DOGE', 'BTC')
         if(sonucDogeBtc) uygunMarkets.push(sonucDogeBtc)
 
-        const sonucDogeLtc = this.CheckForMainMarket(anaCoin, 'DOGE', 'LTC')
+        const sonucDogeLtc = this.MarketeGir(anaCoin, 'DOGE', 'LTC')
         if(sonucDogeLtc) uygunMarkets.push(sonucDogeBtc)
+        
 
         if(uygunMarkets.length > 0){
             const uygunMarket = uygunMarkets.sort((a,b)=> b.fark - a.fark)[0]           
@@ -107,6 +118,13 @@ class WsMongo {
         this.IslemdekilerCikar(anaCoin)
     }
 
+    MarketeGir(anaCoin, firstBase, secondBase){
+        const datas = this.GetAnaMarketler(anaCoin, firstBase, secondBase)
+        if(!datas) return false 
+        const {firstData, secondData} = datas
+        return this.CheckForMainMarket(anaCoin, secondBase, secondBase, firstData, secondData)
+    }
+
     findMarket (marketName){
         const market = this.ortak.depths[marketName]
         if(!market || !market.depths || !market.depths.bids || !market.depths.bids[0] || !market.depths.asks || !market.depths.asks[0]) return false
@@ -117,29 +135,33 @@ class WsMongo {
         }
     }
 
-    CheckForMainMarket(anaCoin, firstBase, secondBase){
-        const lenCoin = this.allCoins.length
+    CheckForMainMarket(anaCoin, firstBase, secondBase, anaCoinFirstBase, anaCoinSecondBase){//anaCoinLtc, anaCoinBtc){
         const uygunMarkets = []
-        for (let i = 0; i < lenCoin; i++) {
+        for (let i = 0; i < this.lenCoins; i++) {
             const coin = this.allCoins[i]
+            /*
             const anaCoinLtc  = this.findMarket(anaCoin + '/' + firstBase)
+            if(!anaCoinLtc) continue
+
             const anaCoinBtc  = this.findMarket(anaCoin + '/' + secondBase)
+            if(!anaCoinBtc) continue
+*/
             const coinBtc     = this.findMarket(coin + '/'+ secondBase)
+            if(!coinBtc) continue
+
             const coinLtc     = this.findMarket(coin + '/' + firstBase)
-            const testAmount  = 100
-            
-            if(!anaCoinLtc || !anaCoinBtc || !coinBtc || !coinLtc) continue
+            if(!coinLtc) continue
 
             // LTC > BTC
-            const firstTotal  = anaCoinLtc.ask.price * testAmount  // LTC ile ada alıyorum
-            const secondTotal = anaCoinBtc.bid.price * testAmount  // Adayi btc ye çeviriyorun- ada ile btc alıyorum
+            const firstTotal  = anaCoinFirstBase.ask.price * this.testAmount  // LTC ile ada alıyorum
+            const secondTotal = anaCoinSecondBase.bid.price * this.testAmount  // Adayi btc ye çeviriyorun- ada ile btc alıyorum
             const thirdTotal  = secondTotal / coinBtc.ask.price    // Btc ile etn alıyorum
             const lastTotal   = coinLtc.bid.price * thirdTotal     // etn yi ltc ye satıyorum yani ltc alıyorum
 
             const fark = (lastTotal - firstTotal) / firstTotal * 100 // ilk aldığım değerle son aldığım değeri karşılaştırıyorum.
 
             if(fark > 1){  // %1 den fazla fark varsa tamam.
-                const uygunMarket = {firstBase, secondBase, fark, coin, anaCoin, first: anaCoinLtc, second: anaCoinBtc, third: coinBtc, fourth: coinLtc}
+                const uygunMarket = {firstBase, secondBase, fark, coin, anaCoin, first: anaCoinFirstBase, second: anaCoinSecondBase, third: coinBtc, fourth: coinLtc}
                 uygunMarkets.push(uygunMarket)
             }
         }
