@@ -104,7 +104,7 @@ class WsMongo {
 
         if(uygunMarkets.length > 0){
             const uygunMarket = uygunMarkets.sort((a,b)=> b.fark - a.fark)[0]           
-            if(uygunMarket.fark > 9) this.FdbIslemleri(uygunMarket)
+            this.FdbIslemleri(uygunMarket)
 
             const checkTamUygun = uygunMarket.first.ask.total >= this.ortak.limits[uygunMarket.firstBase] && uygunMarket.second.bid.total >= this.ortak.limits[uygunMarket.secondBase] // CHECK TAM UYGUN
             const checkTamUygun2 = uygunMarket.third.ask.total >= this.ortak.limits[uygunMarket.secondBase] && uygunMarket.fourth.bid.total >= this.ortak.limits[uygunMarket.firstBase] // CHECK TAM UYGUN
