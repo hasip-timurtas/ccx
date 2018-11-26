@@ -32,13 +32,14 @@ class WsMongo {
         //this.AltcoinCheck('RDD')
         if(this.type == 'RAM' || this.type == 'ALTCOIN'){
             this.ortak.wsDepth.WsBaslat(coin=> this.AltcoinCheck(coin))
-            //this.RunForAllCoins()
+            this.RunForAllCoins()
         } 
     }
 
     async RunForAllCoins(){
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
+        return
         this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
         //this.coins = this.coins.filter(e=>e == 'BLOCK')
         while(this.ortak.wsDataProcessing){
