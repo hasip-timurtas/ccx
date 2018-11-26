@@ -32,7 +32,7 @@ class WsMongo {
         //this.AltcoinCheck('RDD')
         if(this.type == 'RAM' || this.type == 'ALTCOIN'){
             this.ortak.wsDepth.WsBaslat(coin=> this.AltcoinCheck(coin))
-            this.RunForAllCoins()
+            //this.RunForAllCoins()
         } 
     }
 
