@@ -48,17 +48,33 @@ class WsMongo {
         return { price, amount, total, eksik }
     }
 
-    async AltcoinCheck(anaCoin){
+    AltcoinCheck(anaCoin){
         if(this.islemdekiler.includes(anaCoin) || this.ortak.mainMarkets.includes(anaCoin) || this.ortak.wsDataProcessing || anaCoin.includes('$')) return
         //const orderBooks = await this.ortak.GetOrderBooks(null, true)
         this.sonCoin = anaCoin
         this.islemdekiler.push(anaCoin)
-        await this.CheckForMainMarket(anaCoin, 'BTC', 'LTC')
-        await this.CheckForMainMarket(anaCoin, 'BTC', 'DOGE')
-        await this.CheckForMainMarket(anaCoin, 'LTC', 'BTC')
-        await this.CheckForMainMarket(anaCoin, 'LTC', 'DOGE')
-        await this.CheckForMainMarket(anaCoin, 'DOGE', 'LTC')
-        await this.CheckForMainMarket(anaCoin, 'DOGE', 'BTC')
+        const uygunMarkets = []
+        uygunMarkets.push(this.CheckForMainMarket(anaCoin, 'BTC', 'LTC'))
+        uygunMarkets.push(this.CheckForMainMarket(anaCoin, 'BTC', 'DOGE'))
+        uygunMarkets.push(this.CheckForMainMarket(anaCoin, 'LTC', 'BTC'))
+        uygunMarkets.push(this.CheckForMainMarket(anaCoin, 'LTC', 'DOGE'))
+        uygunMarkets.push(this.CheckForMainMarket(anaCoin, 'DOGE', 'LTC'))
+        uygunMarkets.push(this.CheckForMainMarket(anaCoin, 'DOGE', 'BTC'))
+
+        if(uygunMarkets.length > 0){
+            const uygunMarket = uygunMarkets.sort((a,b)=> b.fark - a.fark)[0]
+            this.FdbIslemleri(uygunMarket.coin, uygunMarket.anaCoinLtc, uygunMarket.coinBtc, uygunMarket.fark)
+
+            const checkTamUygun = uygunMarket.anaCoinLtc.ask.total >= this.ortak.limits[uygunMarket.firstBase] && uygunMarket.anaCoinBtc.bid.total >= this.ortak.limits[uygunMarket.secondBase] // CHECK TAM UYGUN
+            const checkTamUygun2 = uygunMarket.coinBtc.ask.total >= this.ortak.limits[uygunMarket.secondBase] && uygunMarket.coinLtc.bid.total >= this.ortak.limits[uygunMarket.firstBase] // CHECK TAM UYGUN
+            if(checkTamUygun && checkTamUygun2){
+            
+                this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(coin).set(uygunMarket)
+                console.log(`${anaCoin} coini > ${coin} coinine ${firstBase} > ${secondBase} ile çevirince fark: `+ fark)
+                // BUYSELL BURAYA
+            }
+
+        }
         this.IslemdekilerCikar(anaCoin)
     }
 
@@ -72,8 +88,9 @@ class WsMongo {
         }
     }
 
-    async CheckForMainMarket(anaCoin, firstBase, secondBase){
+    CheckForMainMarket(anaCoin, firstBase, secondBase){
         const lenCoin = this.allCoins.length
+        const uygunMarkets = []
         for (let i = 0; i < lenCoin; i++) {
             const coin = this.allCoins[i]
             const anaCoinLtc  = this.findMarket(anaCoin + '/' + firstBase)
@@ -91,19 +108,14 @@ class WsMongo {
             const lastTotal   = coinLtc.bid.price * thirdTotal     // etn yi ltc ye satıyorum yani ltc alıyorum
 
             const fark = (lastTotal - firstTotal) / firstTotal * 100 // ilk aldığım değerle son aldığım değeri karşılaştırıyorum.
-            const checkTamUygun = anaCoinLtc.ask.total >= this.ortak.limits[firstBase] && anaCoinBtc.bid.total >= this.ortak.limits[secondBase] // CHECK TAM UYGUN
-            const checkTamUygun2 = coinBtc.ask.total >= this.ortak.limits[secondBase] && coinLtc.bid.total >= this.ortak.limits[firstBase] // CHECK TAM UYGUN
 
             if(fark > 2){  // %1 den fazla fark varsa tamam.
-                
-                if(checkTamUygun && checkTamUygun2){
-                    this.FdbIslemleri(coin, anaCoinLtc, coinBtc, fark)
-                    return
-                    this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(coin).set({fark, coin, anaCoin, first: anaCoinLtc, second: anaCoinBtc, third: coinBtc, fourth: coinLtc})
-                    console.log(`${anaCoin} coini > ${coin} coinine ${firstBase} > ${secondBase} ile çevirince fark: `+ fark)
-                }
+                const uygunMarket = {firstBase, secondBase, fark, coin, anaCoin, first: anaCoinLtc, second: anaCoinBtc, third: coinBtc, fourth: coinLtc}
+                uygunMarkets.push(uygunMarket)
             }
         }
+
+        return uygunMarkets.sort((a,b)=> b.fark - a.fark)[0] || false
     }
 
     FdbIslemleri(coin, first, second, fark){
