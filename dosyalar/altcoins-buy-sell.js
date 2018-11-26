@@ -64,8 +64,7 @@ class WsMongo {
         if(uygunMarkets.length > 0){
             const uygunMarket = uygunMarkets.sort((a,b)=> b.fark - a.fark)[0]
             if(!uygunMarket) return this.IslemdekilerCikar(anaCoin)
-            if(!uygunMarket.anaCoinLtc) return this.IslemdekilerCikar(anaCoin)
-
+            
             this.FdbIslemleri(uygunMarket.coin, uygunMarket.first, uygunMarket.second, uygunMarket.fark)
 
             const checkTamUygun = uygunMarket.anaCoinLtc.ask.total >= this.ortak.limits[uygunMarket.firstBase] && uygunMarket.anaCoinBtc.bid.total >= this.ortak.limits[uygunMarket.secondBase] // CHECK TAM UYGUN
