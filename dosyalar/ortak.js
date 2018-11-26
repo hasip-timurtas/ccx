@@ -976,6 +976,40 @@ class Ortak {
             return false
         }
     }
+
+    
+    SetBook(orderBook, type, marketName){ 
+        let price = Number(orderBook[type][0].rate)
+        let amount = Number(orderBook[type][0].amount)
+        let total = price * amount
+        const baseCoin = marketName.split('/')[1]
+        let eksik = false
+        if(total < this.limits[baseCoin] && orderBook[type][1]){
+            price = Number(orderBook[type][1].rate)
+            amount = amount + Number(orderBook[type][1].amount)
+            total = total + (price * amount)
+            eksik = true
+        }
+        return { price, amount, total, eksik }
+    }
+
+    findMarket (marketName){
+        const market = this.depths[marketName]
+        if(!market || !market.depths || !market.depths.bids || !market.depths.bids[0] || !market.depths.asks || !market.depths.asks[0]) return false
+        return {
+            market: marketName,
+            ask: this.SetBook(market.depths, 'asks', marketName),
+            bid: this.SetBook(market.depths, 'bids', marketName)
+        }
+    }
+
+    GetAnaMarketlerData(anaCoin, firstBase, secondBase){
+        const firstData = this.findMarket(anaCoin + '/' + firstBase)
+        if(!firstData) return false
+        const secondData = this.findMarket(anaCoin + '/' + secondBase)
+        if(!secondData) return false
+        return { firstData, secondData}
+    }
 }
 
 module.exports = Ortak

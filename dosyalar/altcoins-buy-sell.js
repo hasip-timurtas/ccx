@@ -52,29 +52,6 @@ class WsMongo {
         setTimeout(() => this.RunForAllCoins(), 1000 * 60 ) // 1 dk da bir refresh
     }
 
-    SetBook(orderBook, type, marketName){ 
-        let price = Number(orderBook[type][0].rate)
-        let amount = Number(orderBook[type][0].amount)
-        let total = price * amount
-        const baseCoin = marketName.split('/')[1]
-        let eksik = false
-        if(total < this.ortak.limits[baseCoin] && orderBook[type][1]){
-            price = Number(orderBook[type][1].rate)
-            amount = amount + Number(orderBook[type][1].amount)
-            total = total + (price * amount)
-            eksik = true
-        }
-        return { price, amount, total, eksik }
-    }
-
-    GetAnaMarketler(anaCoin, firstBase, secondBase){
-        const firstData = this.findMarket(anaCoin + '/' + firstBase)
-        if(!firstData) return false
-        const secondData = this.findMarket(anaCoin + '/' + secondBase)
-        if(!secondData) return false
-        return { firstData, secondData}
-    }
-
     AltcoinCheck(anaCoin){
         if(this.islemdekiler.includes(anaCoin) || this.ortak.mainMarkets.includes(anaCoin) || this.ortak.wsDataProcessing || anaCoin.includes('$')) return
         //const orderBooks = await this.ortak.GetOrderBooks(null, true)
@@ -120,20 +97,10 @@ class WsMongo {
     }
 
     MarketeGir(anaCoin, firstBase, secondBase){
-        const datas = this.GetAnaMarketler(anaCoin, firstBase, secondBase)
+        const datas = this.ortak.GetAnaMarketlerData(anaCoin, firstBase, secondBase)
         if(!datas) return false 
         const {firstData, secondData} = datas
         return this.CheckForMainMarket(anaCoin, firstBase, secondBase, firstData, secondData)
-    }
-
-    findMarket (marketName){
-        const market = this.ortak.depths[marketName]
-        if(!market || !market.depths || !market.depths.bids || !market.depths.bids[0] || !market.depths.asks || !market.depths.asks[0]) return false
-        return {
-            market: marketName,
-            ask: this.SetBook(market.depths, 'asks', marketName),
-            bid: this.SetBook(market.depths, 'bids', marketName)
-        }
     }
 
     CheckForMainMarket(anaCoin, firstBase, secondBase, anaCoinFirstBase, anaCoinSecondBase){//anaCoinLtc, anaCoinBtc){
@@ -141,10 +108,10 @@ class WsMongo {
         for (let i = 0; i < this.lenCoins; i++) {
             const coin = this.allCoins[i]
 
-            const coinBtc     = this.findMarket(coin + '/'+ secondBase)
+            const coinBtc     = this.ortak.findMarket(coin + '/'+ secondBase)
             if(!coinBtc) continue
 
-            const coinLtc     = this.findMarket(coin + '/' + firstBase)
+            const coinLtc     = this.ortak.findMarket(coin + '/' + firstBase)
             if(!coinLtc) continue
 
             // LTC > BTC
