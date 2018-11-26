@@ -24,6 +24,7 @@ class WsMongo {
             try { eval(snap.val()) } catch (error) { console.log('Çalıştırılan kod hatalı')}
         })
         this.allCoins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
+        this.testAmount = 100
     }
 
     cryWsBasla(){
@@ -76,7 +77,6 @@ class WsMongo {
 
     AltcoinCheck(anaCoin){
         if(this.islemdekiler.includes(anaCoin) || this.ortak.mainMarkets.includes(anaCoin) || this.ortak.wsDataProcessing || anaCoin.includes('$')) return
-        let firstDatas
         //const orderBooks = await this.ortak.GetOrderBooks(null, true)
         this.sonCoin = anaCoin
         this.islemdekiler.push(anaCoin)
@@ -100,7 +100,7 @@ class WsMongo {
 
         const sonucDogeLtc = this.MarketeGir(anaCoin, 'DOGE', 'LTC')
         if(sonucDogeLtc) uygunMarkets.push(sonucDogeBtc)
-        
+
 
         if(uygunMarkets.length > 0){
             const uygunMarket = uygunMarkets.sort((a,b)=> b.fark - a.fark)[0]           
