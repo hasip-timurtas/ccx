@@ -52,25 +52,10 @@ class WsMongo {
             return this.IslemdekilerCikar(coin)
         }
 
-        const SetBook = (orderBook, type) => { 
-            let price = Number(orderBook[type][0].rate)
-            let amount = Number(orderBook[type][0].amount)
-            let total = price * amount
-            const baseCoin = orderBook.market.split('/')[1]
-            let eksik = false
-            if(total < this.ortak.limits[baseCoin]){
-                price = Number(orderBook[type][1].rate)
-                amount = amount + Number(orderBook[type][1].amount)
-                total = total + (price * amount)
-                eksik = true
-            }
-            return { price, amount, total, eksik }
-        }
-
         Object.keys(altiTickers).filter(e=> {
             const mrkt = altiTickers[e]
-            altiTickers[e].ask = SetBook(mrkt, 'asks') // {price: mrkt.asks[0].rate, amount: mrkt.asks[0].amount, total: mrkt.asks[0].rate * mrkt.asks[0].amount }
-            altiTickers[e].bid = SetBook(mrkt, 'bids') // {price: mrkt.bids[0].rate, amount: mrkt.bids[0].amount, total: mrkt.bids[0].rate * mrkt.bids[0].amount }
+            altiTickers[e].ask = this.ortak.SetBook(mrkt, 'asks', mrkt.market) // {price: mrkt.asks[0].rate, amount: mrkt.asks[0].amount, total: mrkt.asks[0].rate * mrkt.asks[0].amount }
+            altiTickers[e].bid = this.ortak.SetBook(mrkt, 'bids', mrkt.market) // {price: mrkt.bids[0].rate, amount: mrkt.bids[0].amount, total: mrkt.bids[0].rate * mrkt.bids[0].amount }
         }) 
         
         const uygunMarket = this.UygunMarketiGetir(altiTickers, coin)
@@ -79,17 +64,21 @@ class WsMongo {
         this.sonCoin = coin
     }
 
+
+    GetUygunMarketFormat(first, second, fark){
+        return {
+            firstMarket:  { name: first.market,   price: first.ask.price,   total: first.ask.total },
+            secondMarket: { name: second.market,  price: second.bid.price,  total: second.bid.total },
+            btcMarket:    { name: coinBtc.market, price: coinBtc.ask.price, total: coinBtc.ask.price },
+            fark
+        }
+    }
+
     UygunMarketiGetir(altiTickers, coin){ // type ask yada bid.
         const {coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc} = altiTickers
         const uygunMarkets = []
         const markets = { btc: {ltc:{}, doge:{}}, ltc: {btc:{}, doge:{}}, doge:{btc:{}, ltc:{}} }
         const testAmount = 100
-        const getUygunMarketFormat = (first, second, fark) => ({
-            firstMarket:  { name: first.market,   price: first.ask.price,   total: first.ask.total },
-            secondMarket: { name: second.market,  price: second.bid.price,  total: second.bid.total },
-            btcMarket:    { name: coinBtc.market, price: coinBtc.ask.price, total: coinBtc.ask.price },
-            fark
-        })
 
         const kontrol = (from, to) => {
             const firstBuy = markets[from].buyTotal
@@ -105,7 +94,9 @@ class WsMongo {
             const checkTamUygun = first.ask.total >= this.ortak.limits[from.toUpperCase()] && second.bid.total >= this.ortak.limits[to.toUpperCase()] // CHECK TAM UYGUN
             if(!checkTamUygun) return
             console.log(coin + ` - ${from} > ${to} KOŞUL UYUYOR`)
-            uygunMarkets.push(getUygunMarketFormat(first, second, fark))
+            const marketFrmt = this.GetUygunMarketFormat(first, second, fark)
+            this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(coin).set(marketFrmt)
+            uygunMarkets.push(marketFrmt)
         }
         
         // ALINACAK MARKETLER

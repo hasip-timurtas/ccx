@@ -660,16 +660,16 @@ class Ortak {
         if(!kontrol) return false
 
         let { alisOrderBook, firstOrderBook, secondOrderBook, thirdOrderBook } = kontrol
-        alisOrderBook = this.SetBook(alisOrderBook, 'asks') 
-        firstOrderBook = this.SetBook(firstOrderBook, 'bids') 
-        secondOrderBook = this.SetBook(secondOrderBook, 'asks')
-        thirdOrderBook = d.type == 'alt' ? this.SetBook(thirdOrderBook, 'asks') : this.SetBook(thirdOrderBook, 'bids') 
+        alisOrderBook = this.SetBook2(alisOrderBook, 'asks') 
+        firstOrderBook = this.SetBook2(firstOrderBook, 'bids') 
+        secondOrderBook = this.SetBook2(secondOrderBook, 'asks')
+        thirdOrderBook = d.type == 'alt' ? this.SetBook2(thirdOrderBook, 'asks') : this.SetBook2(thirdOrderBook, 'bids') 
 
 
         return {alisOrderBook, firstOrderBook, secondOrderBook, thirdOrderBook}
     }
 
-    SetBook(orderBook, type){ 
+    SetBook2(orderBook, type){ 
         return {
             price: Number(orderBook[type][0].rate), 
             total: Number(orderBook[type][0].rate) * Number(orderBook[type][0].amount),
