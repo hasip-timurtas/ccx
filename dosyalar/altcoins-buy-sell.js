@@ -39,7 +39,6 @@ class WsMongo {
     async RunForAllCoins(){
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
-        return
         this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
         //this.coins = this.coins.filter(e=>e == 'BLOCK')
         while(this.ortak.wsDataProcessing){
@@ -93,12 +92,12 @@ class WsMongo {
 
         if(uygunMarkets.length > 0){
             const uygunMarket = uygunMarkets.sort((a,b)=> b.fark - a.fark)[0]           
-            this.FdbIslemleri(uygunMarket)
+            
 
             const checkTamUygun = uygunMarket.first.ask.total >= this.ortak.limits[uygunMarket.firstBase] && uygunMarket.second.bid.total >= this.ortak.limits[uygunMarket.secondBase] // CHECK TAM UYGUN
             const checkTamUygun2 = uygunMarket.third.ask.total >= this.ortak.limits[uygunMarket.secondBase] && uygunMarket.fourth.bid.total >= this.ortak.limits[uygunMarket.firstBase] // CHECK TAM UYGUN
             if(checkTamUygun && checkTamUygun2){
-            
+                this.FdbIslemleri(uygunMarket)
                 this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(anaCoin).set(uygunMarket)
                 console.log(`${anaCoin} coini > ${uygunMarket.coin} coinine ${uygunMarket.firstBase} > ${uygunMarket.secondBase} ile çevirince fark: `+ uygunMarket.fark)
                 // BUYSELL BURAYA
@@ -139,7 +138,7 @@ class WsMongo {
 
             const fark = (lastTotal - firstTotal) / firstTotal * 100 // ilk aldığım değerle son aldığım değeri karşılaştırıyorum.
 
-            if(fark > 2){  // %1 den fazla fark varsa tamam.
+            if(fark > 1){  // %1 den fazla fark varsa tamam.
                 const uygunMarket = {firstBase, secondBase, fark, coin, anaCoin, first: anaCoinLtc, second: anaCoinBtc, third: coinBtc, fourth: coinLtc}
                 uygunMarkets.push(uygunMarket)
             }
