@@ -113,7 +113,8 @@ class WsMongo {
                 console.log(`${anaCoin} coini > ${uygunMarket.coin} coinine ${uygunMarket.firstBase} > ${uygunMarket.secondBase} ile çevirince fark: `+ uygunMarket.fark)
                 // BUYSELL BURAYA
             }
-
+        }else{
+            this.FdbCoiniSil(anaCoin)
         }
         this.IslemdekilerCikar(anaCoin)
     }
@@ -139,13 +140,7 @@ class WsMongo {
         const uygunMarkets = []
         for (let i = 0; i < this.lenCoins; i++) {
             const coin = this.allCoins[i]
-            /*
-            const anaCoinLtc  = this.findMarket(anaCoin + '/' + firstBase)
-            if(!anaCoinLtc) continue
 
-            const anaCoinBtc  = this.findMarket(anaCoin + '/' + secondBase)
-            if(!anaCoinBtc) continue
-*/
             const coinBtc     = this.findMarket(coin + '/'+ secondBase)
             if(!coinBtc) continue
 
