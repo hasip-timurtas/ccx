@@ -98,8 +98,8 @@ class WsMongo {
             const checkTamUygun2 = uygunMarket.third.ask.total >= this.ortak.limits[uygunMarket.secondBase] && uygunMarket.fourth.bid.total >= this.ortak.limits[uygunMarket.firstBase] // CHECK TAM UYGUN
             if(checkTamUygun && checkTamUygun2){
             
-                this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(coin).set(uygunMarket)
-                console.log(`${anaCoin} coini > ${coin} coinine ${firstBase} > ${secondBase} ile çevirince fark: `+ fark)
+                this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(anaCoin).set(uygunMarket)
+                console.log(`${anaCoin} coini > ${uygunMarket.coin} coinine ${uygunMarket.firstBase} > ${uygunMarket.secondBase} ile çevirince fark: `+ uygunMarket.fark)
                 // BUYSELL BURAYA
             }
 
@@ -172,7 +172,7 @@ class WsMongo {
         const fdbName = first.market.replace('/','-') + '--' + second.market.replace('/','-')
         if(this.datalarString[fdbName] != JSON.stringify(uygunMarket)){ // Datalar aynı değilse ise kaydet değilse tekrar kontrole git.
             this.datalarString[fdbName] = JSON.stringify(uygunMarket)
-            this.ortak.db.ref(this.fdbRoot).child(coin).child(fdbName).set(uygunMarket)
+            this.ortak.db.ref(this.fdbRoot).child(anaCoin).child(fdbName).set(uygunMarket)
         }
 
         //setTimeout(() => this.YesYeniFunk(coin), 10000) // 10 saniye sonra bu coin için steama gir.
