@@ -67,8 +67,8 @@ class WsMongo {
             
             this.FdbIslemleri(uygunMarket.coin, uygunMarket.first, uygunMarket.second, uygunMarket.fark)
 
-            const checkTamUygun = uygunMarket.anaCoinLtc.ask.total >= this.ortak.limits[uygunMarket.firstBase] && uygunMarket.anaCoinBtc.bid.total >= this.ortak.limits[uygunMarket.secondBase] // CHECK TAM UYGUN
-            const checkTamUygun2 = uygunMarket.coinBtc.ask.total >= this.ortak.limits[uygunMarket.secondBase] && uygunMarket.coinLtc.bid.total >= this.ortak.limits[uygunMarket.firstBase] // CHECK TAM UYGUN
+            const checkTamUygun = uygunMarket.first.ask.total >= this.ortak.limits[uygunMarket.firstBase] && uygunMarket.second.bid.total >= this.ortak.limits[uygunMarket.secondBase] // CHECK TAM UYGUN
+            const checkTamUygun2 = uygunMarket.third.ask.total >= this.ortak.limits[uygunMarket.secondBase] && uygunMarket.fourth.bid.total >= this.ortak.limits[uygunMarket.firstBase] // CHECK TAM UYGUN
             if(checkTamUygun && checkTamUygun2){
             
                 this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(coin).set(uygunMarket)
