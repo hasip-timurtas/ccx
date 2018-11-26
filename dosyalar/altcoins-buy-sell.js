@@ -132,6 +132,8 @@ class WsMongo {
             coin,
             firstName: first.market,
             secondName: second.market,
+            thirdName: third.market,
+            fourthName: fourth.market,
             firstMarket:  { price: first.ask.price.toFixed(8), amount: first.ask.amount.toFixed(8), total: first.ask.total.toFixed(8), totalUygun: firstTotalUygun  }, 
             secondMarket: { price: second.bid.price.toFixed(8), amount: second.bid.amount.toFixed(8), total: second.bid.total.toFixed(8), totalUygun: secondTotalUygun },
             thirdrMarket: { price: third.ask.price.toFixed(8), amount: third.ask.amount.toFixed(8), total: third.ask.total.toFixed(8), totalUygun:  thirdTotalUygun},
