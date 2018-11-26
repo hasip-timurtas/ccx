@@ -71,17 +71,27 @@ class WsMongo {
         this.sonCoin = anaCoin
         this.islemdekiler.push(anaCoin)
         const uygunMarkets = []
-        uygunMarkets.push(this.CheckForMainMarket(anaCoin, 'BTC', 'LTC'))
-        uygunMarkets.push(this.CheckForMainMarket(anaCoin, 'BTC', 'DOGE'))
-        uygunMarkets.push(this.CheckForMainMarket(anaCoin, 'LTC', 'BTC'))
-        uygunMarkets.push(this.CheckForMainMarket(anaCoin, 'LTC', 'DOGE'))
-        uygunMarkets.push(this.CheckForMainMarket(anaCoin, 'DOGE', 'LTC'))
-        uygunMarkets.push(this.CheckForMainMarket(anaCoin, 'DOGE', 'BTC'))
+        
+        const sonucBtcLtc = this.CheckForMainMarket(anaCoin, 'BTC', 'LTC')
+        if(sonucBtcLtc) uygunMarkets.push(sonucBtcLtc)
+
+        const sonucbtcDoge = this.CheckForMainMarket(anaCoin, 'BTC', 'DOGE')
+        if(kontrolBtcLtc) uygunMarkets.push(sonucbtcDoge)
+
+        const sonucLtcBtc =  this.CheckForMainMarket(anaCoin, 'LTC', 'BTC')
+        if(sonucLtcBtc) uygunMarkets.push(sonucLtcBtc)
+
+        const sonucLtcDoge = this.CheckForMainMarket(anaCoin, 'LTC', 'DOGE')
+        if(sonucLtcDoge) uygunMarkets.push(sonucLtcDoge)
+
+        const sonucDogeBtc = this.CheckForMainMarket(anaCoin, 'DOGE', 'BTC')
+        if(sonucDogeBtc) uygunMarkets.push(sonucDogeBtc)
+
+        const sonucDogeLtc = this.CheckForMainMarket(anaCoin, 'DOGE', 'LTC')
+        if(sonucDogeLtc) uygunMarkets.push(sonucDogeBtc)
 
         if(uygunMarkets.length > 0){
-            const uygunMarket = uygunMarkets.sort((a,b)=> b.fark - a.fark)[0]
-            if(!uygunMarket) return this.IslemdekilerCikar(anaCoin)
-            
+            const uygunMarket = uygunMarkets.sort((a,b)=> b.fark - a.fark)[0]           
             this.FdbIslemleri(uygunMarket)
 
             const checkTamUygun = uygunMarket.first.ask.total >= this.ortak.limits[uygunMarket.firstBase] && uygunMarket.second.bid.total >= this.ortak.limits[uygunMarket.secondBase] // CHECK TAM UYGUN
