@@ -47,7 +47,9 @@ class SellKontrol {
         for (const order of openOrders) {
             await this.ortak.ccx.CancelTrade(order.orderId, order.market).then(e=>{
                 this.ortak.DeleteOrderFb(order.market, 'sell')
-            }).catch(e=> console.log(e))
+            }).catch(e=> {
+                if(!e.message.toLowerCase().includes('nonce')) this.ortak.DeleteOrderFb(order.market, 'sell') // nonce hatası değilse dbden sil.
+            })
         }
 
         this.orderYenile = false
