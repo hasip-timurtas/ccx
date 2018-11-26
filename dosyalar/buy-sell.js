@@ -65,7 +65,7 @@ class WsMongo {
     }
 
 
-    GetUygunMarketFormat(first, second, fark){
+    GetUygunMarketFormat(first, second, fark, coinBtc){
         return {
             firstMarket:  { name: first.market,   price: first.ask.price,   total: first.ask.total },
             secondMarket: { name: second.market,  price: second.bid.price,  total: second.bid.total },
@@ -94,7 +94,7 @@ class WsMongo {
             const checkTamUygun = first.ask.total >= this.ortak.limits[from.toUpperCase()] && second.bid.total >= this.ortak.limits[to.toUpperCase()] // CHECK TAM UYGUN
             if(!checkTamUygun) return
             console.log(coin + ` - ${from} > ${to} KOŞUL UYUYOR`)
-            const marketFrmt = this.GetUygunMarketFormat(first, second, fark)
+            const marketFrmt = this.GetUygunMarketFormat(first, second, fark, coinBtc)
             this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(coin).set(marketFrmt)
             uygunMarkets.push(marketFrmt)
         }
