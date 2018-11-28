@@ -15,7 +15,7 @@ class MhtCcxt {
     this.baseCoin = baseCoin
     this.pauseLoops = false
     this.ordersToplam = 0
-    this.exchange.enableRateLimit = true
+    //this.exchange.enableRateLimit = true
 
   }
 
