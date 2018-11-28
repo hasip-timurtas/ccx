@@ -40,12 +40,12 @@ class WsMongo {
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
         this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
-        const promisses = []
+        const promises = []
         while(this.ortak.wsDataProcessing){
             await this.ortak.sleep(2)
         }
         for (const coin of this.coins) {
-            promisses.push(this.YesYeniFunk(coin))
+            promises.push(this.YesYeniFunk(coin))
         }
         await Promise.all(promises).catch(e=> console.log(e))
 
