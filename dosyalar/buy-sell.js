@@ -6,7 +6,7 @@ class WsMongo {
         this.minFark = 1
         this.islemdekiler = []
         this.ortak = new Ortak()
-        await this.ortak.LoadVeriables('ALTCOIN')
+        await this.ortak.LoadVeriables('RAM')
         //await this.ortak.LoadVeriables()
         setInterval(async ()=> await this.BalanceGuncelle(), 2000 )
         setInterval(()=> console.log('Son işlenen: ' + this.sonCoin), 5000 )

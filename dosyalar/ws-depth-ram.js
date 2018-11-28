@@ -13,6 +13,7 @@ class WsDepth {
         this.depths = []
         this.orderBookCount = 10
         this.subSayac = 0
+        this.marketNames = []
     }
 
     async GetMarkets(){
@@ -42,11 +43,15 @@ class WsDepth {
             return butunMarketlerdeVar
         })
 
-        this.ortak.depths = umFilter.map(x=> ({ tradePairId: x['TradePairId'], market: x['Label']}))
+        umFilter.filter(x=> {
+            this.marketNames[x.TradePairId] = x.Label
+            this.ortak.depths[x.Label] = { tradePairId: x['TradePairId'], market: x['Label']}
+        })
     }
 
     async OrderBookInsert(data, callback){
-        const depths = this.ortak.depths.find(e=> e.tradePairId == data.TradePairId) //await this.ortak.depths.findOne({ 'tradePairId': data['TradePairId'] })
+        const marketName = this.marketNames[data.TradePairId]
+        const depths = this.ortak.depths[marketName] //await this.ortak.depths.findOne({ 'tradePairId': data['TradePairId'] })
 
         if(!depths || !depths.depths.asks || !depths.depths.bids) return
         
@@ -88,18 +93,13 @@ class WsDepth {
 
         newDepths = {'bids': bids, 'asks': asks }
 
-        const depth = this.ortak.depths.find(e=>{
-            if(e.tradePairId == data.TradePairId){
-                e.depths = newDepths
-                return true
-            }
-        })
+        this.ortak.depths[marketName].depths = newDepths
 
         const ratem = yeniMix.find(e=> e['rate'] == data['Rate'])
         const indexim = data['Type'] == 1 ? asks.findIndex(e=> e['rate'] == data['Rate']) :  bids.findIndex(e=> e['rate'] == data['Rate'])
 
         if(callback && !this.ortak.wsDataProcessing && data.Action == 0 && indexim == 0 && ratem){// #and steamBasla:
-            const coin = depth.market.split('/')[0]
+            const coin = marketName.split('/')[0]
             callback(coin)
         }
     }
@@ -180,10 +180,11 @@ class WsDepth {
             console.log('WS Opened');
             await this.PrepareDbAndGetUygunMarkets()
             //this.ortak.depths = this.ortak.depths.filter(e=> [101].includes(e.tradePairId))
-            for(var i=0; i < this.ortak.depths.length; i = i + 5){
-                await this.DbOrderbookDoldurBesMarkets(this.ortak.depths.slice(i, i + 5 ))// 5er 5er kayıt göndereecek
+            const depths =  Object.keys(this.ortak.depths).map(e=> this.ortak.depths[e])
+            for(var i=0; i < depths.length; i = i + 5){
+                await this.DbOrderbookDoldurBesMarkets(depths.slice(i, i + 5 ))// 5er 5er kayıt göndereecek
                 this.subSayac = this.subSayac + 5
-                console.log(this.subSayac + ' market eklendi. Tolam market: '+ this.ortak.depths.length)
+                console.log(this.subSayac + ' market eklendi. Tolam market: '+ depths.length)
             }
             this.ortak.wsDataProcessing = false
             console.log('OrderBooks atama işlemi bitti. Tarih: '+ new Date());            
@@ -214,7 +215,7 @@ class WsDepth {
                 bids = bids.slice(0, this.orderBookCount) // ilk 5 kayıt.
                 let asks = market.asks.map(e=> ({ rate:e[0], amount:e[1], type:'asks'}))
                 asks = asks.splice(0, this.orderBookCount) // ilk 5 kayıt
-                this.ortak.depths.find(e=> e.market == i).depths = { bids, asks}
+                this.ortak.depths[i].depths = { bids, asks}
                 const tradePairId = besMarkets.find(e=> e.market == i).tradePairId
                 const orderBookMessage = '{"H":"notificationhub","M":"SetTradePairSubscription","A":[' + tradePairId + ',null],"I":0}'
                 this.ortak.ws.send(orderBookMessage)

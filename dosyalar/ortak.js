@@ -35,11 +35,6 @@ class Ortak {
             const WsDepth = require('./ws-depth-ram')
             this.wsDepth = new WsDepth()
             await this.wsDepth.LoadVeriables(this)
-        }else if(type == 'ALTCOIN'){
-            this.depths = []
-            const WsDepth = require('./ws-depth-ram-altcoin')
-            this.wsDepth = new WsDepth()
-            await this.wsDepth.LoadVeriables(this)
         }
         this.fbBalances = cnn.collection('balances')
         this.history = cnn.collection('history')
