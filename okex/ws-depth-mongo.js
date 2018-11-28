@@ -56,7 +56,7 @@ class OkexWsDepth {
     async InsertCoinsToDb(){
         //ckear collection
         await this.depths.deleteMany({})
-        await this.depths.insertMany(this.uygunMarkets)
+        //await this.depths.insertMany(this.uygunMarkets)
     }
 
     WsBaslat(){
@@ -67,13 +67,13 @@ class OkexWsDepth {
             msg = JSON.parse(msg)
             if(msg.event == 'pong') return
             var data = msg[0] // pong değilse array gelecek.
-            if(!data) return
+            if(!data || data.data.error_code) return
             if(data.channel.includes('depth')){
                 var marketName = data.channel.split('_')[3] +'/'+ data.channel.split('_')[4]
                 marketName = marketName.toUpperCase()
-                data.data.asks = data.data.asks.splice().reverse().map(e => ({ rate:e[0], amount:e[1], type:'bids'}))
+                data.data.asks = data.data.asks.slice().reverse().map(e => ({ rate:e[0], amount:e[1], type:'asks'}))
                 data.data.bids = data.data.bids.map(e => ({ rate:e[0], amount:e[1], type:'bids'}))
-                this.depths.updateOne({market: marketName}, {$set: { depths: data.data}})
+                this.depths.updateOne({market: marketName}, {$set: { depths: data.data}}, {upsert: true})
             }
         }
 
