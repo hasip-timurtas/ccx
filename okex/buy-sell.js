@@ -203,9 +203,10 @@ class WsMongo {
         if(!kontrol) return
 
         const buyResult = await this.ortak.SubmitMongo(market, firstMarket.name, firstMarket.price, amount, 'buy')
-
         if(buyResult) await this.BuyuSellYap({ buyResult, market, secondMarket, amount, altCoin, btcMarket })
     }
+
+    
 
     BaseCoinAmountTotalGetir( firstMarket, secondMarket ){
         let baseCoin, amount, total, price
@@ -268,9 +269,21 @@ class WsMongo {
 
             if(!buyResult.filled || buyResult.filled < amount) await this.ortak.OrderIptalEt(buyResult)
             if(buyResult.filled == 0) return this.MailDataBosBuyInsert(market)
+            if(buyResult.filled > 0){
+                this.BalanceGuncelleArttir(altCoin, buyResult.filled)
+            }
 
             this.MailDataInsert(market, buyResult, sellResult)
             console.log('##############################     BİR İŞLEM OLDU     ##############################')
+    }
+
+    BalanceGuncelleArttir(altcoin, balance){
+        this.balances.filter(e=> {
+            if(e.Symbol == altcoin){
+                e.Total = e.Total + balance
+            }
+            
+        })
     }
 
     async BalanceGuncelle(){
