@@ -28,7 +28,7 @@ class WsMongo {
     async cryWsBasla(){
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
-        //this.ortak.wsDepth.WsBaslat(coin=> this.YesYeniFunk(coin))
+        this.ortak.wsDepth.WsBaslat()
         while(true){
             await this.RunForAllCoinsPromise()
             console.log('RunForAllCoinsPromise BİTTİ')
