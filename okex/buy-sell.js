@@ -26,8 +26,8 @@ class WsMongo {
     }
     
     cryWsBasla(){
-        //this.cryWsBaslaAll()
-        this.RunForAllCoinsPromise()
+        this.cryWsBaslaAll()
+        //this.RunForAllCoinsPromise() // test 1 defa için.
         return
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
