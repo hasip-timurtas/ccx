@@ -6,7 +6,7 @@ class WsMongo {
         this.minFark = 1
         this.islemdekiler = []
         this.ortak = new Ortak()
-        await this.ortak.LoadVeriables('RAM')
+        await this.ortak.LoadVeriables('MONGO')
         //await this.ortak.LoadVeriables()
         setInterval(async ()=> await this.BalanceGuncelle(), 2000 )
         setInterval(()=> console.log('Son işlenen: ' + this.sonCoin), 5000 )
@@ -16,7 +16,7 @@ class WsMongo {
         this.subSayac = 0
         this.steamBasla = false
         this.sonCoin = '1'
-        this.site = 'cry'
+        this.site = 'okex'
         this.proje = 'buy-sell'
         this.fdbRoot = this.site + '/' + this.proje
         this.ortak.db.ref(this.site + '/eval' + this.proje).on('value', snap => {
@@ -73,7 +73,7 @@ class WsMongo {
     async YesYeniFunk(coin){ // mix max v2
         if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$')) return
         this.islemdekiler.push(coin)
-        const altiTickers = this.ortak.GetAltiMarketTickersBuySell(coin)
+        const altiTickers = this.ortak.GetAltiMarketTickers(coin)
         const kontrols = this.YesYeniFunkKontrols(coin, altiTickers)
         if(!kontrols) return
         const uygunMarket = this.UygunMarketiGetir(altiTickers, coin)
@@ -145,27 +145,27 @@ class WsMongo {
 
         // BTC > LTC  #
         markets.btc.ltc.total = ltcBtc.bid.price * markets.ltc.sellTotal     // LTC/BTC
-        kontrol('btc', 'ltc')
+        kontrol('ust', 'btc')
 
         // BTC > DOGE
         markets.btc.doge.total = dogeBtc.bid.price * markets.doge.sellTotal  // DOGE/BTC
-        kontrol('btc', 'doge')
+        kontrol('usdt', 'eth')
 
         // LTC > BTC  #
         markets.ltc.btc.total = markets.btc.sellTotal / ltcBtc.ask.price      // BTC/LTC
-        kontrol('ltc', 'btc')
+        kontrol('btc', 'usdt')
 
         // LTC > DOGE
         markets.ltc.doge.total = dogeLtc.bid.price * markets.doge.sellTotal   // DOGE/LTC
-        kontrol('ltc', 'doge')
+        kontrol('btc', 'eth')
 
         // DOGE > BTC #
         markets.doge.btc.total = markets.btc.sellTotal / dogeBtc.ask.price    // BTC/DOGE
-        kontrol('doge', 'btc')
+        kontrol('eth', 'usdt')
 
         // DOGE > LTC 
         markets.doge.ltc.total = markets.ltc.sellTotal / dogeLtc.ask.price     // LTC/DOGE
-        kontrol('doge', 'ltc')
+        kontrol('eth', 'btc')
 
         if(uygunMarkets.length == 0) return false
         uygunMarkets.sort((a,b)=> b.fark - a.fark)

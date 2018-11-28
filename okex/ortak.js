@@ -8,7 +8,7 @@ firebase.initializeApp({
     databaseURL: "https://firem-b3432.firebaseio.com"
 })
 
-const mongoUrl = "mongodb://144.202.125.69:1453/";
+const mongoUrl = "mongodb://202.182.123.217:1453/";
 
 class Ortak {
     async LoadVeriables(type){
@@ -17,8 +17,8 @@ class Ortak {
         this.minFark = 1
         this.mainMarkets = ['USDT', 'BTC', 'ETH']
         this.site = 'okex'
-        const key = "dbec90fd39294e1fa90db54e404c2edc" // apo cry
-        const secret = "D3tx+b8gb3Me2z3T/D/gzMdRWfNbR9vfYyf/RiqdJzc="
+        const key = "ecaf9745-8fbb-4721-b3b3-cc94a45a1869" // apo cry
+        const secret = "7539A9DB0EFD7A08CE4BD7B4CDF2CA95"
         this.ccx = new MhtCcxt(key, secret, this.site, null)
         this.limits = { "BTC": 0.0006, "ETH": 0.011, "LTC": 0.08, "DOGE": 1100, "BNB":5.1, "USD": 5, "USDT": 5 }
         this.sellLimits = { "BTC": 0.0005, "LTC": 0.01, "DOGE": 100}

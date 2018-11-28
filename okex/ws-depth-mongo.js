@@ -62,9 +62,7 @@ class OkexWsDepth {
     WsBaslat(){
         var wsApi = new WebSocket("wss://real.okex.com:10441/websocket");
         var depthMessage = ""
-        var tickerMessage = ""
         wsApi.onmessage = (message) => {
-
             var msg = pako.inflateRaw(message.data, {to: 'string'})
             msg = JSON.parse(msg)
             if(msg.event == 'pong') return
@@ -73,15 +71,9 @@ class OkexWsDepth {
             if(data.channel.includes('depth')){
                 var marketName = data.channel.split('_')[3] +'/'+ data.channel.split('_')[4]
                 marketName = marketName.toUpperCase()
-                data.data.asks = data.data.asks.slice().reverse()
-                data.data.bids = data.data.bids
+                data.data.asks = data.data.asks.slice().reverse().map(e => ({ rate:e[0], amount:e[1], type:'bids'}))
+                data.data.bids = data.data.bids.map(e => ({ rate:e[0], amount:e[1], type:'bids'}))
                 this.depths.updateOne({market: marketName}, {$set: { depths: data.data}})
-            }
-
-            if(data.channel.includes('ticker')){
-                var marketName = data.channel.split('_')[3] +'/'+ data.channel.split('_')[4]
-                marketName = marketName.toUpperCase()
-                this.depths.updateOne({market: marketName}, {$set: { ticker: data.data}})
             }
         }
 
