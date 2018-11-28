@@ -26,7 +26,8 @@ class WsMongo {
     }
     
     cryWsBasla(){
-        this.cryWsBaslaAll()
+        //this.cryWsBaslaAll()
+        this.RunForAllCoinsPromise()
         return
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
@@ -128,6 +129,7 @@ class WsMongo {
             const firstBuy = markets[from].buyTotal
             const secondSell = markets[from][to].total
             const fark = (secondSell - firstBuy) / firstBuy * 100
+            if(fark > 0) console.log(fark)
             if(fark < this.minFark) return //this.FdbCoiniSil(coin)
             markets[from][to].fark = fark
             from = from.replace(/^\w/, c => c.toUpperCase())
