@@ -98,17 +98,17 @@ class WsMongo {
     }
 
 
-    GetUygunMarketFormat(first, second, fark, coinBtc){
+    GetUygunMarketFormat(first, second, fark, coinUsdt){
         return {
             firstMarket:  { name: first.market,   price: first.ask.price,   total: first.ask.total },
             secondMarket: { name: second.market,  price: second.bid.price,  total: second.bid.total },
-            btcMarket:    { name: coinBtc.market, price: coinBtc.ask.price, total: coinBtc.ask.price },
+            btcMarket:    { name: coinUsdt.market, price: coinUsdt.ask.price, total: coinUsdt.ask.price },
             fark
         }
     }
 
     UygunMarketiGetir(altiTickers, coin){ // type ask yada bid.
-        const {coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc} = altiTickers
+        const {coinUsdt, coinBtc, coinEth, btcUsdt, ethUsdt, ethBtc} = altiTickers
         const uygunMarkets = []
         const markets = { usdt: {btc:{}, eth:{}}, btc: {usdt:{}, eth:{}}, eth:{usdt:{}, btc:{}} }
         const testAmount = 100
@@ -128,43 +128,43 @@ class WsMongo {
             const checkTamUygun = first.ask.total >= this.ortak.limits[from.toUpperCase()] && second.bid.total >= this.ortak.limits[to.toUpperCase()] // CHECK TAM UYGUN
             if(!checkTamUygun) return
             console.log(coin + ` - ${from} > ${to} KOŞUL UYUYOR`)
-            const marketFrmt = this.GetUygunMarketFormat(first, second, fark, coinBtc)
+            const marketFrmt = this.GetUygunMarketFormat(first, second, fark, coinUsdt)
             this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(coin).set(marketFrmt)
             uygunMarkets.push(marketFrmt)
         }
         
         // ALINACAK MARKETLER
-        markets.usdt.buyTotal   = coinBtc.ask.price  * testAmount            // ADA/BTC 
-        markets.btc.buyTotal   = coinLtc.ask.price  * testAmount            // ADA/LTC
-        markets.eth.buyTotal  = coinDoge.ask.price * testAmount            // ADA/DOGE
+        markets.usdt.buyTotal   = coinUsdt.ask.price  * testAmount            // ADA/BTC 
+        markets.btc.buyTotal   = coinBtc.ask.price  * testAmount            // ADA/LTC
+        markets.eth.buyTotal  = coinEth.ask.price * testAmount            // ADA/DOGE
         
         // SATILACAK MARKETLER
-        markets.usdt.sellTotal  = coinBtc.bid.price  * testAmount            // ADA/BTC
-        markets.btc.sellTotal  = coinLtc.bid.price  * testAmount            // ADA/LTC
-        markets.eth.sellTotal = coinDoge.bid.price * testAmount            // ADA/DOGE
+        markets.usdt.sellTotal  = coinUsdt.bid.price  * testAmount            // ADA/BTC
+        markets.btc.sellTotal  = coinBtc.bid.price  * testAmount            // ADA/LTC
+        markets.eth.sellTotal = coinEth.bid.price * testAmount            // ADA/DOGE
 
         // BTC > LTC  #
-        markets.usdt.btc.total = ltcBtc.bid.price * markets.btc.sellTotal     // LTC/BTC
+        markets.usdt.btc.total = btcUsdt.bid.price * markets.btc.sellTotal     // LTC/BTC
         kontrol('usdt', 'btc')
 
         // BTC > DOGE
-        markets.usdt.eth.total = dogeBtc.bid.price * markets.eth.sellTotal  // DOGE/BTC
+        markets.usdt.eth.total = ethUsdt.bid.price * markets.eth.sellTotal  // DOGE/BTC
         kontrol('usdt', 'eth')
 
         // LTC > BTC  #
-        markets.btc.usdt.total = markets.usdt.sellTotal / ltcBtc.ask.price      // BTC/LTC
+        markets.btc.usdt.total = markets.usdt.sellTotal / btcUsdt.ask.price      // BTC/LTC
         kontrol('btc', 'usdt')
 
         // LTC > DOGE
-        markets.btc.eth.total = dogeLtc.bid.price * markets.eth.sellTotal   // DOGE/LTC
+        markets.btc.eth.total = ethBtc.bid.price * markets.eth.sellTotal   // DOGE/LTC
         kontrol('btc', 'eth')
 
         // DOGE > BTC #
-        markets.eth.usdt.total = markets.usdt.sellTotal / dogeBtc.ask.price    // BTC/DOGE
+        markets.eth.usdt.total = markets.usdt.sellTotal / ethUsdt.ask.price    // BTC/DOGE
         kontrol('eth', 'usdt')
 
         // DOGE > LTC 
-        markets.eth.btc.total = markets.btc.sellTotal / dogeLtc.ask.price     // LTC/DOGE
+        markets.eth.btc.total = markets.btc.sellTotal / ethBtc.ask.price     // LTC/DOGE
         kontrol('eth', 'btc')
 
         if(uygunMarkets.length == 0) return false
@@ -289,8 +289,8 @@ class WsMongo {
             return true // hata olduğu için balance var dönüyoruz. yani işlem yapmasın.
         } 
         let altCoinTotal = altCoinBalance.Total
-        const altCoinBtcDegeri = altCoinTotal * anaCoinPrice
-        return altCoinBtcDegeri > this.ortak.limits['BTC']
+        const altcoinUsdtDegeri = altCoinTotal * anaCoinPrice
+        return altcoinUsdtDegeri > this.ortak.limits['BTC']
     }
 
     async HistoryEkle(altCoin, amount, btcAskPrice ){
@@ -354,14 +354,14 @@ class WsMongo {
 
         if(!orderBooks) return false
         
-        //coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc
+        //coinUsdt, coinBtc, coinEth, btcUsdt, ethUsdt, ethBtc
         return { 
-            coinBtc : orderBooks.find(e => e.market == marketler[0]),
-            coinLtc : orderBooks.find(e => e.market == marketler[1]),
-            coinDoge: orderBooks.find(e => e.market == marketler[2]),
-            ltcBtc  : orderBooks.find(e => e.market == marketler[3]),
-            dogeBtc : orderBooks.find(e => e.market == marketler[4]),
-            dogeLtc : orderBooks.find(e => e.market == marketler[5])
+            coinUsdt : orderBooks.find(e => e.market == marketler[0]),
+            coinBtc : orderBooks.find(e => e.market == marketler[1]),
+            coinEth: orderBooks.find(e => e.market == marketler[2]),
+            btcUsdt  : orderBooks.find(e => e.market == marketler[3]),
+            ethUsdt : orderBooks.find(e => e.market == marketler[4]),
+            ethBtc : orderBooks.find(e => e.market == marketler[5])
         }
     }
     
