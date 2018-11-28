@@ -57,8 +57,6 @@ class SellBuyTrade {
         //rk yani result kontrol
         const rk = this.Kontrol(d, rob['firstOrderBook'][0]['Price'], rob['secondOrderBook'][0]['Price'], rob['thirdOrderBook'][0]['Price'])
         
-        if(rk.fark >= 0.2) console.log(rk.fark)
-
         if(rk['sonuc']) await this.UygunMarketEkle(rk, d, rob)
     }
 
@@ -80,6 +78,7 @@ class SellBuyTrade {
     async UygunMarketEkle(rk, d, rob){
         const uygunMarket = {
             'id': this.GetId(),
+            buySell: d['firstMarketName'] + "-" + d['secondMarketName'],
             'fark': rk['fark'],
             'kar': rk['kar'],
             'firstMarket': { 
@@ -97,10 +96,16 @@ class SellBuyTrade {
                 'amount': rk['thirdMarketTotal'], 
                 'type': d['type'] }
             }
+        
+        if(rk.fark >= this.minFark){
+            this.ortak.db.ref('okex/buy-sell').child(d.coin).set(uygunMarket)
+        }else{
+            this.ortak.db.ref('okex/buy-sell').child(d.coin).set(null)
+        }
 
         const result = this.CheckTamUygun(d, rob)
         if(result){
-            this.ortak.db.ref('okex/sell-buy-trade').push(uygunMarket)
+            this.ortak.db.ref('okex/buy-sell-tam-uygun').child(d.coin).push(uygunMarket)
             //await this.BuySellBasla(uygunMarket)
             console.log('###############################  BİR MARKETE GİRDİİİİİİ  ###############################')
         }
