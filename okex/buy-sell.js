@@ -9,7 +9,7 @@ class WsMongo {
         await this.ortak.LoadVeriables('MONGO')
         //await this.ortak.LoadVeriables()
         setInterval(async ()=> await this.BalanceGuncelle(), 2000 )
-        setInterval(()=> console.log('Son işlenen: ' + this.sonCoin), 5000 )
+        setInterval(()=> console.log('Son işlenen: ' + this.sonCoin + ' RunForAllCoinsPromise sayac: '+ this.RunForAllCoinsPromiseSayac), 5000 )
         this.balances = []
         this.oncekiCoin = null
         this.orderBookCount = 10
@@ -23,6 +23,7 @@ class WsMongo {
             try { eval(snap.val()) } catch (error) { console.log('Çalıştırılan kod hatalı')}
         })
         this.datalarString = []
+        this.RunForAllCoinsPromiseSayac = 0
     }
     
     cryWsBasla(){
@@ -57,7 +58,7 @@ class WsMongo {
             promises.push(this.YesYeniFunk(coin))
         }
         await Promise.all(promises).catch(e=> console.log(e))
-        console.log('RunForAllCoinsPromise BİTTİ')
+        this.RunForAllCoinsPromiseSayac++
     }
 
     async RunForAllCoins(){
