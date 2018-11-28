@@ -50,6 +50,7 @@ class WsMongo {
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
         this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId.toUpperCase())
+        this.allOrderBooks = await this.ortak.GetOrderBooks(null,true) // Hepsini alıyoruz.
         const promises = []
         while(this.ortak.wsDataProcessing){
             await this.ortak.sleep(2)
@@ -58,27 +59,13 @@ class WsMongo {
             promises.push(this.YesYeniFunk(coin))
         }
         await Promise.all(promises).catch(e=> console.log(e))
-        this.RunForAllCoinsPromiseSayac
-    }
-
-    async RunForAllCoins(){
-        this.ortak.db.ref(this.fdbRoot).set(null)
-        this.datalarString = []
-        this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId.toUpperCase())
-        //this.coins = this.coins.filter(e=>e == 'BLOCK')
-        while(this.ortak.wsDataProcessing){
-            await this.ortak.sleep(2)
-        }
-        for (const coin of this.coins) {
-            this.YesYeniFunk(coin)
-        }
-        setTimeout(() => this.RunForAllCoins(), 1000 * 60 ) // 1 dk da bir refresh
+        this.RunForAllCoinsPromiseSayac++
     }
 
     async YesYeniFunk(coin){ // mix max v2
         if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$')) return
         this.islemdekiler.push(coin)
-        const altiTickers = await this.ortak.GetAltiMarketTickers(coin)
+        const altiTickers = this.GetAltiMarketTickers(coin)
            
         Object.keys(altiTickers).filter(e=> {
             const mrkt = altiTickers[e]
@@ -343,6 +330,38 @@ class WsMongo {
             this.ortak.db.ref(this.fdbRoot).child(coin).child(marketName).set(null)
         }else{
             this.ortak.db.ref(this.fdbRoot).child(coin).set(null)
+        }
+    }
+
+    GetAltiMarketTickers(coin){
+        // mainMarkets -> ['BTC', 'LTC', 'DOGE']
+        const marketler = [
+            coin + "/" + this.ortak.mainMarkets[0], // ADA/BTC
+            coin + "/" + this.ortak.mainMarkets[1], // ADA/LTC
+            coin + "/" + this.ortak.mainMarkets[2], // ADA/DOGE
+            this.ortak.mainMarkets[1] + "/" + this.ortak.mainMarkets[0], // LTC/BTC
+            this.ortak.mainMarkets[2] + "/" + this.ortak.mainMarkets[0], // DOGE/BTC
+            this.ortak.mainMarkets[2] + "/" + this.ortak.mainMarkets[1]  // DOGE/LTC
+        ]
+
+        let orderBooks = this.allOrderBooks.filter(e=> marketler.includes(e.market))
+        const result = this.ortak.OrderBooksDataKontrol(orderBooks)
+        
+        if(!result || orderBooks.length < 6){
+            return false
+            //orderBooks = await this.GetOrderBookGroupRest(coin)
+        }
+
+        if(!orderBooks) return false
+        
+        //coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc
+        return { 
+            coinBtc : orderBooks.find(e => e.market == marketler[0]),
+            coinLtc : orderBooks.find(e => e.market == marketler[1]),
+            coinDoge: orderBooks.find(e => e.market == marketler[2]),
+            ltcBtc  : orderBooks.find(e => e.market == marketler[3]),
+            dogeBtc : orderBooks.find(e => e.market == marketler[4]),
+            dogeLtc : orderBooks.find(e => e.market == marketler[5])
         }
     }
     
