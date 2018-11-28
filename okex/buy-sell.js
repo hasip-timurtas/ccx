@@ -129,7 +129,7 @@ class WsMongo {
             if(!checkTamUygun) return
             console.log(coin + ` - ${from} > ${to} KOŞUL UYUYOR`)
             const marketFrmt = this.GetUygunMarketFormat(first, second, fark, coinUsdt)
-            this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(coin).set(marketFrmt)
+            this.ortak.db.ref(this.fdbRoot+"-uygunlar").push(coin).set(marketFrmt)
             uygunMarkets.push(marketFrmt)
         }
         
