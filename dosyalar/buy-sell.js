@@ -44,7 +44,7 @@ class WsMongo {
     }
 
     async YesYeniFunk(coin){ // mix max v2
-        if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$')) continue
+        if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$')) return
         this.islemdekiler.push(coin)
         const altiTickers = this.ortak.GetAltiMarketTickersBuySell(coin)
         const kontrols = this.YesYeniFunkKontrols(coin, altiTickers)
