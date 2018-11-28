@@ -624,7 +624,9 @@ class Ortak {
     }
      
     VolumeKontrol(markets){
-        const vUygunlar = markets.filter(e=> this.marketTickers.Data.find(a=> a.Label == e.market && a.Volume > 0)) // Bu volumesi uygun marketleri alır.
+        const marketNames = markets.map(e=> e.market)
+        const marketTickers = this.marketTickers.Data.filter(e=> marketNames.includes(e.Label))
+        const vUygunlar = markets.filter(e=> marketTickers.find(a=> a.Label == e.market && a.Volume > 0)) // Bu volumesi uygun marketleri alır.
 
         const uygunMarket = vUygunlar.sort((a,b)=> b.total - a.total)[0] // b-a büyükten küçüğe
         if(!uygunMarket){

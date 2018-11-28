@@ -21,17 +21,20 @@ class SellKontrol {
         await this.ortak.fbBalancesUpdate(totalBalances)
         const openOrders = await this.ortak.GetFbData()
 
-        if(this.orderYenile){
-            await this.CancelAllOrders(openOrders)
-        }
+
         
         const mainBalances = balances.filter(e=> this.ortak.mainMarkets.includes(e.Symbol))
         await this.BalanceEsitle(mainBalances) // Şimdilik kapalı. Hangi coin en az gidiyorsa ona çevrilecek.
 
-        if(false){
+        if(true){
             //  ################     TEST     ################    TEST    ################     TEST     ################
-            const testCoins = ['MGO'] // Dizi Olmalı
+            const testCoins = ['BPL'] // Dizi Olmalı
             totalBalances = totalBalances.filter(e=> testCoins.includes(e.Symbol))
+            this.orderYenile = false // cancel all ordere girmemesi için.
+        }
+
+        if(this.orderYenile){
+            await this.CancelAllOrders(openOrders)
         }
 
         const islemdeBalances = totalBalances.filter(e=> e.Total != e.Available)
