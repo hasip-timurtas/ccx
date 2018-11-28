@@ -3,7 +3,7 @@ const Ortak = require('./ortak')
 class WsMongo {
     async LoadVeriables() {
         this.islemKati = 15
-        this.minFark = 1
+        this.minFark = 2
         this.islemdekiler = []
         this.ortak = new Ortak()
         await this.ortak.LoadVeriables('MONGO')
