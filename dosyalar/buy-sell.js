@@ -22,9 +22,12 @@ class WsMongo {
         this.ortak.db.ref(this.site + '/eval' + this.proje).on('value', snap => {
             try { eval(snap.val()) } catch (error) { console.log('Çalıştırılan kod hatalı')}
         })
+        this.datalarString = []
     }
 
     cryWsBasla(){
+        this.ortak.db.ref(this.fdbRoot).set(null)
+        this.datalarString = []
         this.ortak.wsDepth.WsBaslat(coin=> this.YesYeniFunk(coin))
         //this.RunForAllCoins()
     }
