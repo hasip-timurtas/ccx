@@ -20,7 +20,7 @@ class OkexWsDepth {
 
     async Basla(){
         this.connection = await mongodb.MongoClient.connect(this.url, { useNewUrlParser: true });
-        this.depths = this.connection.db('okex').collection('depths')
+        this.depths = this.connection.db('okex').collection('ws-depths')
         await this.GetHerMarketteOlanlar()
         await this.InsertCoinsToDb()
         console.log(this.uygunMarkets.length + ' aded coin var')
