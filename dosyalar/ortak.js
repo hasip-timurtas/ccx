@@ -208,14 +208,22 @@ class Ortak {
 
     async GetAltiMarketTickersBuySell(coin){
         // mainMarkets -> ['BTC', 'LTC', 'DOGE']
+        const marketler = [
+            coin + "/" + this.mainMarkets[0], // ADA/BTC
+            coin + "/" + this.mainMarkets[1], // ADA/LTC
+            coin + "/" + this.mainMarkets[2], // ADA/DOGE
+            this.mainMarkets[1] + "/" + this.mainMarkets[0], // LTC/BTC
+            this.mainMarkets[2] + "/" + this.mainMarkets[0], // DOGE/BTC
+            this.mainMarkets[2] + "/" + this.mainMarkets[1]  // DOGE/LTC
+        ]
         
         let orderBooks = [
-            this.findMarket(coin + "/" + this.mainMarkets[0]), // ADA/BTC
-            this.findMarket(coin + "/" + this.mainMarkets[1]), // ADA/LTC
-            this.findMarket(coin + "/" + this.mainMarkets[2]), // ADA/DOGE
-            this.findMarket(this.mainMarkets[1] + "/" + this.mainMarkets[0]), // LTC/BTC
-            this.findMarket(this.mainMarkets[2] + "/" + this.mainMarkets[0]), // DOGE/BTC
-            this.findMarket(this.mainMarkets[2] + "/" + this.mainMarkets[1])  // DOGE/LTC
+            this.findMarket(marketler[0]), // ADA/BTC
+            this.findMarket(marketler[1]), // ADA/LTC
+            this.findMarket(marketler[2]), // ADA/DOGE
+            this.findMarket(marketler[3]), // LTC/BTC
+            this.findMarket(marketler[4]), // DOGE/BTC
+            this.findMarket(marketler[5])  // DOGE/LTC
         ]
 
         orderBooks = orderBooks.map(e=> {

@@ -51,13 +51,13 @@ class WsMongo {
             this.FdbCoiniSil(coin)
             return this.IslemdekilerCikar(coin)
         }
-
+        /*
         Object.keys(altiTickers).filter(e=> {
             const mrkt = altiTickers[e]
             altiTickers[e].ask = this.ortak.SetBook(mrkt, 'asks', mrkt.market) // {price: mrkt.asks[0].rate, amount: mrkt.asks[0].amount, total: mrkt.asks[0].rate * mrkt.asks[0].amount }
             altiTickers[e].bid = this.ortak.SetBook(mrkt, 'bids', mrkt.market) // {price: mrkt.bids[0].rate, amount: mrkt.bids[0].amount, total: mrkt.bids[0].rate * mrkt.bids[0].amount }
         }) 
-        
+        */
         const uygunMarket = this.UygunMarketiGetir(altiTickers, coin)
         if(uygunMarket) await this.BuySellBasla(uygunMarket).catch(e=> this.IslemdekilerCikarHataEkle(e, coin))
         this.IslemdekilerCikar(coin)
