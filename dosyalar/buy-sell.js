@@ -39,7 +39,6 @@ class WsMongo {
         while(true){
             await this.RunForAllCoinsPromise()
         }
-        //this.RunForAllCoins()
     }
 
     async RunForAllCoinsPromise(){
@@ -54,7 +53,7 @@ class WsMongo {
             promises.push(this.YesYeniFunk(coin))
         }
         await Promise.all(promises).catch(e=> console.log(e))
-
+        console.log('RunForAllCoinsPromise BİTTİ')
     }
 
     async RunForAllCoins(){
@@ -354,3 +353,19 @@ async function Basla(){
 }
 
 Basla()
+
+
+async function deneme() {
+    var promises = []
+    for (let i = 1; i < 11; i++) {
+        promises.push(proFunc(i))
+    }
+
+    await Promise.all(promises)
+    console.log('ALL İŞLEM BİTTİ')
+}
+
+async function proFunc(i) {
+    await new Promise(resolve => setTimeout(resolve, i * 1000))
+    console.log(i + ' işlem bitti')
+}
