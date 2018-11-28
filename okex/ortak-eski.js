@@ -21,7 +21,7 @@ class Ortak {
         this.db = firebase.database();
         const connection = await mongodb.MongoClient.connect(mongoUrl, { useNewUrlParser: true });
         const cnn = connection.db('okex')
-        this.depths = cnn.collection('depths')
+        this.depths = cnn.collection('ws-depths')
         this.marketsInfos = await this.ccx.exchange.load_markets().catch(async (e)=> await this.LoadVeriables())
         this.marketsInfos = Object.keys(this.marketsInfos).map(e=> this.marketsInfos[e])
         this.islemdekiCoinler = []
