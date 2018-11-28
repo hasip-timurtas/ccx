@@ -1,4 +1,3 @@
-const errorCodes = require('./erors')
 const mongodb = require('mongodb')
 const firebase = require('firebase-admin')
 const MhtCcxt = require('../dll/mhtCcxt')
@@ -288,10 +287,7 @@ class Ortak {
         await this.Submit(marketName, buyPrice, alinacakBalance, 'buy').then(async (e)=>{
             if(!e.id) return
             await this.InsertOrderFb(e, 'buy')
-        }).catch(e=>{
-            var errorCode = e.message.replace('okex {"error_code":','').replace('}','')
-            console.log(e, (errorCodes[errorCode]), balance.Symbol)
-        })
+        }).catch(e=> console.log(e))
     }
 
     async MinMaxKontrol(coin){
