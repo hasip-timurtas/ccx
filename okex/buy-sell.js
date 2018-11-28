@@ -277,7 +277,10 @@ class WsMongo {
     async BalanceGuncelle(){
         const balances = await this.ortak.GetBalance().catch(e=> this.HataEkle(e))
         if(balances){
-            this.balances = balances
+            this.balances = balances.filter(e=>{
+                e.Symbol = e.Symbol.toUpperCase()
+                return true
+            })
         }
     }
 
