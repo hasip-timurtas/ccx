@@ -71,7 +71,7 @@ class OkexWsDepth {
             if(data.channel.includes('depth')){
                 var marketName = data.channel.split('_')[3] +'/'+ data.channel.split('_')[4]
                 marketName = marketName.toUpperCase()
-                data.data.asks = data.data.asks.slice().reverse().map(e => ({ rate:e[0], amount:e[1], type:'bids'}))
+                data.data.asks = data.data.asks.splice().reverse().map(e => ({ rate:e[0], amount:e[1], type:'bids'}))
                 data.data.bids = data.data.bids.map(e => ({ rate:e[0], amount:e[1], type:'bids'}))
                 this.depths.updateOne({market: marketName}, {$set: { depths: data.data}})
             }
