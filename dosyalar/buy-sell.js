@@ -24,8 +24,15 @@ class WsMongo {
         })
         this.datalarString = []
     }
+    
+    cryWsBasla(){
+        this.ortak.db.ref(this.fdbRoot).set(null)
+        this.datalarString = []
+        this.ortak.wsDepth.WsBaslat(coin=> this.AltcoinCheck(coin))
+        this.RunForAllCoins()
+    }
 
-    async cryWsBasla(){
+    async cryWsBaslaAll(){
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
         this.ortak.wsDepth.WsBaslat()
