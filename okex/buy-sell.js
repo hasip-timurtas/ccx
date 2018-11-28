@@ -76,7 +76,7 @@ class WsMongo {
         const kontrols = this.YesYeniFunkKontrols(coin, altiTickers)
         if(!kontrols) return
         const uygunMarket = this.UygunMarketiGetir(altiTickers, coin)
-        //if(uygunMarket) await this.BuySellBasla(uygunMarket).catch(e=> this.IslemdekilerCikarHataEkle(e, coin))
+        if(uygunMarket) await this.BuySellBasla(uygunMarket).catch(e=> this.IslemdekilerCikarHataEkle(e, coin))
         this.IslemdekilerCikar(coin)
         this.sonCoin = coin
     }
