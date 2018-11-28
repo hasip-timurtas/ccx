@@ -14,7 +14,7 @@ class Ortak {
     async LoadVeriables(type){
         if(!type) throw 'LÜTFEN ORTAK CLASS İÇİN TYPE GİRİN.'
         this.type = type
-        this.minFark = 1
+        this.minFark = 2
         this.mainMarkets = ['USDT', 'BTC', 'ETH']
         this.site = 'okex'
         const key = "cc624bb0-e2e2-400e-91e8-60b1444d9037" // hasip okex
