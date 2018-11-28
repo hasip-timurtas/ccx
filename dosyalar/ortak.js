@@ -206,7 +206,7 @@ class Ortak {
         }
     }
 
-    async GetAltiMarketTickersBuySell(coin){
+    GetAltiMarketTickersBuySell(coin){
         // mainMarkets -> ['BTC', 'LTC', 'DOGE']
         const marketler = [
             coin + "/" + this.mainMarkets[0], // ADA/BTC

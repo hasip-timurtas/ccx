@@ -39,7 +39,7 @@ class WsDepth {
             const markets = [coin + '/BTC', coin + '/LTC', coin + '/DOGE']
             if(mainMarkets.includes(x.Label)) return true
             if(yasakliMarkets.includes(baseCoin)) return false
-            const butunMarketlerdeVar = allMarkets.includes(markets[0]) && allMarkets.includes(markets[1]) && allMarkets.includes(markets[2]) //&& x.Volume > 0.1
+            const butunMarketlerdeVar = allMarkets.includes(markets[0]) && allMarkets.includes(markets[1]) && allMarkets.includes(markets[2]) //&& x.Volume > 1
             return butunMarketlerdeVar
         })
 
