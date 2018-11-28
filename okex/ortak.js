@@ -15,8 +15,8 @@ class Ortak {
         if(!type) throw 'LÜTFEN ORTAK CLASS İÇİN TYPE GİRİN.'
         this.type = type
         this.minFark = 1
-        this.mainMarkets = ['BTC', 'LTC', 'DOGE']
-        this.site = 'cryptopia'
+        this.mainMarkets = ['USDT', 'BTC', 'ETH']
+        this.site = 'okex'
         const key = "dbec90fd39294e1fa90db54e404c2edc" // apo cry
         const secret = "D3tx+b8gb3Me2z3T/D/gzMdRWfNbR9vfYyf/RiqdJzc="
         this.ccx = new MhtCcxt(key, secret, this.site, null)
@@ -25,7 +25,7 @@ class Ortak {
         this.volumeLimtis = { "BTC": 0.5, "ETH": 10, "LTC": 50, "DOGE": 1100, "BNB":250, "USD":3250, "USDT":3250 }
         this.db = firebase.database()
         const connection = await mongodb.MongoClient.connect(mongoUrl, { useNewUrlParser: true });
-        const cnn = connection.db('cry')
+        const cnn = connection.db('okex')
         this.wsDataProcessing = true // ilk başta true diyoruz. ilk çalıştığında beklesin diye.
         if(type == 'MONGO'){
             this.wsDataProcessing = false // boşuna beklemesinler çünkü ws yok.
