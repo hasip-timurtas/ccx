@@ -216,38 +216,14 @@ class Ortak {
             this.mainMarkets[2] + "/" + this.mainMarkets[0], // DOGE/BTC
             this.mainMarkets[2] + "/" + this.mainMarkets[1]  // DOGE/LTC
         ]
-        
-        let orderBooks = [
-            this.findMarket(marketler[0]), // ADA/BTC
-            this.findMarket(marketler[1]), // ADA/LTC
-            this.findMarket(marketler[2]), // ADA/DOGE
-            this.findMarket(marketler[3]), // LTC/BTC
-            this.findMarket(marketler[4]), // DOGE/BTC
-            this.findMarket(marketler[5])  // DOGE/LTC
-        ]
 
-        orderBooks = orderBooks.map(e=> {
-            if(!e.depths){
-                return e
-            }
-            e.depths.market = e.market
-            return e.depths
-        })
-
-        const result = this.OrderBooksDataKontrol(orderBooks)
-        
-        if(!orderBooks || !result || orderBooks.length < 6){
-            return false
-        }
-        
-        //coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc
         return { 
-            coinBtc : orderBooks.find(e => e.market == marketler[0]),
-            coinLtc : orderBooks.find(e => e.market == marketler[1]),
-            coinDoge: orderBooks.find(e => e.market == marketler[2]),
-            ltcBtc  : orderBooks.find(e => e.market == marketler[3]),
-            dogeBtc : orderBooks.find(e => e.market == marketler[4]),
-            dogeLtc : orderBooks.find(e => e.market == marketler[5])
+            coinBtc : this.findMarket(marketler[0]),
+            coinLtc : this.findMarket(marketler[1]),
+            coinDoge: this.findMarket(marketler[2]),
+            ltcBtc  : this.findMarket(marketler[3]),
+            dogeBtc : this.findMarket(marketler[4]),
+            dogeLtc : this.findMarket(marketler[5])
         }
     }
 
