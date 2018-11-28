@@ -17,8 +17,12 @@ class Ortak {
         this.minFark = 1
         this.mainMarkets = ['USDT', 'BTC', 'ETH']
         this.site = 'okex'
-        const key = "ecaf9745-8fbb-4721-b3b3-cc94a45a1869" // apo cry
-        const secret = "7539A9DB0EFD7A08CE4BD7B4CDF2CA95"
+        const key = "cc624bb0-e2e2-400e-91e8-60b1444d9037" // hasip okex
+        const secret = "29B4A74AF2EFA4CE5CF38DA6EAAC0436"
+        /*
+        const key = "f4544544-67bd-4984-b26e-642a4951dedf" // apo okex
+        const secret = "D90A009CB124702AF2FD382747909628"
+        */
         this.ccx = new MhtCcxt(key, secret, this.site, null)
         this.limits = { "BTC": 0.0006, "ETH": 0.011, "LTC": 0.08, "DOGE": 1100, "BNB":5.1, "USD": 5, "USDT": 5 }
         this.sellLimits = { "BTC": 0.0005, "LTC": 0.01, "DOGE": 100}

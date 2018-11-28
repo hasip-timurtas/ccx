@@ -26,16 +26,19 @@ class WsMongo {
     }
     
     cryWsBasla(){
+        this.cryWsBaslaAll()
+        return
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
-        this.ortak.wsDepth.WsBaslat(coin=> this.YesYeniFunk(coin))
-        this.RunForAllCoins()
+        this.YesYeniFunk('ADA')
+        //this.ortak.wsDepth.WsBaslat(coin=> this.YesYeniFunk(coin))
+        //this.RunForAllCoins()
     }
 
     async cryWsBaslaAll(){
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
-        this.ortak.wsDepth.WsBaslat()
+        //this.ortak.wsDepth.WsBaslat()
         while(true){
             await this.RunForAllCoinsPromise()
         }
@@ -44,7 +47,7 @@ class WsMongo {
     async RunForAllCoinsPromise(){
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
-        this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
+        this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId.toUpperCase())
         const promises = []
         while(this.ortak.wsDataProcessing){
             await this.ortak.sleep(2)
@@ -59,7 +62,7 @@ class WsMongo {
     async RunForAllCoins(){
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
-        this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
+        this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId.toUpperCase())
         //this.coins = this.coins.filter(e=>e == 'BLOCK')
         while(this.ortak.wsDataProcessing){
             await this.ortak.sleep(2)
@@ -73,7 +76,14 @@ class WsMongo {
     async YesYeniFunk(coin){ // mix max v2
         if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$')) return
         this.islemdekiler.push(coin)
-        const altiTickers = this.ortak.GetAltiMarketTickers(coin)
+        const altiTickers = await this.ortak.GetAltiMarketTickers(coin)
+           
+        Object.keys(altiTickers).filter(e=> {
+            const mrkt = altiTickers[e]
+            altiTickers[e].ask = this.ortak.SetBook(mrkt, 'asks', mrkt.market) // {price: mrkt.asks[0].rate, amount: mrkt.asks[0].amount, total: mrkt.asks[0].rate * mrkt.asks[0].amount }
+            altiTickers[e].bid = this.ortak.SetBook(mrkt, 'bids', mrkt.market) // {price: mrkt.bids[0].rate, amount: mrkt.bids[0].amount, total: mrkt.bids[0].rate * mrkt.bids[0].amount }
+        }) 
+        
         const kontrols = this.YesYeniFunkKontrols(coin, altiTickers)
         if(!kontrols) return
         const uygunMarket = this.UygunMarketiGetir(altiTickers, coin)
@@ -111,7 +121,7 @@ class WsMongo {
     UygunMarketiGetir(altiTickers, coin){ // type ask yada bid.
         const {coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc} = altiTickers
         const uygunMarkets = []
-        const markets = { btc: {ltc:{}, doge:{}}, ltc: {btc:{}, doge:{}}, doge:{btc:{}, ltc:{}} }
+        const markets = { usdt: {btc:{}, eth:{}}, btc: {usdt:{}, eth:{}}, eth:{usdt:{}, btc:{}} }
         const testAmount = 100
 
         const kontrol = (from, to) => {
@@ -134,37 +144,37 @@ class WsMongo {
         }
         
         // ALINACAK MARKETLER
-        markets.btc.buyTotal   = coinBtc.ask.price  * testAmount            // ADA/BTC 
-        markets.ltc.buyTotal   = coinLtc.ask.price  * testAmount            // ADA/LTC
-        markets.doge.buyTotal  = coinDoge.ask.price * testAmount            // ADA/DOGE
+        markets.usdt.buyTotal   = coinBtc.ask.price  * testAmount            // ADA/BTC 
+        markets.btc.buyTotal   = coinLtc.ask.price  * testAmount            // ADA/LTC
+        markets.eth.buyTotal  = coinDoge.ask.price * testAmount            // ADA/DOGE
         
         // SATILACAK MARKETLER
-        markets.btc.sellTotal  = coinBtc.bid.price  * testAmount            // ADA/BTC
-        markets.ltc.sellTotal  = coinLtc.bid.price  * testAmount            // ADA/LTC
-        markets.doge.sellTotal = coinDoge.bid.price * testAmount            // ADA/DOGE
+        markets.usdt.sellTotal  = coinBtc.bid.price  * testAmount            // ADA/BTC
+        markets.btc.sellTotal  = coinLtc.bid.price  * testAmount            // ADA/LTC
+        markets.eth.sellTotal = coinDoge.bid.price * testAmount            // ADA/DOGE
 
         // BTC > LTC  #
-        markets.btc.ltc.total = ltcBtc.bid.price * markets.ltc.sellTotal     // LTC/BTC
-        kontrol('ust', 'btc')
+        markets.usdt.btc.total = ltcBtc.bid.price * markets.btc.sellTotal     // LTC/BTC
+        kontrol('usdt', 'btc')
 
         // BTC > DOGE
-        markets.btc.doge.total = dogeBtc.bid.price * markets.doge.sellTotal  // DOGE/BTC
+        markets.usdt.eth.total = dogeBtc.bid.price * markets.eth.sellTotal  // DOGE/BTC
         kontrol('usdt', 'eth')
 
         // LTC > BTC  #
-        markets.ltc.btc.total = markets.btc.sellTotal / ltcBtc.ask.price      // BTC/LTC
+        markets.btc.usdt.total = markets.usdt.sellTotal / ltcBtc.ask.price      // BTC/LTC
         kontrol('btc', 'usdt')
 
         // LTC > DOGE
-        markets.ltc.doge.total = dogeLtc.bid.price * markets.doge.sellTotal   // DOGE/LTC
+        markets.btc.eth.total = dogeLtc.bid.price * markets.eth.sellTotal   // DOGE/LTC
         kontrol('btc', 'eth')
 
         // DOGE > BTC #
-        markets.doge.btc.total = markets.btc.sellTotal / dogeBtc.ask.price    // BTC/DOGE
+        markets.eth.usdt.total = markets.usdt.sellTotal / dogeBtc.ask.price    // BTC/DOGE
         kontrol('eth', 'usdt')
 
         // DOGE > LTC 
-        markets.doge.ltc.total = markets.ltc.sellTotal / dogeLtc.ask.price     // LTC/DOGE
+        markets.eth.btc.total = markets.btc.sellTotal / dogeLtc.ask.price     // LTC/DOGE
         kontrol('eth', 'btc')
 
         if(uygunMarkets.length == 0) return false
