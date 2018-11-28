@@ -28,8 +28,27 @@ class WsMongo {
     cryWsBasla(){
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
-        this.ortak.wsDepth.WsBaslat(coin=> this.YesYeniFunk(coin))
+        //this.ortak.wsDepth.WsBaslat(coin=> this.YesYeniFunk(coin))
+        while(true){
+            await this.RunForAllCoinsPromise()
+            console.log('RunForAllCoinsPromise BİTTİ')
+        }
         //this.RunForAllCoins()
+    }
+
+    async RunForAllCoinsPromise(){
+        this.ortak.db.ref(this.fdbRoot).set(null)
+        this.datalarString = []
+        this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId)
+        const promisses = []
+        while(this.ortak.wsDataProcessing){
+            await this.ortak.sleep(2)
+        }
+        for (const coin of this.coins) {
+            promisses.push(this.YesYeniFunk(coin))
+        }
+        await Promise.all(promises).catch(e=> console.log(e))
+
     }
 
     async RunForAllCoins(){
