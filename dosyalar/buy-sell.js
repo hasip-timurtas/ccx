@@ -26,7 +26,7 @@ class WsMongo {
 
     cryWsBasla(){
         this.ortak.wsDepth.WsBaslat(coin=> this.YesYeniFunk(coin))
-        this.RunForAllCoins()
+        //this.RunForAllCoins()
     }
 
     async RunForAllCoins(){
@@ -38,13 +38,13 @@ class WsMongo {
             await this.ortak.sleep(2)
         }
         for (const coin of this.coins) {
-            if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$')) continue
             this.YesYeniFunk(coin)
         }
         setTimeout(() => this.RunForAllCoins(), 1000 * 60 ) // 1 dk da bir refresh
     }
 
     async YesYeniFunk(coin){ // mix max v2
+        if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$')) continue
         this.islemdekiler.push(coin)
         const altiTickers = this.ortak.GetAltiMarketTickersBuySell(coin)
         const kontrols = this.YesYeniFunkKontrols(coin, altiTickers)
