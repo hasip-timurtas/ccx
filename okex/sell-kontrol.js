@@ -24,7 +24,7 @@ class SellKontrol {
 
         
         const mainBalances = balances.filter(e=> this.ortak.mainMarkets.includes(e.Symbol))
-        await this.BalanceEsitle(mainBalances) // Şimdilik kapalı. Hangi coin en az gidiyorsa ona çevrilecek.
+        //await this.BalanceEsitle(mainBalances) // Şimdilik kapalı. Hangi coin en az gidiyorsa ona çevrilecek.
 
         if(false){
             //  ################     TEST     ################    TEST    ################     TEST     ################
@@ -75,21 +75,21 @@ class SellKontrol {
     }
 
     BalanceKontroller(balance){
-        var coinMarkets = this.ortak.marketsInfos.filter(e=> e.baseId == balance.Symbol && e.active == true)
+        var coinMarkets = this.ortak.marketsInfos.filter(e=> e.base == balance.Symbol && e.active == true)
         if(coinMarkets.length < 3) return false
         if(this.ortak.mainMarkets.includes(balance.Symbol)) return false  // Ana market kontrolü
         return true
     }
 
     async BalanceKontrol(balance){
-        const marketName = balance.Symbol + '/BTC' 
+        const marketName = balance.Symbol + '/USDT' 
         const orderBook = await this.ortak.GetOrderBook(marketName)
         if(!orderBook) {
             console.log(balance.Symbol+' ws-db de kaydı yok')
             return false
         }
         const btcTotal = orderBook.asks[0].rate * balance.Total
-        return btcTotal >= this.ortak.limits['BTC']
+        return btcTotal >= this.ortak.limits['USDT']
     }
 
     async SelleKoyKontrol(balance, openOrder){

@@ -15,6 +15,8 @@ class MhtCcxt {
     this.baseCoin = baseCoin
     this.pauseLoops = false
     this.ordersToplam = 0
+    this.exchange.enableRateLimit = true
+
   }
 
   async GetOhlcv(market, sure){

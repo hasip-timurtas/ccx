@@ -281,6 +281,7 @@ class WsMongo {
                 e.Symbol = e.Symbol.toUpperCase()
                 return true
             })
+            var a = 1
         }
     }
 
