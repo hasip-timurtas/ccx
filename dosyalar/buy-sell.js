@@ -31,7 +31,6 @@ class WsMongo {
         this.ortak.wsDepth.WsBaslat()
         while(true){
             await this.RunForAllCoinsPromise()
-            console.log('RunForAllCoinsPromise BİTTİ')
         }
         //this.RunForAllCoins()
     }
