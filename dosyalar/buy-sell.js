@@ -46,7 +46,7 @@ class WsMongo {
 
     async YesYeniFunk(coin){ // mix max v2
         this.islemdekiler.push(coin)
-        const altiTickers = await this.ortak.GetAltiMarketTickers(coin)
+        const altiTickers = this.ortak.GetAltiMarketTickers(coin)
         if(!altiTickers){
             this.FdbCoiniSil(coin)
             return this.IslemdekilerCikar(coin)

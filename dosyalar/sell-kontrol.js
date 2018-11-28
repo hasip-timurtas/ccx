@@ -51,7 +51,7 @@ class SellKontrol {
                 if(!e.message.toLowerCase().includes('nonce')) this.ortak.DeleteOrderFb(order.market, 'sell') // nonce hatası değilse dbden sil.
             })
         }
-
+        this.ortak.SetVariable('CancelAllOrders', new Date())
         this.orderYenile = false
     }
 

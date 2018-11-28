@@ -66,6 +66,10 @@ class Ortak {
        return await this.variables.findOne({key})
     }
 
+    SetVariable(key, value){
+        this.variables.updateOne({key}, {'$set': {value}})
+     }
+
     InsertTestler(data){
         this.testler.insertOne(data)
     }
