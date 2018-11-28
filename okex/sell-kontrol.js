@@ -43,7 +43,7 @@ class SellKontrol {
         const promise1 = this.BalanceIslemdeOlanlar(islemdeBalances, openOrders)
         const promise2 = this.BalanceAvilableOlanlar(availableBalances)
         await Promise.all([promise1, promise2]).catch(e=> console.log(e))
-        //await this.ortak.sleep(5) // 2 saniye bekle
+        await this.ortak.sleep(10) // 2 saniye bekle
     }
 
     async CancelAllOrders(openOrders){
@@ -63,7 +63,6 @@ class SellKontrol {
         for (const balance of balances) {
             if(!this.BalanceKontroller(balance)) continue
             await this.SellKurKontrol(balance)
-            await this.ortak.sleep(0.5)
         }
     }
 
@@ -73,7 +72,6 @@ class SellKontrol {
             const openOrder = openOrders && openOrders.find(e=> e.market.split('/')[0] == balance.Symbol)
             if(!openOrder) continue // TODO: balanceler eşit değilse ve open ordersta yoksa dbde yok demek. ordersi bi şekilde iptal et.
             await this.SelleKoyKontrol(balance, openOrder)
-            await this.ortak.sleep(0.5)
         }
     }
 
