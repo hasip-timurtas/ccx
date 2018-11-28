@@ -206,6 +206,43 @@ class Ortak {
         }
     }
 
+    async GetAltiMarketTickersBuySell(coin){
+        // mainMarkets -> ['BTC', 'LTC', 'DOGE']
+        
+        let orderBooks = [
+            this.findMarket(coin + "/" + this.mainMarkets[0]), // ADA/BTC
+            this.findMarket(coin + "/" + this.mainMarkets[1]), // ADA/LTC
+            this.findMarket(coin + "/" + this.mainMarkets[2]), // ADA/DOGE
+            this.findMarket(this.mainMarkets[1] + "/" + this.mainMarkets[0]), // LTC/BTC
+            this.findMarket(this.mainMarkets[2] + "/" + this.mainMarkets[0]), // DOGE/BTC
+            this.findMarket(this.mainMarkets[2] + "/" + this.mainMarkets[1])  // DOGE/LTC
+        ]
+
+        orderBooks = orderBooks.map(e=> {
+            if(!e.depths){
+                return e
+            }
+            e.depths.market = e.market
+            return e.depths
+        })
+
+        const result = this.OrderBooksDataKontrol(orderBooks)
+        
+        if(!orderBooks || !result || orderBooks.length < 6){
+            return false
+        }
+        
+        //coinBtc, coinLtc, coinDoge, ltcBtc, dogeBtc, dogeLtc
+        return { 
+            coinBtc : orderBooks.find(e => e.market == marketler[0]),
+            coinLtc : orderBooks.find(e => e.market == marketler[1]),
+            coinDoge: orderBooks.find(e => e.market == marketler[2]),
+            ltcBtc  : orderBooks.find(e => e.market == marketler[3]),
+            dogeBtc : orderBooks.find(e => e.market == marketler[4]),
+            dogeLtc : orderBooks.find(e => e.market == marketler[5])
+        }
+    }
+
     async GetOrderBooks(marketler, all = false){
         let orderBooks
         if(all) { // all true ise hepsini döndürür.
