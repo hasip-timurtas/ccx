@@ -49,16 +49,24 @@ class SellKontrol {
 
     async OrdersTotalHesapla(){
         const openOrders = await this.ortak.GetFbData()
-        let totalBtc = 0
+        const balances = await this.ortak.GetBalance()
+        const btcBalance = balances.find(e=> e.Symbol == 'BTC')
+        const usdtBalance = balances.find(e=> e.Symbol == 'USDT')
+        const ethBalance = balances.find(e=> e.Symbol == 'ETH')
+        const ethBtcOrder = await this.ortak.GetOrderBook('ETH/BTC')
+        const btcUsdtOrder = await this.ortak.GetOrderBook('BTC/USDT')
+
+        let totalBtc = btcBalance.Total // btc yi direk attık
+        totalBtc += ethBtcOrder.asks[0].rate * ethBalance.Total   // eth to btc balance
+        totalBtc += usdtBalance.Total / btcUsdtOrder.asks[0].rate  // usdt to btc balance
+        
         for (const order of openOrders) {
             const base = order.market.split('/')[1]
             const total = order.total
             if(base == 'ETH'){
-                const ethBtcOrder = await this.ortak.GetOrderBook('ETH/BTC')
                 const ethBtcTotal = ethBtcOrder.asks[0].rate * total
                 totalBtc += ethBtcTotal
             }else if(base == 'USDT'){
-                const btcUsdtOrder = await this.ortak.GetOrderBook('BTC/USDT')
                 const btcUsdtTotal = total / btcUsdtOrder.asks[0].rate
                 total += btcUsdtTotal
             }else{
