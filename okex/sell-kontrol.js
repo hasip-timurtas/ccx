@@ -43,7 +43,30 @@ class SellKontrol {
         const promise1 = this.BalanceIslemdeOlanlar(islemdeBalances, openOrders)
         const promise2 = this.BalanceAvilableOlanlar(availableBalances)
         await Promise.all([promise1, promise2]).catch(e=> console.log(e))
+        await this.OrdersTotalHesapla()
         await this.ortak.sleep(10) // 2 saniye bekle
+    }
+
+    async OrdersTotalHesapla(){
+        const openOrders = await this.ortak.GetFbData()
+        const totalBtc = 0
+        for (const order of openOrders) {
+            const base = order.market.split('/')[1]
+            const total = order.total
+            if(base == 'ETH'){
+                const ethBtcOrder = await this.ortak.GetOrderBook('ETH/BTC')
+                const ethBtcTotal = ethBtcOrder.asks[0].rate * total
+                totalBtc += ethBtcTotal
+            }else if(base == 'USDT'){
+                const btcUsdtOrder = await this.ortak.GetOrderBook('BTC/USDT')
+                const btcUsdtTotal = total / btcUsdtOrder.asks[0].rate
+                total += btcUsdtTotal
+            }else{
+                totalBtc += total
+            }
+        }
+
+        this.ortak.SetVariable('okex-order-total', totalBtc.toFixed(8)) // veritabanına open ordersların BTC toplamını ekliyoruz.
     }
 
     async CancelAllOrders(openOrders){

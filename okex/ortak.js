@@ -357,7 +357,7 @@ class Ortak {
             return false
         }
         marketOrders = marketOrders.depths
-
+        marketOrders.market = marketName
         const result = this.OrderBooksDataKontrol([marketOrders])
 
         if(!result){
