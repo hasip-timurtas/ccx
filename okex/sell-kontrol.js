@@ -32,7 +32,7 @@ class SellKontrol {
             totalBalances = totalBalances.filter(e=> testCoins.includes(e.Symbol))
             this.orderYenile = false // cancel all ordere girmemesi için.
         }
-
+        this.orderYenile = false // TEST
         if(this.orderYenile){
             return await this.CancelAllOrders(openOrders) // ordersları cancel ettikten sonra balance değişecek o yüzden tekrar girsin.
         }
@@ -49,7 +49,7 @@ class SellKontrol {
 
     async OrdersTotalHesapla(){
         const openOrders = await this.ortak.GetFbData()
-        const totalBtc = 0
+        let totalBtc = 0
         for (const order of openOrders) {
             const base = order.market.split('/')[1]
             const total = order.total
