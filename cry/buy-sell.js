@@ -257,18 +257,21 @@ class WsMongo {
     async BuyuSellYap(data){
         const { buyResult, market, secondMarket, amount, altCoin, btcMarket } = data
         let sellResult
-
+        let alinanAmount = buyResult.filled
             if(buyResult.filled && buyResult.filled > 0){
                 sellResult = await this.ortak.SubmitMongo(market, secondMarket.name, secondMarket.price, buyResult.filled, 'sell')
                 if(sellResult && sellResult.filled < buyResult.filled){
                     await this.ortak.OrderIptalEt(sellResult)
-                    const kalanAmount = buyResult.filled - sellResult.filled
-                    this.HistoryEkle(altCoin, kalanAmount, btcMarket.price)
+                    alinanAmount = buyResult.filled - sellResult.filled
                 }
+                await this.HistoryEkle(altCoin, alinanAmount, btcMarket.price) // sonuçta buy yaptı. history eklesin.
             }
 
             if(!buyResult.filled || buyResult.filled < amount) await this.ortak.OrderIptalEt(buyResult)
             if(buyResult.filled == 0) return this.MailDataBosBuyInsert(market)
+            if(buyResult.filled > 0){
+                this.BalanceGuncelleArttir(altCoin, buyResult.filled)
+            }
 
             this.MailDataInsert(market, buyResult, sellResult)
             console.log('##############################     BİR İŞLEM OLDU     ##############################')
