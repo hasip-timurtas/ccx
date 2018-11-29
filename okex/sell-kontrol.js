@@ -77,6 +77,14 @@ class SellKontrol {
         this.ortak.SetVariable('okex-order-total', totalBtc.toFixed(8)) // veritabanına open ordersların BTC toplamını ekliyoruz.
     }
 
+    async OrdersTotalHesaplaUsdt(){
+        const balances = await this.ortak.GetBalance().then(e=> e.filter(a=> a.Symbol != 'USDT'))
+        const markets = balances.map(e=> e.Symbol + '/USDT')
+        const orderBooks = await this.ortak.GetOrderBooks(markets)
+        
+        
+    }
+
     async CancelAllOrders(openOrders){
         console.log('BÜTÜN ORDERLAR İPTAL EDİLİYORRRRRRRRRRRRRRRRRR.')
         for (const order of openOrders) {
