@@ -203,7 +203,7 @@ class WsMongo {
         if(!kontrol) return
 
         const buyResult = await this.ortak.SubmitMongo(market, firstMarket.name, firstMarket.price, amount, 'buy')
-        if(buyResult && buyResult.result){
+        if(buyResult && buyResult.info.result){
             await this.BuyuSellYap({ buyResult, market, secondMarket, amount, altCoin, btcMarket })
             this.HistoryEkle(altCoin, amount, btcMarket.price) // sonuçta buy yaptı. history eklesin.
         }else{
