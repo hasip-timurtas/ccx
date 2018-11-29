@@ -66,7 +66,7 @@ class Ortak {
     }
 
     SetVariable(key, value){
-        this.variables.updateOne({key}, {'$set': {value}})
+        this.variables.updateOne({key}, {'$set': {value}}, {upsert: true})
      }
 
     InsertTestler(data){
