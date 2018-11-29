@@ -32,7 +32,7 @@ class SellKontrol {
             totalBalances = totalBalances.filter(e=> testCoins.includes(e.Symbol))
             this.orderYenile = false // cancel all ordere girmemesi için.
         }
-        this.orderYenile = false // TEST
+        //this.orderYenile = false // TEST
         if(this.orderYenile){
             return await this.CancelAllOrders(openOrders) // ordersları cancel ettikten sonra balance değişecek o yüzden tekrar girsin.
         }
