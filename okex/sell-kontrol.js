@@ -68,7 +68,7 @@ class SellKontrol {
                 totalBtc += ethBtcTotal
             }else if(base == 'USDT'){
                 const btcUsdtTotal = total / btcUsdtOrder.asks[0].rate
-                total += btcUsdtTotal
+                totalBtc += btcUsdtTotal
             }else{
                 totalBtc += total
             }
