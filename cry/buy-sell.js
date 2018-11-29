@@ -204,7 +204,7 @@ class WsMongo {
         if(!kontrol) return
 
         const buyResult = await this.ortak.SubmitMongo(market, firstMarket.name, firstMarket.price, amount, 'buy')
-
+        if(!buyResult || buyResult.filled == 0) return this.MailDataBosBuyInsert(market)
         if(buyResult) await this.BuyuSellYap({ buyResult, market, secondMarket, amount, altCoin, btcMarket })
     }
 
@@ -268,7 +268,6 @@ class WsMongo {
             }
 
             if(!buyResult.filled || buyResult.filled < amount) await this.ortak.OrderIptalEt(buyResult)
-            if(buyResult.filled == 0) return this.MailDataBosBuyInsert(market)
             if(buyResult.filled > 0){
                 this.BalanceGuncelleArttir(altCoin, buyResult.filled)
             }
