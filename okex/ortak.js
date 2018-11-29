@@ -1011,11 +1011,16 @@ class Ortak {
         let total = price * amount
         const baseCoin = marketName.split('/')[1]
         let eksik = false
-        if(total < this.limits[baseCoin] && orderBook[type][1]){
+        if(total < this.limits[baseCoin] && orderBook[type][1]){ // 1. total yetersizse 2. totale geç ve 2. price al.
             price = Number(orderBook[type][1].rate)
             amount = amount + Number(orderBook[type][1].amount)
             total = total + (price * amount)
             eksik = true
+            if(total < this.limits[baseCoin]){ // 2. total yetersiz ise 3. totale geç ve 3. price al.
+                price = Number(orderBook[type][2].rate)
+                amount = amount + Number(orderBook[type][2].amount)
+                total = total + (price * amount)
+            }
         }
         return { price, amount, total, eksik }
     }
