@@ -113,12 +113,12 @@ class WsMongo {
             to = to.replace(/^\w/, c => c.toUpperCase())
             const first = altiTickers['coin'+from]
             const second = altiTickers['coin'+to]
-            this.FdbIslemleri(coin, first, second, fark)
+            
             const checkTamUygun = first.ask.total >= this.ortak.limits[from.toUpperCase()] && second.bid.total >= this.ortak.limits[to.toUpperCase()] // CHECK TAM UYGUN
             if(!checkTamUygun) return
             console.log(coin + ` - ${from} > ${to} KOŞUL UYUYOR`)
             const marketFrmt = this.GetUygunMarketFormat(first, second, fark, coinUsdt)
-            this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(coin).set(marketFrmt)
+            this.FdbIslemleri(coin, first, second, fark)
             uygunMarkets.push(marketFrmt)
         }
         
