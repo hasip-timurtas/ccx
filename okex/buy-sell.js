@@ -281,10 +281,10 @@ class WsMongo {
         
         const submitOrder = await this.ortak.ccx.exchange.createOrder(...orderParams).catch(e => {
             const coin = marketName.split('/')[0]
+            this.hataliCoinler.push(coin)
             market.Hata = e.message
             market.date = new Date()
-            this.mailDataHata.insertOne(market)
-            this.hataliCoinler.push(coin)
+            this.ortak.mailDataHata.insertOne(market)
             console.log(e, orderParams)
         })
 
