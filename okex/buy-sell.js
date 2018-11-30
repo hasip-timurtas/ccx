@@ -8,6 +8,7 @@ class WsMongo {
         this.ortak = new Ortak()
         await this.ortak.LoadVeriables('MONGO')
         //await this.ortak.LoadVeriables()
+        await this.BalanceGuncelle() // bir fulle aq sonra güncellersin 2 sn de bir.
         setInterval(async ()=> await this.BalanceGuncelle(), 2000 )
         setInterval(()=> console.log('Son işlenen: ' + this.sonCoin + ' RunForAllCoinsPromise sayac: '+ this.RunForAllCoinsPromiseSayac), 5000 )
         this.balances = []
@@ -24,8 +25,8 @@ class WsMongo {
         })
         this.datalarString = []
         this.RunForAllCoinsPromiseSayac = 0
-        this.hataliCoinler = []
-        setInterval(()=> this.hataliCoinler = [], 1000 * 60 * 60 ) // bir saatte bir hatali coinleri boşalt
+        this.sonraDeneList = []
+        setInterval(()=> this.sonraDeneList = [], 1000 * 60 * 60 ) // bir saatte bir hatali coinleri boşalt
     }
     
     cryWsBasla(){
@@ -60,7 +61,7 @@ class WsMongo {
     }
 
     async YesYeniFunk(coin){ // mix max v2
-        if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$') || this.hataliCoinler.includes(coin)) return
+        if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$') || this.sonraDeneList.includes(coin)) return
         this.islemdekiler.push(coin)
         const altiTickers = this.GetAltiMarketTickers(coin)
            
@@ -246,7 +247,11 @@ class WsMongo {
         }
 
         const balanceVar = this.BalanceKontrol(btcMarket.price, altCoin)
-        if(balanceVar) return false // 'Yeterince balance var. ÇIK'        
+        if(balanceVar){
+            this.sonraDeneList.push(altcoin)
+            console.log(altCoin + 'Yeterince balance var. ÇIK')
+            return false
+        }     
         return true
     }
 
@@ -278,7 +283,7 @@ class WsMongo {
         
         const submitOrder = await this.ortak.ccx.exchange.createOrder(...orderParams).catch(e => {
             const coin = marketName.split('/')[0]
-            this.hataliCoinler.push(coin)
+            this.sonraDeneList.push(coin)
             market.Hata = e.message
             market.date = new Date()
             this.ortak.mailDataHata.insertOne(market)
