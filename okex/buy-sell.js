@@ -194,7 +194,7 @@ class WsMongo {
         const buyResult = await this.Submit(market, firstMarket.name, firstMarket.price, amount, 'buy')
         if(buyResult && buyResult.info.result){
             await this.HistoryEkle(altCoin, amount, btcMarket.price)
-            this.ortak.db.ref(this.fdbRoot+'-buy-coin').set(coin) // sell kontrolden bu datayı dinleyip ona göre kontrol edecek
+            await this.ortak.db.ref(this.fdbRoot+'-buy-coin').set(coin) // sell kontrolden bu datayı dinleyip ona göre kontrol edecek
             //await this.BuyuSellYap({ buyResult, market, secondMarket, amount, altCoin, btcMarket })
             
         }else{
