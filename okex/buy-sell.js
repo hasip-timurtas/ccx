@@ -279,7 +279,7 @@ class WsMongo {
     async Submit(market, marketName, rate, amount, type){
         const orderParams = [marketName, 'limit', type, amount, rate]
         
-        const submitOrder = await this.ccx.exchange.createOrder(...orderParams).catch(e => {
+        const submitOrder = await this.ortak.ccx.exchange.createOrder(...orderParams).catch(e => {
             const coin = marketName.split('/')[0]
             market.Hata = e.message
             market.date = new Date()
