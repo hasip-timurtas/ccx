@@ -26,7 +26,7 @@ class WsMongo {
         this.datalarString = []
         this.RunForAllCoinsPromiseSayac = 0
         this.sonraDeneList = []
-        setInterval(()=> this.sonraDeneList = [], 1000 * 60 * 60 ) // bir saatte bir hatali coinleri boşalt
+        setInterval(()=> this.sonraDeneList = [], 1000 * 60 ) // bir dakikada bir hsonraDeneList coinleri boşalt
     }
     
     cryWsBasla(){
