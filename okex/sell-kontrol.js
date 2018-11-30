@@ -51,7 +51,7 @@ class SellKontrol {
         const promise2 = this.BalanceAvilableOlanlar(availableBalances)
         await Promise.all([promise1, promise2]).catch(e=> console.log(e))
         await this.OrdersTotalHesapla()
-        await this.ortak.sleep(10) // 2 saniye bekle
+        //await this.ortak.sleep(10) // 2 saniye bekle
     }
 
     async BalanceAvilableOlanlar(balances){
