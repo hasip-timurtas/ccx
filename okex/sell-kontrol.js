@@ -26,7 +26,7 @@ class SellKontrol {
         const mainBalances = balances.filter(e=> this.ortak.mainMarkets.includes(e.Symbol))
         //await this.BalanceEsitle(mainBalances) // Şimdilik kapalı. Hangi coin en az gidiyorsa ona çevrilecek.
 
-        if(true){
+        if(false){
             //  ################     TEST     ################    TEST    ################     TEST     ################
             const testCoins = ['EGT'] // Dizi Olmalı
             totalBalances = totalBalances.filter(e=> testCoins.includes(e.Symbol))
