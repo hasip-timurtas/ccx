@@ -37,7 +37,7 @@ class WsMongo {
 
     async cryWsBaslaAll(){
         while(true){
-            this.ortak.db.ref(this.fdbRoot).set(null)
+            //his.ortak.db.ref(this.fdbRoot).set(null)
             this.datalarString = []
             this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId.toUpperCase())
             //this.coins = this.coins.filter(e=> e == 'REN') /// ####  TEST   ####
