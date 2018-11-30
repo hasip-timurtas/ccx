@@ -34,29 +34,20 @@ class WsMongo {
     }
 
     async cryWsBaslaAll(){
-        this.ortak.db.ref(this.fdbRoot).set(null)
-        this.datalarString = []
-        //this.ortak.wsDepth.WsBaslat()
         while(true){
-            await this.RunForAllCoinsPromise()
-        }
-    }
+            this.ortak.db.ref(this.fdbRoot).set(null)
+            this.datalarString = []
+            this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId.toUpperCase())
+            //this.coins = this.coins.filter(e=> e == 'REN') /// ####  TEST   ####
+            this.allOrderBooks = await this.ortak.GetOrderBooks(null,true) // Hepsini alıyoruz.
 
-    async RunForAllCoinsPromise(){
-        this.ortak.db.ref(this.fdbRoot).set(null)
-        this.datalarString = []
-        this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId.toUpperCase())
-        //this.coins = this.coins.filter(e=> e == 'REN') /// ####  TEST   ####
-        this.allOrderBooks = await this.ortak.GetOrderBooks(null,true) // Hepsini alıyoruz.
-        const promises = []
-        while(this.ortak.wsDataProcessing){
-            await this.ortak.sleep(2)
+            const promises = []
+            for (const coin of this.coins) {
+                promises.push(this.YesYeniFunk(coin))
+            }
+            await Promise.all(promises).catch(e=> console.log(e))
+            this.RunForAllCoinsPromiseSayac++
         }
-        for (const coin of this.coins) {
-            promises.push(this.YesYeniFunk(coin))
-        }
-        await Promise.all(promises).catch(e=> console.log(e))
-        this.RunForAllCoinsPromiseSayac++
     }
 
     async YesYeniFunk(coin){ // mix max v2
