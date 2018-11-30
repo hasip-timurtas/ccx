@@ -45,7 +45,7 @@ class WsMongo {
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
         this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId.toUpperCase())
-        this.coins = this.coins.filter(e=> e == 'REN') /// ####  TEST   ####
+        //this.coins = this.coins.filter(e=> e == 'REN') /// ####  TEST   ####
         this.allOrderBooks = await this.ortak.GetOrderBooks(null,true) // Hepsini alıyoruz.
         const promises = []
         while(this.ortak.wsDataProcessing){
