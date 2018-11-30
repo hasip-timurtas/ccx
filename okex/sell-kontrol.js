@@ -6,6 +6,14 @@ class SellKontrol {
         await this.ortak.LoadVeriables('MONGO')
         this.orderYenile = true
         setInterval(()=> this.orderYenile = true, 1000 * 60 * 60 * 1) // 2 saatte bir ordersleri sil.
+        this.ortak.db.ref('okex/buy-sell-buy-coin').on('value', snap => this.BuySellListener(snap.val()))
+    }
+
+    async BuySellListener(coin){
+        console.log('BuySellListener for: ' + coin)
+        const balances = await this.ortak.GetBalance()
+        const balance = balances.find(e=> e.Symbol == coin && e.Available > 0)
+        this.SellKurKontrol(balance)
     }
     
     async BaslaSell(){ // baseCoin hangi coinle alacağı
