@@ -1,5 +1,5 @@
 const Ortak = require('./ortak')
-
+const SellKontrolForBuy = require('./sell-kontrol-for-buy')
 class WsMongo {
     async LoadVeriables() {
         this.islemKati = 15
@@ -7,6 +7,8 @@ class WsMongo {
         this.islemdekiler = []
         this.ortak = new Ortak()
         await this.ortak.LoadVeriables('MONGO')
+        this.SellKontrolForBuy = new SellKontrolForBuy()
+        this.SellKontrolForBuy.LoadVeriables(this.ortak) 
         //await this.ortak.LoadVeriables()
         await this.BalanceGuncelle() // bir fulle aq sonra güncellersin 2 sn de bir.
         setInterval(async ()=> await this.BalanceGuncelle(), 2000 )
@@ -193,9 +195,10 @@ class WsMongo {
 
         const buyResult = await this.Submit(market, firstMarket.name, firstMarket.price, amount, 'buy')
         if(buyResult && buyResult.info.result){
-            await this.ortak.OrderIptalEt(buyResult)
+            await this.SellKontrolForBuy.SellBaslat(altCoin)
+            this.ortak.OrderIptalEt(buyResult)
             await this.HistoryEkle(altCoin, amount, btcMarket.price)
-            await this.ortak.db.ref(this.fdbRoot+'-buy-coin').set(altCoin) // sell kontrolden bu datayı dinleyip ona göre kontrol edecek
+            //await this.ortak.db.ref(this.fdbRoot+'-buy-coin').set(altCoin) // sell kontrolden bu datayı dinleyip ona göre kontrol edecek
             //await this.BuyuSellYap({ buyResult, market, secondMarket, amount, altCoin, btcMarket })
         }else{
             return this.MailDataBosBuyInsert(market)
