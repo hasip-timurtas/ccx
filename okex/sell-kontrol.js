@@ -5,7 +5,7 @@ class SellKontrol {
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables('MONGO')
         this.orderYenile = true
-        setInterval(()=> this.orderYenile = true, 1000 * 60 * 60 * 2) // 2 saatte bir ordersleri sil.
+        setInterval(()=> this.orderYenile = true, 1000 * 60 * 60 * 1) // 2 saatte bir ordersleri sil.
     }
     
     async BaslaSell(){ // baseCoin hangi coinle alacağı
