@@ -248,7 +248,7 @@ class WsMongo {
 
         const balanceVar = this.BalanceKontrol(btcMarket.price, altCoin)
         if(balanceVar){
-            this.sonraDeneList.push(altcoin)
+            this.sonraDeneList.push(altCoin)
             console.log(altCoin + 'Yeterince balance var. ÇIK')
             return false
         }     
