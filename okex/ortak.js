@@ -105,25 +105,6 @@ class Ortak {
         }
     }
 
-    async SubmitMongo(market, marketName, rate, amount, type){
-        const orderParams = [marketName, 'limit', type, amount, rate]
-        
-        const submitOrder = await this.ccx.exchange.createOrder(...orderParams).catch(e => {
-            market.Hata = e.message
-            market.date = new Date()
-            this.mailDataHata.insertOne(market)
-            console.log(e, orderParams)
-        })
-
-        if (submitOrder) {
-            console.log(`${marketName} için  ${type} kuruldu.'`)
-            return submitOrder
-        } else {
-            console.log(`${type} Kurarken Hata. market: ${marketName}`)
-            return false
-        }
-    }
-
     async OrderIptalEt(order) {
         return await this.ccx.CancelTrade(order.id, order.symbol).catch(e => console.log(e))
     }

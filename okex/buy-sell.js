@@ -24,17 +24,12 @@ class WsMongo {
         })
         this.datalarString = []
         this.RunForAllCoinsPromiseSayac = 0
+        this.hataliCoinler = []
+        setInterval(()=> this.hataliCoinler = [], 1000 * 60 * 60 ) // bir saatte bir hatali coinleri boşalt
     }
     
     cryWsBasla(){
         this.cryWsBaslaAll()
-        //this.RunForAllCoinsPromise() // test 1 defa için.
-        return
-        this.ortak.db.ref(this.fdbRoot).set(null)
-        this.datalarString = []
-        this.YesYeniFunk('ADA')
-        //this.ortak.wsDepth.WsBaslat(coin=> this.YesYeniFunk(coin))
-        //this.RunForAllCoins()
     }
 
     async cryWsBaslaAll(){
@@ -50,6 +45,7 @@ class WsMongo {
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
         this.coins = this.ortak.marketsInfos.filter(e=> e.active && e.quote == 'BTC').map(e=> e.baseId.toUpperCase())
+        this.coins = this.coins.filter(e=> e == 'REN') /// ####  TEST   ####
         this.allOrderBooks = await this.ortak.GetOrderBooks(null,true) // Hepsini alıyoruz.
         const promises = []
         while(this.ortak.wsDataProcessing){
@@ -63,7 +59,7 @@ class WsMongo {
     }
 
     async YesYeniFunk(coin){ // mix max v2
-        if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$')) return
+        if(this.islemdekiler.includes(coin) || this.ortak.mainMarkets.includes(coin) || this.ortak.wsDataProcessing || coin.includes('$') || this.hataliCoinler.includes(coin)) return
         this.islemdekiler.push(coin)
         const altiTickers = this.GetAltiMarketTickers(coin)
            
@@ -202,7 +198,7 @@ class WsMongo {
         const kontrol =  this.BuyBaslaKontroller(btcMarket, altCoin, baseCoin, total )
         if(!kontrol) return
 
-        const buyResult = await this.ortak.SubmitMongo(market, firstMarket.name, firstMarket.price, amount, 'buy')
+        const buyResult = await this.Submit(market, firstMarket.name, firstMarket.price, amount, 'buy')
         if(buyResult && buyResult.info.result){
             await this.BuyuSellYap({ buyResult, market, secondMarket, amount, altCoin, btcMarket })
             this.HistoryEkle(altCoin, amount, btcMarket.price) // sonuçta buy yaptı. history eklesin.
@@ -262,7 +258,7 @@ class WsMongo {
         let sellResult
         let alinanAmount = buyResult.filled
         if(buyResult.filled && buyResult.filled > 0){
-            sellResult = await this.ortak.SubmitMongo(market, secondMarket.name, secondMarket.price, buyResult.filled, 'sell')
+            sellResult = await this.Submit(market, secondMarket.name, secondMarket.price, buyResult.filled, 'sell')
             if(sellResult && sellResult.filled < buyResult.filled){
                 await this.ortak.OrderIptalEt(sellResult)
                 alinanAmount = buyResult.filled - sellResult.filled
@@ -278,6 +274,27 @@ class WsMongo {
 
         this.MailDataInsert(market, buyResult, sellResult)
         console.log('##############################     BİR İŞLEM OLDU     ##############################')
+    }
+
+    async Submit(market, marketName, rate, amount, type){
+        const orderParams = [marketName, 'limit', type, amount, rate]
+        
+        const submitOrder = await this.ccx.exchange.createOrder(...orderParams).catch(e => {
+            const coin = marketName.split('/')[0]
+            market.Hata = e.message
+            market.date = new Date()
+            this.mailDataHata.insertOne(market)
+            this.hataliCoinler.push(coin)
+            console.log(e, orderParams)
+        })
+
+        if (submitOrder) {
+            console.log(`${marketName} için  ${type} kuruldu.'`)
+            return submitOrder
+        } else {
+            console.log(`${type} Kurarken Hata. market: ${marketName}`)
+            return false
+        }
     }
 
     BalanceGuncelleArttir(altcoin, balance){
