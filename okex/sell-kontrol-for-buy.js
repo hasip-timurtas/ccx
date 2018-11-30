@@ -4,7 +4,6 @@ class SellKontrolForBuy {
     }
 
     async SellBaslat(coin){
-        console.log('BuySellListener for: ' + coin)
         const balances = await this.ortak.GetBalance()
         const balance = balances.find(e=> e.Symbol == coin && e.Available > 0)
         if(!balance) return
