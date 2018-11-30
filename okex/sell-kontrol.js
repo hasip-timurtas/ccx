@@ -26,7 +26,7 @@ class SellKontrol {
 
         if(false){
             //  ################     TEST     ################    TEST    ################     TEST     ################
-            const testCoins = ['EGT'] // Dizi Olmalı
+            const testCoins = ['MANA'] // Dizi Olmalı
             totalBalances = totalBalances.filter(e=> testCoins.includes(e.Symbol))
             this.orderYenile = false // cancel all ordere girmemesi için.
         }
