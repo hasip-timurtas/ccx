@@ -321,9 +321,7 @@ class WsMongo {
         //const balances = await this.ortak.GetBalance()
         let altCoinBalance = this.balances.find(e=> e.Symbol == altCoin) //balances[altCoin]['total']
         if(!altCoinBalance) {
-            console.log(this.balances, altCoin)
-            
-            console.log('#####      Balancekontrol altcoin boş !!!!')
+            console.log('#####      Balancekontrol altcoin boş !!!!', this.balances, altCoin)
             return true // hata olduğu için balance var dönüyoruz. yani işlem yapmasın.
         } 
         let altCoinTotal = altCoinBalance.Total
