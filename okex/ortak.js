@@ -721,7 +721,7 @@ class Ortak {
         if(type == 'sell'){ // sell ise asks price -1, buy ise bids price +1
             total = (market.asks[0]['rate'] - ondalikliSayi) * this.testAmount // coin o markette varsa degerini, yoksa 0 yazsın.
         }else{
-            total = (Number(market.bids[0]['rate']) + ondalikliSayi) * this.testAmount // coin o markette varsa degerini, yoksa 0 yazsın.
+            total = Number(market.bids[0]['rate']) * this.testAmount // coin o markette varsa degerini, yoksa 0 yazsın.
         }
         
         if(baseCoin == 'BTC' && market.asks[0]['rate'] < 0.0000000021) return 0 // basecoin BTC ise ve price 21 satoshiden küçükse bunu geç. 0 döndür.
