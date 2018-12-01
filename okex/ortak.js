@@ -450,7 +450,7 @@ class Ortak {
         
         const marketNameFb = market.replace('/','-')
         await this.db.ref('okex/open-orders').child(marketNameFb).set(null)
-        
+        await this.UpdateOpenOrderCount()
     }
 
     async InsertOrderFb(order, type){
@@ -467,6 +467,7 @@ class Ortak {
         const marketNameFb = order.symbol.replace('/','-')
 
         await this.db.ref('okex/open-orders').child(marketNameFb).set(data)
+        await this.UpdateOpenOrderCount()
         //await this.openOrders.insertOne(data)
 
 
@@ -488,7 +489,13 @@ class Ortak {
         const fbOpenOrders = await this.db.ref('okex/open-orders').once('value').then(e => e.val())
         if(!fbOpenOrders) return []
         const openOrders = Object.keys(fbOpenOrders).map(e=> fbOpenOrders[e])
+        await this.UpdateOpenOrderCount()
         return openOrders
+    }
+
+    async UpdateOpenOrderCount(){
+        const size = await this.db.ref('okex/open-orders').once('value').then(e => e.size)
+        await this.db.ref('okex/open-orders-count').set(size)
     }
     
     async GetOrderBookGroupRest(coin){
