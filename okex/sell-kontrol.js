@@ -157,7 +157,7 @@ class SellKontrol {
             await this.ortak.DeleteOrderFb(openOrder.market, 'sell')
             console.log(`${openOrder.market} Cancel edildi'`)
             balance.Available = openOrder.amount
-            await this.SellKurKontrol(balance)
+            //await this.SellKurKontrol(balance)
         }).catch(async (e) => {
             if(e.message.includes('No matching trades found')){
                 await this.ortak.DeleteOrderFb(openOrder.market, 'sell')
