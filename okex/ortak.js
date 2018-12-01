@@ -494,7 +494,7 @@ class Ortak {
     }
 
     async UpdateOpenOrderCount(){
-        const size = await this.db.ref('okex/open-orders').once('value').then(e => e.size)
+        const size = await this.db.ref('okex/open-orders').once('value').then(e => e.numChildren())
         await this.db.ref('okex/open-orders-count').set(size)
     }
     
@@ -502,7 +502,7 @@ class Ortak {
         const marketler1 = [
             coin + "/" + this.mainMarkets[0], // ADA/BTC
             coin + "/" + this.mainMarkets[1], // ADA/LTC
-            coin + "/" + this.mainMarkets[2] // ADA/DOGE
+            coin + "/" + this.mainMarkets[2]  // ADA/DOGE
         ]
 
         const marketler2 =[
