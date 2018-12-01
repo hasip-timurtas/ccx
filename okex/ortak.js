@@ -446,11 +446,11 @@ class Ortak {
     }
 
     async DeleteOrderFb(market, type){
-        await this.openOrders.deleteOne({market, side: type})
-        /*
-        const marketNameFb = order.market.replace('/','_') + '-' +  order.orderId
+        //await this.openOrders.deleteOne({market, side: type})
+        
+        const marketNameFb = market.replace('/','-')
         await this.db.ref(`cry/${type}-open-orders`).child(marketNameFb).set(null)
-        */
+        
     }
 
     async InsertOrderFb(order, type){
@@ -461,11 +461,14 @@ class Ortak {
             market: order.symbol,
             price: order.price,
             amount: order.amount,
-            total: total,
+            total: total.toFixed(8),
             side: order.side
         }
+        const marketNameFb = order.symbol.replace('/','-')
 
-        await this.openOrders.insertOne(data)
+        await this.db.ref('okex/open-orders').child(marketNameFb).set(data)
+        //await this.openOrders.insertOne(data)
+
 
         /*
         const marketNameFb = order.symbol.replace('/','_') + '-' +  order.id
@@ -480,9 +483,12 @@ class Ortak {
         
     }
 
-    async GetFbData(path){
-        return await this.openOrders.find().toArray()
-        //return await this.db.ref(path).once('value').then(e => e.val())
+    async GetOpenOrders(){
+        //return await this.openOrders.find().toArray()
+        const fbOpenOrders = await this.db.ref('okex/open-orders').once('value').then(e => e.val())
+        if(!fbOpenOrders) return []
+        const openOrders = Object.keys(fbOpenOrders).map(e=> fbOpenOrders[e])
+        return openOrders
     }
     
     async GetOrderBookGroupRest(coin){

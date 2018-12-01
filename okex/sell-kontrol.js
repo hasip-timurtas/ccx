@@ -28,7 +28,7 @@ class SellKontrol {
         const balances = await this.ortak.GetBalance()
         let totalBalances = balances.filter(e=> e.Total > 0)
         await this.ortak.fbBalancesUpdate(totalBalances)
-        const openOrders = await this.ortak.GetFbData()
+        const openOrders = await this.ortak.GetOpenOrders()
 
         //await this.OrdersTotalHesapla(balances, openOrders)
         /*const mainBalances = balances.filter(e=> this.ortak.mainMarkets.includes(e.Symbol))
@@ -213,7 +213,6 @@ class SellKontrol {
     }
 
     async OrdersTotalHesapla(balances, openOrders){
-        const openOrders = await this.ortak.GetFbData()
         const btcBalance = balances.find(e=> e.Symbol == 'BTC')
         const usdtBalance = balances.find(e=> e.Symbol == 'USDT')
         const ethBalance = balances.find(e=> e.Symbol == 'ETH')
@@ -239,12 +238,6 @@ class SellKontrol {
         }
 
         this.ortak.SetVariable('okex-order-total', totalBtc.toFixed(8)) // veritabanına open ordersların BTC toplamını ekliyoruz.
-    }
-
-    async OrdersTotalHesaplaUsdt(){
-        const balances = await this.ortak.GetBalance().then(e=> e.filter(a=> a.Symbol != 'USDT'))
-        const markets = balances.map(e=> e.Symbol + '/USDT')
-        const orderBooks = await this.ortak.GetOrderBooks(markets)
     }
 
     async CancelAllOrders(openOrders){
