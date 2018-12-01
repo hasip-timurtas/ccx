@@ -449,7 +449,7 @@ class Ortak {
         //await this.openOrders.deleteOne({market, side: type})
         
         const marketNameFb = market.replace('/','-')
-        await this.db.ref(`cry/${type}-open-orders`).child(marketNameFb).set(null)
+        await this.db.ref('okex/open-orders').child(marketNameFb).set(null)
         
     }
 
