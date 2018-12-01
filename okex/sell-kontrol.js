@@ -30,6 +30,7 @@ class SellKontrol {
         await this.ortak.fbBalancesUpdate(totalBalances)
         const openOrders = await this.ortak.GetFbData()
 
+        //await this.OrdersTotalHesapla(balances, openOrders)
         /*const mainBalances = balances.filter(e=> this.ortak.mainMarkets.includes(e.Symbol))
         await this.BalanceEsitle(mainBalances) // Şimdilik kapalı. Hangi coin en az gidiyorsa ona çevrilecek.*/
 
@@ -50,7 +51,6 @@ class SellKontrol {
         const promise1 = this.BalanceIslemdeOlanlar(islemdeBalances, openOrders)
         const promise2 = this.BalanceAvilableOlanlar(availableBalances)
         await Promise.all([promise1, promise2]).catch(e=> console.log(e))
-        await this.OrdersTotalHesapla()
         //await this.ortak.sleep(10) // 2 saniye bekle
     }
 
@@ -212,9 +212,8 @@ class SellKontrol {
         }
     }
 
-    async OrdersTotalHesapla(){
+    async OrdersTotalHesapla(balances, openOrders){
         const openOrders = await this.ortak.GetFbData()
-        const balances = await this.ortak.GetBalance()
         const btcBalance = balances.find(e=> e.Symbol == 'BTC')
         const usdtBalance = balances.find(e=> e.Symbol == 'USDT')
         const ethBalance = balances.find(e=> e.Symbol == 'ETH')
