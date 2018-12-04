@@ -459,8 +459,8 @@ class Ortak {
         const data = {
             orderId: order.id,
             market: order.symbol,
-            price: Number(order.price.toFixed(8)),
-            amount: Number(order.amount.toFixed(8)),
+            price: order.price.toString().substring(0, order.price.toString().indexOf(".") + 8),
+            amount: order.amount,
             total: total.toFixed(8),
             side: order.side
         }
