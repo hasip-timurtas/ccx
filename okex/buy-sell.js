@@ -114,6 +114,7 @@ class WsMongo {
             const first = altiTickers['coin'+from]
             const second = altiTickers['coin'+to]
             const volumeUygun = this.ortak.marketVolumes[second.market] >=  this.ortak.volumeLimtis[to.toUpperCase()]
+            console.log(this.ortak.marketVolumes[second.market])
             if(!volumeUygun) return
             const checkTamUygun = first.ask.total >= this.ortak.limits[from.toUpperCase()] && second.bid.total >= this.ortak.limits[to.toUpperCase()] // CHECK TAM UYGUN
             if(!checkTamUygun) return
