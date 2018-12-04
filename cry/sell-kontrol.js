@@ -43,6 +43,7 @@ class SellKontrol {
         const promise1 = this.BalanceIslemdeOlanlar(islemdeBalances, openOrders)
         const promise2 = this.BalanceAvilableOlanlar(availableBalances)
         await Promise.all([promise1, promise2]).catch(e=> console.log(e))
+        await this.ortak.sleep(5)
     }
 
     async CancelAllOrders(openOrders){
