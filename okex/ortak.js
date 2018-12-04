@@ -741,11 +741,13 @@ class Ortak {
             amount = amount + Number(orderBook[type][1].amount)
             total = total + (price * amount)
             eksik = true
+            /*
             if(total < this.limits[baseCoin]){ // 2. total yetersiz ise 3. totale geç ve 3. price al.
                 price = Number(orderBook[type][2].rate)
                 amount = amount + Number(orderBook[type][2].amount)
                 total = total + (price * amount)
             }
+            */
         }
         return { price, amount, total, eksik }
     }
