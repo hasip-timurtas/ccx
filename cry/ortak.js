@@ -22,7 +22,7 @@ class Ortak {
         this.ccx = new MhtCcxt(key, secret, this.site, null)
         this.limits = { "BTC": 0.0006, "ETH": 0.011, "LTC": 0.08, "DOGE": 1100, "BNB":5.1, "USD": 5, "USDT": 5 }
         this.sellLimits = { "BTC": 0.0005, "LTC": 0.01, "DOGE": 100}
-        this.volumeLimtis = { "BTC": 0.5, "ETH": 10, "LTC": 50, "DOGE": 1100, "BNB":250, "USD":3250, "USDT":3250 }
+        this.volumeLimtis = { "BTC": 0.01, "ETH": 10, "LTC": 1, "DOGE": 10000, "BNB":250, "USD":3250, "USDT":3250 }
         this.db = firebase.database()
         const connection = await mongodb.MongoClient.connect(mongoUrl, { useNewUrlParser: true });
         const cnn = connection.db('cry')
@@ -49,6 +49,8 @@ class Ortak {
         this.marketsInfos = await this.ccx.exchange.load_markets().catch(e=> console.log(e) )
         this.marketsInfos = this.marketsInfos && Object.keys(this.marketsInfos).map(e=> this.marketsInfos[e])
         this.marketTickers = await this.ccx.GetMarkets().catch(e=> console.log(e))
+        this.marketVolumes = {}
+        this.marketTickers.Data.filter(e=> this.marketVolumes[e.Label]= e.Volume)
         this.islemdekiCoinler = []
         this.allData = []
         this.allActiveCoins = []//this.marketsInfos && this.marketsInfos.filter(e=> e.active &&  e.quote == 'BTC').map(e=>e.baseId.toUpperCase()).filter(e=> !this.mainMarkets.includes(e))

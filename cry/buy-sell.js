@@ -125,6 +125,8 @@ class WsMongo {
             const first = altiTickers['coin'+from]
             const second = altiTickers['coin'+to]
             this.FdbIslemleri(coin, first, second, fark)
+            const volumeUygun = this.ortak.marketVolumes[second.market] >=  this.ortak.volumeLimtis[to.toUpperCase()]
+            if(!volumeUygun) return
             const checkTamUygun = first.ask.total >= this.ortak.limits[from.toUpperCase()] && second.bid.total >= this.ortak.limits[to.toUpperCase()] // CHECK TAM UYGUN
             if(!checkTamUygun) return
             console.log(coin + ` - ${from} > ${to} KOŞUL UYUYOR`)
