@@ -183,8 +183,7 @@ class WsMongo {
             firstMarket:  { price: first.ask.price.toFixed(8), amount: first.ask.amount.toFixed(8), total: first.ask.total.toFixed(8), totalUygun: firstTotalUygun  }, // TODO: tofixed kaldır.
             secondMarket: { price: second.bid.price.toFixed(8), amount: second.bid.amount.toFixed(8), total: second.bid.total.toFixed(8), totalUygun: secondTotalUygun },// TODO: tofixed kaldır.
             totalUygun,
-            fark: fark.toFixed(2),
-            date: Date()
+            fark: fark.toFixed(2)
         }
 
         const fdbName = first.market.replace('/','-') + '--' + second.market.replace('/','-')
