@@ -53,6 +53,8 @@ class Ortak {
         this.marketsInfos = await this.ccx.exchange.load_markets().catch(e=> console.log(e) )
         this.marketsInfos = this.marketsInfos && Object.keys(this.marketsInfos).map(e=> this.marketsInfos[e])
         this.marketTickers = await this.ccx.GetMarkets().catch(e=> console.log(e))
+        this.marketVolumes = {}
+        this.marketTickers.Data.filter(e=> this.marketVolumes[e.Label]= e.Volume)
         this.islemdekiCoinler = []
         this.allData = []
         this.allActiveCoins = []//this.marketsInfos && this.marketsInfos.filter(e=> e.active &&  e.quote == 'BTC').map(e=>e.baseId.toUpperCase()).filter(e=> !this.mainMarkets.includes(e))
