@@ -28,7 +28,7 @@ class WsMongo {
     cryWsBasla(){
         this.ortak.db.ref(this.fdbRoot).set(null)
         this.datalarString = []
-        this.ortak.wsDepth.WsBaslat()
+        this.ortak.wsDepth.WsBaslat(coin=> this.YesYeniFunk(coin))
         this.RunForAllCoins()
     }
 
