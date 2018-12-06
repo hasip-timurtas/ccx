@@ -13,7 +13,7 @@ class OkexWsDepth {
         this.sayac = 0
         this.limit = 200
         //this.url = "mongodb://localhost:27017/okex-depths"; // production
-        this.url = "mongodb://202.182.123.217:1453/"; // test
+        this.url = "mongodb://139.180.197.6:1453/"; // test
         this.mainMarkets = ['USDT', 'BTC', 'ETH', 'OKB']
         this.coins = []
     }
