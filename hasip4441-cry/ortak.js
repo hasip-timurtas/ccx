@@ -17,7 +17,7 @@ class Ortak {
         this.minFark = 1
         this.mainMarkets = ['BTC', 'LTC', 'DOGE']
         this.site = 'cryptopia'
-        const key = "9759289e3d634a9492318240ad6984b5" // apo cry
+        const key = "9759289e3d634a9492318240ad6984b5" // hasip4441 cry
         const secret = "XLJ1k0HeIZ2EFV/awysRdZ5PZc2UMAye45gG9hjF7w0="
         this.ccx = new MhtCcxt(key, secret, this.site, null)
         this.limits = { "BTC": 0.0006, "ETH": 0.011, "LTC": 0.08, "DOGE": 1100, "BNB":5.1, "USD": 5, "USDT": 5 }
@@ -36,15 +36,15 @@ class Ortak {
             this.wsDepth = new WsDepth()
             await this.wsDepth.LoadVeriables(this)
         }
-        this.fbBalances = cnn.collection('balances')
-        this.history = cnn.collection('history')
-        this.mailData = cnn.collection('mailData')
-        this.mailDataMinMax = cnn.collection('mailData-min-max')
-        this.mailDataEski = cnn.collection('mailData-Eski')
-        this.mailDataBosBuy = cnn.collection('mailData-bos-buy')
-        this.mailDataHata = cnn.collection('mailData-hata')
-        this.openOrders = cnn.collection('openOrders')
-        this.testler = cnn.collection('testler')
+        this.fbBalances = cnn.collection('balances-hasip4441')
+        this.history = cnn.collection('history-hasip4441')
+        this.mailData = cnn.collection('mailData-hasip4441')
+        this.mailDataMinMax = cnn.collection('mailData-min-max-hasip4441')
+        this.mailDataEski = cnn.collection('mailData-Eski-hasip4441')
+        this.mailDataBosBuy = cnn.collection('mailData-bos-buy-hasip4441')
+        this.mailDataHata = cnn.collection('mailData-hata-hasip4441')
+        this.openOrders = cnn.collection('openOrders-hasip4441')
+        this.testler = cnn.collection('testler-hasip4441')
         this.variables = cnn.collection('variables')
         this.marketsInfos = await this.ccx.exchange.load_markets().catch(e=> console.log(e) )
         this.marketsInfos = this.marketsInfos && Object.keys(this.marketsInfos).map(e=> this.marketsInfos[e])
