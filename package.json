@@ -7,10 +7,10 @@
     "ccxt": "^1.17.352",
     "firebase-admin": "^6.2.0",
     "mongodb": "^3.1.6",
+    "pako": "^1.0.6",
     "request-promise": "^4.2.2",
     "webworker-threads": "^0.7.17",
-    "ws": "^6.0.0",
-    "pako": "^1.0.6"
+    "ws": "^6.0.0"
   },
   "devDependencies": {},
   "scripts": {
