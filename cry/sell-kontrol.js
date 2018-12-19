@@ -24,7 +24,7 @@ class SellKontrol {
 
         
         const mainBalances = balances.filter(e=> this.ortak.mainMarkets.includes(e.Symbol))
-        //await this.BalanceEsitle(mainBalances) // Şimdilik kapalı. Hangi coin en az gidiyorsa ona çevrilecek.
+        await this.BalanceEsitle(mainBalances) // Şimdilik kapalı. Hangi coin en az gidiyorsa ona çevrilecek.
 
         if(false){
             //  ################     TEST     ################    TEST    ################     TEST     ################
