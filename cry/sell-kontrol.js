@@ -170,13 +170,9 @@ class SellKontrol {
             //await this.SellKurKontrol(balance)
         }).catch(async (e) => {
             console.log(e, openOrder.market)
-            /*
             if(e.message.includes('No matching trades found')){
                 await this.ortak.DeleteOrderFb(openOrder.orderId)
-            }else{
-                console.log(e, openOrder.market)
-            }  
-            */
+            }
         })
     }
 
