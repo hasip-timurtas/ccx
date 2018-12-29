@@ -66,12 +66,18 @@ class SellKontrol {
     }
 
     async BalanceIslemdeOlanlar(balances, openOrders){
+        for (const openOrder of openOrders) {
+            const balance = balances.find(e => e.Symbol == openOrder.market.split('/')[0])
+            await this.SelleKoyKontrol(balance, openOrder)
+        }
+        /*
         for (const balance of balances) {
             if(!this.BalanceKontroller(balance)) continue
             const openOrder = openOrders && openOrders.find(e=> e.market.split('/')[0] == balance.Symbol)
             if(!openOrder) continue // TODO: balanceler eşit değilse ve open ordersta yoksa dbde yok demek. ordersi bi şekilde iptal et.
             await this.SelleKoyKontrol(balance, openOrder)
         }
+        */
     }
 
     BalanceKontroller(balance){
