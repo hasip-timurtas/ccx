@@ -461,8 +461,8 @@ class Ortak {
         //console.log(coin + ' ÇIKTI', this.islemdekiCoinler)
     }
 
-    async DeleteOrderFb(market, type){
-        await this.openOrders.deleteOne({market, side: type})
+    async DeleteOrderFb(orderId){
+        await this.openOrders.deleteOne({orderId})
         /*
         const marketNameFb = order.market.replace('/','_') + '-' +  order.orderId
         await this.db.ref(`cry/${type}-open-orders`).child(marketNameFb).set(null)

@@ -50,9 +50,9 @@ class SellKontrol {
         console.log('BÜTÜN ORDERLAR İPTAL EDİLİYORRRRRRRRRRRRRRRRRR.')
         for (const order of openOrders) {
             await this.ortak.ccx.CancelTrade(order.orderId, order.market).then(e=>{
-                this.ortak.DeleteOrderFb(order.market, 'sell')
+                this.ortak.DeleteOrderFb(order.orderId)
             }).catch(e=> {
-                if(!e.message.toLowerCase().includes('nonce')) this.ortak.DeleteOrderFb(order.market, 'sell') // nonce hatası değilse dbden sil.
+                if(!e.message.toLowerCase().includes('nonce')) this.ortak.DeleteOrderFb(order.orderId) // nonce hatası değilse dbden sil.
             })
         }
         this.ortak.SetVariable('CancelAllOrders', new Date())
@@ -159,13 +159,13 @@ class SellKontrol {
 
     async SellBoz(balance, openOrder){
         await this.ortak.ccx.CancelTrade(openOrder.orderId, openOrder.market).then(async (e)=>{
-            await this.ortak.DeleteOrderFb(openOrder.market, 'sell')
+            await this.ortak.DeleteOrderFb(openOrder.orderId)
             console.log(`${openOrder.market} Cancel edildi'`)
             balance.Available = openOrder.amount
             //await this.SellKurKontrol(balance)
         }).catch(async (e) => {
             if(e.message.includes('No matching trades found')){
-                await this.ortak.DeleteOrderFb(openOrder.market, 'sell')
+                await this.ortak.DeleteOrderFb(openOrder.orderId)
             }else{
                 console.log(e, openOrder.market)
             }  
