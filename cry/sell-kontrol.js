@@ -201,23 +201,35 @@ class SellKontrol {
         const ltcBalance = balances.find(e=> e.Symbol == 'LTC').Available
         const dogeBalance = balances.find(e=> e.Symbol == 'DOGE').Available
         const ondalikliSayi = this.ortak.SetPrices('LTC/BTC') //ondalikliSayi için BTC LTC DOGE aynı
-        if(ltcBalance > 4 ){
+
+        // LTC
+        if(ltcBalance > 4 ){ // SELL
             const satilacakBalance = ltcBalance - 4
             if(satilacakBalance >= this.ortak.limits['LTC']){
                 const marketOrders = await this.ortak.GetOrderBook('LTC/BTC')
                 const sellPrice = marketOrders.asks[0]['rate'] - ondalikliSayi
                 this.ortak.SubmitSellKontrol('LTC/BTC', sellPrice, satilacakBalance, 'Sell')
             }
-            
+        } else if(ltcBalance < 2 ){  // BUY
+            const alinacakBalance = 2
+            const marketOrders = await this.ortak.GetOrderBook('LTC/BTC')
+            const buyPrice = marketOrders.asks[0]['rate']
+            this.ortak.SubmitSellKontrol('LTC/BTC', buyPrice, alinacakBalance, 'Buy')
         }
 
-        if(dogeBalance > 50000 ){
+        // DOGE
+        if(dogeBalance > 50000 ){  // SELL
             const satilacakBalance = dogeBalance - 50000
             if(satilacakBalance >= this.ortak.limits['DOGE']){
                 const marketOrders = await this.ortak.GetOrderBook('DOGE/LTC')
                 const sellPrice = marketOrders.asks[0]['rate'] - ondalikliSayi
                 this.ortak.SubmitSellKontrol('DOGE/LTC', sellPrice, satilacakBalance, 'Sell')
             }
+        } else if(dogeBalance < 20000 ){  // BUY
+            const alinacakBalance = 20000
+            const marketOrders = await this.ortak.GetOrderBook('DOGE/BTC')
+            const buyPrice = marketOrders.asks[0]['rate']
+            this.ortak.SubmitSellKontrol('DOGE/BTC', buyPrice, alinacakBalance, 'Buy')
         }
     }
 }
