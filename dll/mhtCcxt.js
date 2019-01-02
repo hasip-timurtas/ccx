@@ -11,7 +11,7 @@ class MhtCcxt {
     this.exchange = new ccxt[exchangeId](); // Örnek new Cryptopia('yobit')
     this.exchange.apiKey = key
     this.exchange.secret = secret
-    this.exchange.timeout = 30000
+    this.exchange.timeout = 300000
     this.baseCoin = baseCoin
     this.pauseLoops = false
     this.ordersToplam = 0
