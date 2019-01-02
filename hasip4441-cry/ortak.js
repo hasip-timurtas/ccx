@@ -15,7 +15,7 @@ class Ortak {
         if(!type) throw 'LÜTFEN ORTAK CLASS İÇİN TYPE GİRİN.'
         this.type = type
         this.minFark = 1
-        this.mainMarkets = ['BTC', 'LTC', 'DOGE']
+        this.mainMarkets = ['BTC', 'LTC', 'DOGE', 'ETH']
         this.site = 'cryptopia'
         const key = "9759289e3d634a9492318240ad6984b5" // hasip4441 cry
         const secret = "XLJ1k0HeIZ2EFV/awysRdZ5PZc2UMAye45gG9hjF7w0="
