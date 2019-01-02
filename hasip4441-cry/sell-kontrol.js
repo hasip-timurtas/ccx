@@ -207,7 +207,7 @@ class SellKontrol {
                 this.ortak.SubmitSellKontrol('LTC/BTC', sellPrice, satilacakBalance, 'Sell')
             }
         } else if(ltcBalance < 2 ){  // BUY
-            const alinacakBalance = 2
+            const alinacakBalance = 1
             const marketOrders = await this.ortak.GetOrderBook('LTC/BTC')
             const buyPrice = marketOrders.asks[0]['rate']
             this.ortak.SubmitSellKontrol('LTC/BTC', buyPrice, alinacakBalance, 'Buy')
@@ -222,7 +222,7 @@ class SellKontrol {
                 this.ortak.SubmitSellKontrol('DOGE/LTC', sellPrice, satilacakBalance, 'Sell')
             }
         } else if(dogeBalance < 20000 ){  // BUY
-            const alinacakBalance = 20000
+            const alinacakBalance = 10000
             const marketOrders = await this.ortak.GetOrderBook('DOGE/BTC')
             const buyPrice = marketOrders.asks[0]['rate']
             this.ortak.SubmitSellKontrol('DOGE/BTC', buyPrice, alinacakBalance, 'Buy')
