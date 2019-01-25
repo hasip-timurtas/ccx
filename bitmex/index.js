@@ -8,6 +8,7 @@ class SellKontrol {
         this.kaldirac = 50
         this.amount = 350
         this.marginAmount = 5
+        this.minYuzde = 2
     }
 
     async BitmexBasla(){
@@ -40,7 +41,7 @@ class SellKontrol {
         })[0]
         
         // Positionlarda kâr varsa sat.
-        if(positions.entryPrice && positions.profitYuzde >= 1){ // Açık posizyon varsa ve en az %1 karda ise
+        if(positions.entryPrice && positions.profitYuzde >= this.minYuzde){ // Açık posizyon varsa ve en az %1 karda ise
             // position var ve en az %1 karda
             const type = positions.orderedType == 'sell' ? 'buy' : 'sell' // sell yapmışsa buy yapıcaz. değilse tam tersi.
             const quantity = Math.abs(positions.size) // amount için size nigatif ise pozitif yap
