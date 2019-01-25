@@ -7,8 +7,8 @@ class SellKontrol {
         await this.ortak.LoadVeriables('MONGO')
         this.kaldirac = 50
         this.amount = 10000
-        this.marginAmount = 2.5
-        this.minYuzde = 2
+        this.marginAmount = 5
+        //this.minYuzde = 2
     }
 
     async BitmexBasla(){
