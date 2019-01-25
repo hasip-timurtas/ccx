@@ -6,7 +6,7 @@ class SellKontrol {
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables('MONGO')
         this.kaldirac = 50
-        this.amount = 350
+        this.amount = 200
         this.marginAmount = 5
     }
 
