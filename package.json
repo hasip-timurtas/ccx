@@ -4,13 +4,14 @@
   "description": "cry",
   "main": "index.js",
   "dependencies": {
-    "ccxt": "^1.17.352",
-    "firebase-admin": "^6.2.0",
-    "mongodb": "^3.1.6",
-    "pako": "^1.0.6",
+    "ccxt": "^1.18.152",
+    "crypto": "^1.0.1",
+    "firebase-admin": "^6.5.1",
+    "mongodb": "^3.1.13",
+    "pako": "^1.0.8",
     "request-promise": "^4.2.2",
     "webworker-threads": "^0.7.17",
-    "ws": "^6.0.0"
+    "ws": "^6.1.3"
   },
   "devDependencies": {},
   "scripts": {
