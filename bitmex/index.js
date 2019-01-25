@@ -7,7 +7,7 @@ class SellKontrol {
         await this.ortak.LoadVeriables('MONGO')
         this.kaldirac = 50
         this.amount = 500
-        this.marginAmount = 5
+        this.marginAmount = 2.5
         this.minYuzde = 2
     }
 
@@ -110,7 +110,7 @@ async function Basla(){
     await sellKontrol.LoadVeriables()
     while(true){
         await sellKontrol.BitmexBasla().catch(e=> console.log(e))
-        await sellKontrol.ortak.sleep(60 * 15)
+        await sellKontrol.ortak.sleep(60 * 5)
     }
 }
 
