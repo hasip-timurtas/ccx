@@ -6,7 +6,7 @@ class SellKontrol {
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables('MONGO')
         this.kaldirac = 50
-        this.amount = 350
+        this.amount = 500
         this.marginAmount = 5
         this.minYuzde = 2
     }
@@ -49,15 +49,12 @@ class SellKontrol {
             await this.CreateOrder(type, quantity, null, 'market') // open positionu direk satıyoruz.  -- AMA market ile satıyoruz. 3 kat daha fazla fee var.
         }
         
-
         // Open Ordersları iptal et.
         await this.ortak.BitmexCalcelAllOrders()
 
         // şimdi yeni ordersları aç. Buy ve sell için -+ 5 dolardan açıcaz
-        const buyResult = await this.CreateOrder('buy', this.amount, ticker.last - this.marginAmount)
-        const sellResult = await this.CreateOrder('sell', this.amount, ticker.last + this.marginAmount)
-        
-        
+        await this.CreateOrder('buy', this.amount, ticker.last - this.marginAmount)
+        await this.CreateOrder('sell', this.amount, ticker.last + this.marginAmount)        
     }
 
 
