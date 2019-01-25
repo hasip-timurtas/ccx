@@ -7,7 +7,7 @@ class SellKontrol {
         await this.ortak.LoadVeriables('MONGO')
         this.kaldirac = 50
         this.amount = 10000
-        this.marginAmount = 5
+        this.marginAmount = 3
         //this.minYuzde = 2
     }
 
