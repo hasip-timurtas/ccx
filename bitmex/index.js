@@ -112,7 +112,7 @@ async function Basla(){
     await sellKontrol.LoadVeriables()
     while(true){
         await sellKontrol.BitmexBasla().catch(e=> console.log(e))
-        await sellKontrol.ortak.sleep(60)
+        await sellKontrol.ortak.sleep(60 * 15)
     }
 }
 
