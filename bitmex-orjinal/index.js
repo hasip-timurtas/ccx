@@ -5,10 +5,11 @@ class SellKontrol {
     async LoadVeriables(){
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables('MONGO')
-        this.kaldirac = 50
+        this.kaldirac = 25
         this.amount = 1000
         this.marginAmount = 3
         this.marketName = 'BTC/USD'
+        this.firstRun = true
         //this.minYuzde = 2
     }
 
@@ -17,20 +18,34 @@ class SellKontrol {
         //const balances = await this.ortak.GetBalance()
         const ticker =  await this.ortak.ccx.exchange.fetchTicker(this.marketName) // awaitthis.ortak.ccx.GetMarket(marketName)
 
-
         await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
 
         // şimdi yeni ordersları aç. Buy ve sell için -+ 5 dolardan açıcaz
         await this.CreateOrder('buy', this.amount, ticker.last - this.marginAmount)
-        await this.CreateOrder('sell', this.amount, ticker.last + this.marginAmount)        
+        await this.CreateOrder('sell', this.amount, ticker.last + this.marginAmount)
     }
 
     async ClosePositions(){
+
+        const position = await this.GetPositions()
+        // Positionlarda kâr varsa sat.
+        if(position.entryPrice) {  //  Açık posizyon varsa ve en az %1 karda ise    ||  position.profitYuzde >= this.minYuzde
+            // position var ve en az %1 karda
+            const type = position.orderedType == 'sell' ? 'buy' : 'sell' // sell yapmışsa buy yapıcaz. değilse tam tersi.
+            const quantity = Math.abs(position.size) // amount için size nigatif ise pozitif yap
+
+            //await this.CreateOrder(type, quantity, position.orderPrice, 'market') // open positionu direk satıyoruz.  -- AMA market ile satıyoruz. 3 kat daha fazla fee var.
+            await this.CreateOrder(type, quantity, null, 'market') // open positionu direk satıyoruz.  -- AMA market ile satıyoruz. 3 kat daha fazla fee var.
+        
+        }
+    }
+
+    async GetPositions(){
         const ticker =  await this.ortak.ccx.exchange.fetchTicker(this.marketName) // awaitthis.ortak.ccx.GetMarket(marketName)
 
         // Get Positions
         const result = JSON.parse(await this.ortak.BitmexPositions())
-        const position = result && result.map(e=>{
+        return result && result.map(e=>{
             const orderedType = e.currentQty < 0 ? 'sell' : 'buy' // size negatif ise sell yapılmış pozitif ise buy.
             let profitYuzde, orderPrice
             if(orderedType == 'sell'){
@@ -55,17 +70,6 @@ class SellKontrol {
                 orderPrice
             }
         })[0]
-
-        // Positionlarda kâr varsa sat.
-        if(position.entryPrice) {  //  Açık posizyon varsa ve en az %1 karda ise    ||  position.profitYuzde >= this.minYuzde
-            // position var ve en az %1 karda
-            const type = position.orderedType == 'sell' ? 'buy' : 'sell' // sell yapmışsa buy yapıcaz. değilse tam tersi.
-            const quantity = Math.abs(position.size) // amount için size nigatif ise pozitif yap
-
-            //await this.CreateOrder(type, quantity, position.orderPrice, 'market') // open positionu direk satıyoruz.  -- AMA market ile satıyoruz. 3 kat daha fazla fee var.
-            await this.CreateOrder(type, quantity, null, 'market') // open positionu direk satıyoruz.  -- AMA market ile satıyoruz. 3 kat daha fazla fee var.
-        
-        }
     }
 
     async CreateOrder(type, quantity, price, marketType = "limit"){
