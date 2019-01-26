@@ -8,13 +8,25 @@ class SellKontrol {
         this.kaldirac = 50
         this.amount = 1000
         this.marginAmount = 3
+        this.marketName = 'BTC/USD'
         //this.minYuzde = 2
     }
 
     async BitmexBasla(){
-        const marketName = 'BTC/USD'
+        
         //const balances = await this.ortak.GetBalance()
-        const ticker =  await this.ortak.ccx.exchange.fetchTicker(marketName) // awaitthis.ortak.ccx.GetMarket(marketName)
+        const ticker =  await this.ortak.ccx.exchange.fetchTicker(this.marketName) // awaitthis.ortak.ccx.GetMarket(marketName)
+
+
+        await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
+
+        // şimdi yeni ordersları aç. Buy ve sell için -+ 5 dolardan açıcaz
+        await this.CreateOrder('buy', this.amount, ticker.last - this.marginAmount)
+        await this.CreateOrder('sell', this.amount, ticker.last + this.marginAmount)        
+    }
+
+    async ClosePositions(){
+        const ticker =  await this.ortak.ccx.exchange.fetchTicker(this.marketName) // awaitthis.ortak.ccx.GetMarket(marketName)
 
         // Get Positions
         const result = JSON.parse(await this.ortak.BitmexPositions())
@@ -44,26 +56,17 @@ class SellKontrol {
             }
         })[0]
 
-        await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
-
         // Positionlarda kâr varsa sat.
         if(position.entryPrice) {  //  Açık posizyon varsa ve en az %1 karda ise    ||  position.profitYuzde >= this.minYuzde
             // position var ve en az %1 karda
             const type = position.orderedType == 'sell' ? 'buy' : 'sell' // sell yapmışsa buy yapıcaz. değilse tam tersi.
             const quantity = Math.abs(position.size) // amount için size nigatif ise pozitif yap
 
-            await this.CreateOrder(type, quantity, position.orderPrice) // open positionu direk satıyoruz.  -- AMA market ile satıyoruz. 3 kat daha fazla fee var.
+            //await this.CreateOrder(type, quantity, position.orderPrice, 'market') // open positionu direk satıyoruz.  -- AMA market ile satıyoruz. 3 kat daha fazla fee var.
+            await this.CreateOrder(type, quantity, null, 'market') // open positionu direk satıyoruz.  -- AMA market ile satıyoruz. 3 kat daha fazla fee var.
+        
         }
-        
-        
-        
-
-        // şimdi yeni ordersları aç. Buy ve sell için -+ 5 dolardan açıcaz
-        await this.CreateOrder('buy', this.amount, ticker.last - this.marginAmount)
-        await this.CreateOrder('sell', this.amount, ticker.last + this.marginAmount)        
     }
-
-
 
     async CreateOrder(type, quantity, price, marketType = "limit"){
         const orderParams = ['BTC/USD', marketType, type, quantity, price]
@@ -114,9 +117,21 @@ async function Basla(){
     sayac++
     sellKontrol = new SellKontrol()
     await sellKontrol.LoadVeriables()
+    ReopenOrders()
+    ClosePositions()
+}
+
+async function ReopenOrders(){
     while(true){
         await sellKontrol.BitmexBasla().catch(e=> console.log(e))
         await sellKontrol.ortak.sleep(60 * 15)
+    }
+}
+
+async function ClosePositions(){
+    while(true){
+        await sellKontrol.ClosePositions()
+        await sellKontrol.ortak.sleep(60 * 60)
     }
 }
 
