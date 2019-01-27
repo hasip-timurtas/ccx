@@ -33,13 +33,13 @@ class SellKontrol {
             /*
             const type = position.orderedType == 'sell' ? 'buy' : 'sell' // sell yapmışsa buy yapıcaz. değilse tam tersi.
             await this.CreateOrder(type, quantity, ticker.last - this.marginAmount)
-*/
+            */
             // POSİTİON YOKSA 2 TANE NORMAL ORDER AÇ şimdi yeni ordersları aç. Buy ve sell için -+ 5 dolardan açıcaz
             if(position.orderedType == 'sell'){ // eğer önceki işlem sell ise yeni açılan sell 2 katı daha arkada dursun
-                await this.CreateOrder('buy', quantity , ticker.last - this.marginAmount) // + 
+                await this.CreateOrder('buy', quantity , position.orderPrice)//ticker.last - this.marginAmount) // + 
                 await this.CreateOrder('sell', this.amount, ticker.last + this.marginAmount * kacCarpiGeride)
             }else{
-                await this.CreateOrder('sell', quantity, ticker.last + this.marginAmount) // + quantity
+                await this.CreateOrder('sell', quantity, position.orderPrice)//ticker.last + this.marginAmount) // + quantity
                 await this.CreateOrder('buy', this.amount, ticker.last - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun
             }
             
