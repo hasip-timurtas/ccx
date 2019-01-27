@@ -14,14 +14,14 @@ class SellKontrol {
 
     async BitmexBasla(){
         
-        //const balances = await this.ortak.GetBalance()
+        const balances = await this.ortak.GetBalance()
         const ticker =  await this.ortak.ccx.exchange.fetchTicker(this.marketName) // awaitthis.ortak.ccx.GetMarket(marketName)
         const openOrders = await this.ortak.ccx.GetOpenOrders(this.marketName)
         const openBuys = openOrders.Data.filter(e=> e.Type == 'buy')
         const openSells = openOrders.Data.filter(e=> e.Type == 'sell')
         const orderslarVar = openBuys.length > 0 && openSells.length > 0
         
-        if( !this.firstRun && orderslarVar ) return
+        if(orderslarVar ) return
         this.firstRun = false
         await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
         const position = await this.GetPositions()
@@ -29,12 +29,21 @@ class SellKontrol {
         if(position.entryPrice) {
             // position varsa  var olan position 2x aç
             const quantity = Math.abs(position.size)
+            const kacCarpiGeride = (quantity / this.amount) +1
+            /*
             const type = position.orderedType == 'sell' ? 'buy' : 'sell' // sell yapmışsa buy yapıcaz. değilse tam tersi.
             await this.CreateOrder(type, quantity, ticker.last - this.marginAmount)
-
+*/
             // POSİTİON YOKSA 2 TANE NORMAL ORDER AÇ şimdi yeni ordersları aç. Buy ve sell için -+ 5 dolardan açıcaz
-            await this.CreateOrder(position.orderedType, this.amount, ticker.last - this.marginAmount * 2)
-            await this.CreateOrder(type, this.amount, ticker.last + this.marginAmount)
+            if(position.orderedType == 'sell'){ // eğer önceki işlem sell ise yeni açılan sell 2 katı daha arkada dursun
+                await this.CreateOrder('buy', quantity , ticker.last - this.marginAmount) // + 
+                await this.CreateOrder('sell', this.amount, ticker.last + this.marginAmount * kacCarpiGeride)
+            }else{
+                await this.CreateOrder('sell', quantity, ticker.last + this.marginAmount) // + quantity
+                await this.CreateOrder('buy', this.amount, ticker.last - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun
+            }
+            
+            
         }else{
             // POSİTİON YOKSA 2 TANE NORMAL ORDER AÇ şimdi yeni ordersları aç. Buy ve sell için -+ 5 dolardan açıcaz
             await this.CreateOrder('buy', this.amount, ticker.last - this.marginAmount)
