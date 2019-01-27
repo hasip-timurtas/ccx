@@ -6,7 +6,7 @@ class SellKontrol {
     async LoadVeriables(){
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables('MONGO')
-        this.amount = 5000
+        this.amount = 2500
         this.marginAmount = 2
         this.marketName = 'BTC/USD'
         this.firstRun = true
@@ -36,11 +36,11 @@ class SellKontrol {
             */
             // POSİTİON YOKSA 2 TANE NORMAL ORDER AÇ şimdi yeni ordersları aç. Buy ve sell için -+ 5 dolardan açıcaz
             if(position.orderedType == 'sell'){ // eğer önceki işlem sell ise yeni açılan sell 2 katı daha arkada dursun
-                await this.CreateOrder('buy', quantity , position.orderPrice)//ticker.last - this.marginAmount) // + 
+                await this.CreateOrder('buy', quantity , position.orderPrice)//ticker.last - this.marginAmount) // + this.amount
                 await this.CreateOrder('sell', this.amount, ticker.last + this.marginAmount * kacCarpiGeride)
             }else{
                 await this.CreateOrder('sell', quantity, position.orderPrice)//ticker.last + this.marginAmount) // + quantity
-                await this.CreateOrder('buy', this.amount, ticker.last - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun
+                await this.CreateOrder('buy', this.amount, ticker.last - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun + this.amount
             }
             
             
