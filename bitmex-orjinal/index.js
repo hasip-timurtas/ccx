@@ -100,11 +100,12 @@ class SellKontrol {
         const history = JSON.parse(await this.ortak.BitmexHistory())
         const position = await this.GetPositions()
         if(position.entryPrice) {  //  Açık posizyon varsa
-            await this.ortak.BitmexCalcelAllOrders() 
+            
             const quantity = Math.abs(position.size)
             const positionOpenOrderType = position.orderedType == 'sell' ? 'buy' : 'sell'
             const sonFillKacSaatOnce = Math.abs(new Date(history[0].transactTime) - new Date()) / 36e5;
             if(sonFillKacSaatOnce >= 1){ // posizyon 1 saattir açıksa kapat
+                await this.ortak.BitmexCalcelAllOrders() 
                 return await this.CreateOrder(positionOpenOrderType, quantity, position.ticker)
             }
             /*
