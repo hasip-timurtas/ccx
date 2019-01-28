@@ -6,7 +6,7 @@ class SellKontrol {
     async LoadVeriables(){
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables('MONGO')
-        this.amount = 3500
+        this.amount = 500
         this.marginAmount = 2
         this.marketName = 'BTC/USD'
         this.firstRun = true
@@ -95,6 +95,7 @@ class SellKontrol {
     async ClosePositions(){  // KULLANIM DIŞI
 
         const position = await this.GetPositions()
+        return
         // Positionlarda kâr varsa sat.
         if(position.entryPrice) {  //  Açık posizyon varsa
             // position var ve en az %1 karda
