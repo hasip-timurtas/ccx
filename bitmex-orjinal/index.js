@@ -9,6 +9,8 @@ class SellKontrol {
         this.amount = 500
         this.marginAmount = 2
         this.marketName = 'BTC/USD'
+        this.lastPrice = null
+        
     }
 
     async BitmexBasla(){
@@ -20,20 +22,24 @@ class SellKontrol {
 
         await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
         const position = await this.GetPositions()
+
+
+        if(position.ticker.last - this.lastPrice)
+        this.lastPrice = position.ticker.last
         const openPositionVar = position.entryPrice
         // Positionlarda kâr varsa sat.
         if(openPositionVar) {
             const quantity = Math.abs(position.size)
 
             const kacCarpiGeride = Math.round((quantity / this.amount) +1)
-
+            const fazlaAlimVar = kacCarpiGeride == 3
             // POSİTİON YOKSA 2 TANE NORMAL ORDER AÇ şimdi yeni ordersları aç. Buy ve sell için -+ 5 dolardan açıcaz
             if(position.orderedType == 'sell'){ // eğer önceki işlem sell ise yeni açılan sell 2 katı daha arkada dursun
                 await this.CreateOrder('buy', quantity + this.amount, position.orderPrice)//ticker.last - this.marginAmount) // 
-                await this.CreateOrder('sell', this.amount, position.ticker.last + this.marginAmount * kacCarpiGeride)
+                !fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.ticker.last + this.marginAmount * kacCarpiGeride)
             }else if(position.orderedType == 'buy'){
                 await this.CreateOrder('sell', quantity + this.amount, position.orderPrice)//ticker.last + this.marginAmount) // + quantity
-                await this.CreateOrder('buy', this.amount, position.ticker.last - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun + this.amount
+                !fazlaAlimVar && await this.CreateOrder('buy', this.amount, position.ticker.last - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun + this.amount
             }
             
             
@@ -44,6 +50,15 @@ class SellKontrol {
         }
         
         
+    }
+
+    AniDususAniYukselis(){
+        // ANİ DÜŞÜŞ ANİ YÜKSELİŞ
+        const aniYulselis = this.lastPrice && position.ticker.last - this.lastPrice == 10
+        const aniDusus = this.lastPrice && this.lastPrice - position.ticker.last == -10
+        if(aniYulselis || aniDusus) return true// eğer ani düşüş ve ani yükseliş varsa open orders kurma şimdilik
+        this.lastPrice = position.ticker.last
+        return false
     }
 
     async GetPositions(){
