@@ -9,45 +9,38 @@ class SellKontrol {
         this.amount = 500
         this.marginAmount = 2
         this.marketName = 'BTC/USD'
-        this.firstRun = true
     }
 
     async BitmexBasla(){
         
-        const balances = await this.ortak.GetBalance()
-        const ticker =  await this.ortak.ccx.exchange.fetchTicker(this.marketName) // awaitthis.ortak.ccx.GetMarket(marketName)
-        const openOrders = await this.ortak.ccx.GetOpenOrders(this.marketName)
-        const openBuys = openOrders.Data.filter(e=> e.Type == 'buy')
-        const openSells = openOrders.Data.filter(e=> e.Type == 'sell')
-        const orderslarVar = openBuys.length > 0 && openSells.length > 0
-        
-        if(orderslarVar ) return
-        this.firstRun = false
+        //const balances = await this.ortak.GetBalance()
+        const openOrders = await this.GetOpenOrders()
+        const openBuyVeSellVar = openOrders.buy && openOrders.sell
+        if(openBuyVeSellVar) return
+
         await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
         const position = await this.GetPositions()
+        const openPositionVar = position.entryPrice
         // Positionlarda kâr varsa sat.
-        if(position.entryPrice) {
-            // position varsa  var olan position 2x aç
+        if(openPositionVar) {
             const quantity = Math.abs(position.size)
-            const kacCarpiGeride = (quantity / this.amount) +1
-            /*
-            const type = position.orderedType == 'sell' ? 'buy' : 'sell' // sell yapmışsa buy yapıcaz. değilse tam tersi.
-            await this.CreateOrder(type, quantity, ticker.last - this.marginAmount)
-            */
+
+            const kacCarpiGeride = Math.round((quantity / this.amount) +1)
+
             // POSİTİON YOKSA 2 TANE NORMAL ORDER AÇ şimdi yeni ordersları aç. Buy ve sell için -+ 5 dolardan açıcaz
             if(position.orderedType == 'sell'){ // eğer önceki işlem sell ise yeni açılan sell 2 katı daha arkada dursun
-                await this.CreateOrder('buy', quantity , position.orderPrice)//ticker.last - this.marginAmount) // + this.amount
-                await this.CreateOrder('sell', this.amount, ticker.last + this.marginAmount * kacCarpiGeride)
-            }else{
-                await this.CreateOrder('sell', quantity, position.orderPrice)//ticker.last + this.marginAmount) // + quantity
-                await this.CreateOrder('buy', this.amount, ticker.last - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun + this.amount
+                await this.CreateOrder('buy', quantity + this.amount, position.orderPrice)//ticker.last - this.marginAmount) // 
+                await this.CreateOrder('sell', this.amount, position.ticker.last + this.marginAmount * kacCarpiGeride)
+            }else if(position.orderedType == 'buy'){
+                await this.CreateOrder('sell', quantity + this.amount, position.orderPrice)//ticker.last + this.marginAmount) // + quantity
+                await this.CreateOrder('buy', this.amount, position.ticker.last - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun + this.amount
             }
             
             
         }else{
             // POSİTİON YOKSA 2 TANE NORMAL ORDER AÇ şimdi yeni ordersları aç. Buy ve sell için -+ 5 dolardan açıcaz
-            await this.CreateOrder('buy', this.amount, ticker.last - this.marginAmount)
-            await this.CreateOrder('sell', this.amount, ticker.last + this.marginAmount)
+            await this.CreateOrder('buy', this.amount, position.ticker.last - this.marginAmount)
+            await this.CreateOrder('sell', this.amount, position.ticker.last + this.marginAmount)
         }
         
         
@@ -80,7 +73,8 @@ class SellKontrol {
                 liqPrice: e.liquidationPrice,
                 profitYuzde,
                 orderedType,
-                orderPrice
+                orderPrice,
+                ticker
             }
         })[0]
     }
@@ -92,20 +86,37 @@ class SellKontrol {
         })
     }
 
-    async ClosePositions(){  // KULLANIM DIŞI
-
+    async CheckPositions(){
+        const history = JSON.parse(await this.ortak.BitmexHistory())
         const position = await this.GetPositions()
-        return
-        // Positionlarda kâr varsa sat.
         if(position.entryPrice) {  //  Açık posizyon varsa
-            // position var ve en az %1 karda
-            const type = position.orderedType == 'sell' ? 'buy' : 'sell' // sell yapmışsa buy yapıcaz. değilse tam tersi.
-            const quantity = Math.abs(position.size) // amount için size nigatif ise pozitif yap
-
-            //await this.CreateOrder(type, quantity, position.orderPrice, 'market') // open positionu direk satıyoruz.  -- AMA market ile satıyoruz. 3 kat daha fazla fee var.
-            await this.CreateOrder(type, quantity, null, 'market') // open positionu direk satıyoruz.  -- AMA market ile satıyoruz. 3 kat daha fazla fee var.
-        
+            const quantity = Math.abs(position.size)
+            const positionOpenOrderType = position.orderedType == 'sell' ? 'buy' : 'sell'
+            const sonFillKacSaatOnce = Math.abs(new Date(history[0].transactTime) - new Date()) / 36e5;
+            if(sonFillKacSaatOnce >= 1){ // posizyon 1 saattir açıksa kapat
+                return await this.CreateOrder(positionOpenOrderType, quantity, position.ticker)
+            }
+            /*
+            const openOrders = await this.GetOpenOrders()
+            const positionOrder = openOrders.Data.find(e=> e.Type == positionOpenOrderType)
+            const sonFillKacSaatOnce = Math.abs(new Date(history[0].transactTime) - new Date()) / 36e5;
+            if(positionOrder && positionOrder.kacSaatOnce > 1 && sonFillKacSaatOnce > 1){ // posizyon 1 saattir açıksa kapat
+                return await this.CreateOrder(positionOpenOrderType, quantity, position.ticker)
+            }
+            */
         }
+    }
+
+    async GetOpenOrders(){
+        const openOrders = await this.ortak.ccx.GetOpenOrders(this.marketName)
+        openOrders.buy = openOrders.Data.find(e=> e.Type == 'buy') 
+        openOrders.sell = openOrders.Data.find(e=> e.Type == 'sell') 
+
+        for (const openOrder of openOrders.Data) {
+            openOrder.kacSaatOnce = Math.abs(new Date(openOrder.entryDate) - new Date()) / 36e5;
+        }
+
+        return openOrders
     }
 
     investingSignal(){
@@ -131,6 +142,23 @@ class SellKontrol {
         const sonuc = await rp(options).catch(e=> console.log(e))
     */  
     }
+
+    async ClosePositions(){  // KULLANIM DIŞI
+        // const history = JSON.parse(await this.ortak.BitmexHistory())
+        
+        const position = await this.GetPositions()
+        
+        // Positionlarda kâr varsa sat.
+        if(position.entryPrice) {  //  Açık posizyon varsa
+            // position var ve en az %1 karda
+            const type = position.orderedType == 'sell' ? 'buy' : 'sell' // sell yapmışsa buy yapıcaz. değilse tam tersi.
+            const quantity = Math.abs(position.size) // amount için size nigatif ise pozitif yap
+
+            //await this.CreateOrder(type, quantity, position.orderPrice, 'market') // open positionu direk satıyoruz.  -- AMA market ile satıyoruz. 3 kat daha fazla fee var.
+            await this.CreateOrder(type, quantity, position.ticker) // open positionu direk satıyoruz.  -- AMA market ile satıyoruz. 3 kat daha fazla fee var.
+        
+        }
+    }
 }
 
 
@@ -145,7 +173,7 @@ async function Basla(){
     sellKontrol = new SellKontrol()
     await sellKontrol.LoadVeriables()
     ReopenOrders()
-    //ClosePositions()
+    CheckPositions()
 }
 
 async function ReopenOrders(){
@@ -155,10 +183,10 @@ async function ReopenOrders(){
     }
 }
 
-async function ClosePositions(){
+async function CheckPositions(){
     while(true){
-        await sellKontrol.ClosePositions()
-        await sellKontrol.ortak.sleep(60 * 60)
+        await sellKontrol.CheckPositions()
+        await sellKontrol.ortak.sleep(60 * 10)
     }
 }
 

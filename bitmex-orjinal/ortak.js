@@ -71,6 +71,35 @@ class Ortak {
         this.wsZamanlayici = 30 // DAKİKA
     }
 
+    async BitmexHistory(){
+        var verb = 'GET',
+        path = '/api/v1//execution/tradeHistory',
+        expires = Math.round(new Date().getTime() / 1000) + 60, // 1 min in the future
+        data = {symbol:"XBTUSD", reverse: true, count: 5};
+
+        var postBody = JSON.stringify(data);
+
+        var signature = crypto.createHmac('sha256', this.secret).update(verb + path + expires + postBody).digest('hex');
+
+        var headers = {
+            'content-type' : 'application/json',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'api-expires': expires,
+            'api-key': this.key,
+            'api-signature': signature
+        };
+
+        const requestOptions = {
+        headers: headers,
+        url: this.bitmexUrl+path,
+        method: verb,
+        body: postBody
+        };
+
+        return await rp(requestOptions)
+    }
+
     async BitmexPositions(){
         var verb = 'GET',
         path = '/api/v1/position',

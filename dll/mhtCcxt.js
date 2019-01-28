@@ -253,7 +253,8 @@ class MhtCcxt {
           "Type": data.side,
           "Rate": data.price,
           "Amount": data.remaining,
-          "Remaining": data.remaining    
+          "Remaining": data.remaining,
+          "entryDate": data.datetime
         }
         break;
       default:
