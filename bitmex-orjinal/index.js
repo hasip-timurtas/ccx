@@ -10,7 +10,7 @@ class SellKontrol {
         this.marginAmount = 2
         this.marketName = 'BTC/USD'
         this.lastPrice = null
-        
+        this.fazlaAlimVar = false
     }
 
     async BitmexBasla(){
@@ -20,26 +20,22 @@ class SellKontrol {
         const openBuyVeSellVar = openOrders.buy && openOrders.sell
         if(openBuyVeSellVar) return
 
-        await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
+        !this.fazlaAlimVar && await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
         const position = await this.GetPositions()
-
-
-        if(position.ticker.last - this.lastPrice)
-        this.lastPrice = position.ticker.last
         const openPositionVar = position.entryPrice
         // Positionlarda kâr varsa sat.
         if(openPositionVar) {
             const quantity = Math.abs(position.size)
 
             const kacCarpiGeride = Math.round((quantity / this.amount) +1)
-            const fazlaAlimVar = kacCarpiGeride == 3
+            this.fazlaAlimVar = kacCarpiGeride == 3
             // POSİTİON YOKSA 2 TANE NORMAL ORDER AÇ şimdi yeni ordersları aç. Buy ve sell için -+ 5 dolardan açıcaz
             if(position.orderedType == 'sell'){ // eğer önceki işlem sell ise yeni açılan sell 2 katı daha arkada dursun
                 await this.CreateOrder('buy', quantity + this.amount, position.orderPrice)//ticker.last - this.marginAmount) // 
-                !fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.ticker.last + this.marginAmount * kacCarpiGeride)
+                !this.fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.ticker.last + this.marginAmount * kacCarpiGeride)
             }else if(position.orderedType == 'buy'){
                 await this.CreateOrder('sell', quantity + this.amount, position.orderPrice)//ticker.last + this.marginAmount) // + quantity
-                !fazlaAlimVar && await this.CreateOrder('buy', this.amount, position.ticker.last - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun + this.amount
+                !this.fazlaAlimVar && await this.CreateOrder('buy', this.amount, position.ticker.last - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun + this.amount
             }
             
             
