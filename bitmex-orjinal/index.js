@@ -107,7 +107,7 @@ class SellKontrol {
             const sonFillKacSaatOnce = Math.abs(new Date() - new Date(lastFilled.transactTime)) / 36e5;
             if(sonFillKacSaatOnce >= 1){ // posizyon 1 saattir açıksa kapat
                 await this.ortak.BitmexCalcelAllOrders() 
-                return await this.CreateOrder(positionOpenOrderType, quantity, position.ticker)
+                return await this.CreateOrder(positionOpenOrderType, quantity, position.ticker.last)
             }
             /*
             const openOrders = await this.GetOpenOrders()
@@ -185,7 +185,7 @@ async function Basla(){
     sayac++
     sellKontrol = new SellKontrol()
     await sellKontrol.LoadVeriables()
-    //ReopenOrders()
+    ReopenOrders()
     CheckPositions()
 }
 
