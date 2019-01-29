@@ -10,10 +10,11 @@ class SellKontrol {
         this.marginAmount = 2
         this.marketName = 'BTC/USD'
         this.lastPrice = null
+        this.checkPositionAktif = false
     }
 
     async BitmexBasla(){
-        
+        if(this.checkPositionAktif) return
         //const balances = await this.ortak.GetBalance()
         const openOrders = await this.GetOpenOrders()
         const openBuyVeSellVar = openOrders.buy && openOrders.sell
@@ -105,8 +106,10 @@ class SellKontrol {
             const positionOpenOrderType = position.orderedType == 'sell' ? 'buy' : 'sell'
             const lastFilled = history.find(e=> e.execType == 'Trade')
             const sonFillKacSaatOnce = Math.abs(new Date() - new Date(lastFilled.transactTime)) / 36e5;
+            this.checkPositionAktif = false // normal şartlardan bunu deaktif yap.
             if(sonFillKacSaatOnce >= 0.75){ // posizyon 1 saattir açıksa kapat
-                await this.ortak.BitmexCalcelAllOrders() 
+                await this.ortak.BitmexCalcelAllOrders()
+                this.checkPositionAktif = true // check postion orderi açılacaksa bunu aktif etki normal kontrol yenisini açmasın.
                 return await this.CreateOrder(positionOpenOrderType, quantity, position.ticker.last)
             }
             /*
