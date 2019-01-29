@@ -31,9 +31,11 @@ class SellKontrol {
             const fazlaAlimVar = kacCarpiGeride == 3
             // POSİTİON YOKSA 2 TANE NORMAL ORDER AÇ şimdi yeni ordersları aç. Buy ve sell için -+ 5 dolardan açıcaz
             if(position.orderedType == 'sell'){ // eğer önceki işlem sell ise yeni açılan sell 2 katı daha arkada dursun
-                await this.CreateOrder('buy', quantity + this.amount, position.orderPrice)//ticker.last - this.marginAmount) // 
+                const price = position.orderPrice < position.ticker.last ? position.ticker.last + 0.5 : position.orderPrice
+                await this.CreateOrder('buy', quantity + this.amount, price)//ticker.last - this.marginAmount) // 
                 !fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.ticker.last + this.marginAmount * kacCarpiGeride)
             }else if(position.orderedType == 'buy'){
+                const price = position.orderPrice > position.ticker.last ? position.ticker.last - 0.5 : position.orderPrice
                 await this.CreateOrder('sell', quantity + this.amount, position.orderPrice)//ticker.last + this.marginAmount) // + quantity
                 !fazlaAlimVar && await this.CreateOrder('buy', this.amount, position.ticker.last - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun + this.amount
             }
@@ -204,7 +206,7 @@ async function ReopenOrders(){
 async function CheckPositions(){
     while(true){
         await sellKontrol.CheckPositions()
-        await sellKontrol.ortak.sleep(60 * waitTime)
+        await sellKontrol.ortak.sleep(60 * waitTime * 2)
     }
 }
 
