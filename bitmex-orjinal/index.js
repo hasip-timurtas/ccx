@@ -36,7 +36,7 @@ class SellKontrol {
                 !fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.ticker.last + this.marginAmount * kacCarpiGeride)
             }else if(position.orderedType == 'buy'){
                 const price = position.orderPrice > position.ticker.last ? position.ticker.last - 0.5 : position.orderPrice
-                await this.CreateOrder('sell', quantity + this.amount, position.orderPrice)//ticker.last + this.marginAmount) // + quantity
+                await this.CreateOrder('sell', quantity + this.amount, price)//ticker.last + this.marginAmount) // + quantity
                 !fazlaAlimVar && await this.CreateOrder('buy', this.amount, position.ticker.last - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun + this.amount
             }
             
