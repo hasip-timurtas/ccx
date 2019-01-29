@@ -102,15 +102,17 @@ class SellKontrol {
         const position = await this.GetPositions()
         if(position.entryPrice) {  //  Açık posizyon varsa
             
-            const quantity = Math.abs(position.size)
-            const positionOpenOrderType = position.orderedType == 'sell' ? 'buy' : 'sell'
             const lastFilled = history.find(e=> e.execType == 'Trade')
             const sonFillKacSaatOnce = Math.abs(new Date() - new Date(lastFilled.transactTime)) / 36e5;
             this.checkPositionAktif = false // normal şartlardan bunu deaktif yap.
             if(sonFillKacSaatOnce >= 0.75){ // posizyon 1 saattir açıksa kapat
+
+                const quantity = Math.abs(position.size)
+                const positionOpenOrderType = position.orderedType == 'sell' ? 'buy' : 'sell'
                 await this.ortak.BitmexCalcelAllOrders()
                 this.checkPositionAktif = true // check postion orderi açılacaksa bunu aktif etki normal kontrol yenisini açmasın.
-                return await this.CreateOrder(positionOpenOrderType, quantity, position.ticker.last)
+                const price = position.orderedType == 'sell' ? position.ticker.last + 0.5 : position.ticker.last - 0.5 
+                return await this.CreateOrder(positionOpenOrderType, quantity, price)
             }
             /*
             const openOrders = await this.GetOpenOrders()
@@ -202,7 +204,7 @@ async function ReopenOrders(){
 async function CheckPositions(){
     while(true){
         await sellKontrol.CheckPositions()
-        await sellKontrol.ortak.sleep(60 * 10)
+        await sellKontrol.ortak.sleep(60 * waitTime)
     }
 }
 
