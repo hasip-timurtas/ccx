@@ -105,7 +105,7 @@ class SellKontrol {
             const positionOpenOrderType = position.orderedType == 'sell' ? 'buy' : 'sell'
             const lastFilled = history.find(e=> e.execType == 'Trade')
             const sonFillKacSaatOnce = Math.abs(new Date() - new Date(lastFilled.transactTime)) / 36e5;
-            if(sonFillKacSaatOnce >= 0.5){ // posizyon 1 saattir açıksa kapat
+            if(sonFillKacSaatOnce >= 0.75){ // posizyon 1 saattir açıksa kapat
                 await this.ortak.BitmexCalcelAllOrders() 
                 return await this.CreateOrder(positionOpenOrderType, quantity, position.ticker.last)
             }
