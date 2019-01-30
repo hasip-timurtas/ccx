@@ -112,7 +112,7 @@ class SellKontrol {
             const lastFilled = history.find(e=> e.execType == 'Trade')
             const sonFillKacSaatOnce = Math.abs(new Date() - new Date(lastFilled.transactTime)) / 36e5;
             if(sonFillKacSaatOnce >= 0.75){ // posizyon 1 saattir açıksa kapat
-                //await this.ortak.BitmexCalcelAllOrders()
+                await this.ortak.BitmexCalcelAllOrders()
                 const quantity = Math.abs(position.size)
                 const positionOpenOrderType = position.orderedType == 'sell' ? 'buy' : 'sell'
                 this.checkPositionAktif = true // check postion orderi açılacaksa bunu aktif etki normal kontrol yenisini açmasın.
