@@ -32,11 +32,11 @@ class SellKontrol {
             // POSİTİON YOKSA 2 TANE NORMAL ORDER AÇ şimdi yeni ordersları aç. Buy ve sell için -+ 5 dolardan açıcaz
             if(position.orderedType == 'sell'){ // eğer önceki işlem sell ise yeni açılan sell 2 katı daha arkada dursun
                 //const price = position.orderPrice > position.ticker.last ? position.ticker.last - 1 : position.orderPrice
-                await this.CreateOrder('buy', quantity + this.amount, position.orderPrice)//ticker.last - this.marginAmount) // 
+                await this.CreateOrder('buy', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
                 !fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount * kacCarpiGeride)
             }else if(position.orderedType == 'buy'){
                 //const price = position.orderPrice < position.ticker.last ? position.ticker.last + 1 : position.orderPrice
-                await this.CreateOrder('sell', quantity + this.amount, position.orderPrice)//ticker.last + this.marginAmount) // + quantity
+                await this.CreateOrder('sell', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al 
                 !fazlaAlimVar && await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun + this.amount
             }
             
@@ -50,13 +50,11 @@ class SellKontrol {
         
     }
 
-    AniDususAniYukselis(){
-        // ANİ DÜŞÜŞ ANİ YÜKSELİŞ
-        const aniYulselis = this.lastPrice && position.ticker.last - this.lastPrice == 10
-        const aniDusus = this.lastPrice && this.lastPrice - position.ticker.last == -10
-        if(aniYulselis || aniDusus) return true// eğer ani düşüş ve ani yükseliş varsa open orders kurma şimdilik
-        this.lastPrice = position.ticker.last
-        return false
+    GetOhlcv(){
+        const oneHourAgo = new Date(new Date().getTime() - 60 * 60 * 1000)
+        let grafik = await this.ortak.ccx.exchange.fetchOHLCV(this.marketName, '1h', oneHourAgo)
+        grafik = grafik.map(e=> ({date: new Date(e[0]), open: e[1], high: e[2], low: e[3], close: e[4], volume: e[5]}))[1]
+        
     }
 
     async GetPositions(){
@@ -119,14 +117,6 @@ class SellKontrol {
                 //const price = positionOpenOrderType == 'sell' ? position.ticker.last + 1 : position.ticker.last - 1 
                 return await this.CreateOrder(positionOpenOrderType, quantity, position.sellNowPrice)
             }
-            /*
-            const openOrders = await this.GetOpenOrders()
-            const positionOrder = openOrders.Data.find(e=> e.Type == positionOpenOrderType)
-            const sonFillKacSaatOnce = Math.abs(new Date(history[0].transactTime) - new Date()) / 36e5;
-            if(positionOrder && positionOrder.kacSaatOnce > 1 && sonFillKacSaatOnce > 1){ // posizyon 1 saattir açıksa kapat
-                return await this.CreateOrder(positionOpenOrderType, quantity, position.ticker)
-            }
-            */
         }
     }
 
@@ -142,46 +132,6 @@ class SellKontrol {
         return openOrders
     }
 
-    investingSignal(){
-    /*
-        const options = {
-            method: 'POST',
-            uri: 'https://tr.investing.com/instruments/Service/GetTechincalData',
-            body: {
-                pairID: '1057995',
-                period: '300',
-                viewType: 'normal'
-            },
-            json: true, // Automatically stringifies the body to JSON
-            headers:{
-                //'Content-Type': 'application/json'
-                'User-Agent': 'Request-Promise',
-                'Host': 'tr.investing.com',
-                'Origin': 'https://tr.investing.com',
-                'Referer': 'https://tr.investing.com/crypto/bitcoin/btc-usd-technical?cid=1057995'
-              }
-        }
-
-        const sonuc = await rp(options).catch(e=> console.log(e))
-    */  
-    }
-
-    async ClosePositions(){  // KULLANIM DIŞI
-        // const history = JSON.parse(await this.ortak.BitmexHistory())
-        
-        const position = await this.GetPositions()
-        
-        // Positionlarda kâr varsa sat.
-        if(position.entryPrice) {  //  Açık posizyon varsa
-            // position var ve en az %1 karda
-            const type = position.orderedType == 'sell' ? 'buy' : 'sell' // sell yapmışsa buy yapıcaz. değilse tam tersi.
-            const quantity = Math.abs(position.size) // amount için size nigatif ise pozitif yap
-
-            //await this.CreateOrder(type, quantity, position.orderPrice, 'market') // open positionu direk satıyoruz.  -- AMA market ile satıyoruz. 3 kat daha fazla fee var.
-            await this.CreateOrder(type, quantity, position.ticker) // open positionu direk satıyoruz.  -- AMA market ile satıyoruz. 3 kat daha fazla fee var.
-        
-        }
-    }
 }
 
 
@@ -208,16 +158,61 @@ async function ReopenOrders(){
 
 async function CheckPositions(){
     while(true){
-        await sellKontrol.CheckPositions()
         await sellKontrol.ortak.sleep(60 * waitTime * 2)
+        await sellKontrol.CheckPositions()
     }
 }
 
 Basla()
 
 /*
-- Close position olayı iptal edilece.
-- Eğer buy yada sell yapmışsa ikincisinde sll yada buyu 2 kat yap.
-- 
+    investingSignal(){
+    
+        const options = {
+            method: 'POST',
+            uri: 'https://tr.investing.com/instruments/Service/GetTechincalData',
+            body: {
+                pairID: '1057995',
+                period: '300',
+                viewType: 'normal'
+            },
+            json: true, // Automatically stringifies the body to JSON
+            headers:{
+                //'Content-Type': 'application/json'
+                'User-Agent': 'Request-Promise',
+                'Host': 'tr.investing.com',
+                'Origin': 'https://tr.investing.com',
+                'Referer': 'https://tr.investing.com/crypto/bitcoin/btc-usd-technical?cid=1057995'
+              }
+        }
 
+        const sonuc = await rp(options).catch(e=> console.log(e))
+    
+    }
+    
+    AniDususAniYukselis(){
+        // ANİ DÜŞÜŞ ANİ YÜKSELİŞ
+        const aniYulselis = this.lastPrice && position.ticker.last - this.lastPrice == 10
+        const aniDusus = this.lastPrice && this.lastPrice - position.ticker.last == -10
+        if(aniYulselis || aniDusus) return true// eğer ani düşüş ve ani yükseliş varsa open orders kurma şimdilik
+        this.lastPrice = position.ticker.last
+        return false
+    }
+
+    async ClosePositions(){  // KULLANIM DIŞI
+        // const history = JSON.parse(await this.ortak.BitmexHistory())
+        
+        const position = await this.GetPositions()
+        
+        // Positionlarda kâr varsa sat.
+        if(position.entryPrice) {  //  Açık posizyon varsa
+            // position var ve en az %1 karda
+            const type = position.orderedType == 'sell' ? 'buy' : 'sell' // sell yapmışsa buy yapıcaz. değilse tam tersi.
+            const quantity = Math.abs(position.size) // amount için size nigatif ise pozitif yap
+
+            //await this.CreateOrder(type, quantity, position.orderPrice, 'market') // open positionu direk satıyoruz.  -- AMA market ile satıyoruz. 3 kat daha fazla fee var.
+            await this.CreateOrder(type, quantity, position.ticker) // open positionu direk satıyoruz.  -- AMA market ile satıyoruz. 3 kat daha fazla fee var.
+        
+        }
+    }
 */
