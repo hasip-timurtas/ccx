@@ -43,7 +43,7 @@ class SellKontrol {
         await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount)
     }
 
-    async SellYaptiBuyYap(){
+    async SellYaptiBuyYap(position){
         const quantity = Math.abs(position.size)
         const kacCarpiGeride = Math.round((quantity / this.amount) +1)
         const fazlaAlimVar = kacCarpiGeride == 3
@@ -52,7 +52,7 @@ class SellKontrol {
         !fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount * kacCarpiGeride)
     }
 
-    async BuyYaptiSellYap(){
+    async BuyYaptiSellYap(position){
         const quantity = Math.abs(position.size)
         const kacCarpiGeride = Math.round((quantity / this.amount) +1)
         const fazlaAlimVar = kacCarpiGeride == 3
