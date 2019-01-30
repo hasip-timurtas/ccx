@@ -73,7 +73,7 @@ class Ortak {
         this.ws
         this.wsZamanlayici = 30 // DAKİKA
     }
-    
+
     async BitmexHistory(){
         var verb = 'GET',
         path = '/api/v1//execution/tradeHistory',
@@ -102,7 +102,6 @@ class Ortak {
 
         return await rp(requestOptions)
     }
-
 
     async BitmexPositions(){
         var verb = 'GET',
