@@ -73,11 +73,11 @@ class SellKontrol {
             if(orderedType == 'sell'){
                 orderPrice = e.avgEntryPrice - this.marginAmount // ne kadara satacağım bilgisi eğer 3550 den aldıysam 3545 den satıcam. marginAmount 5$ ise
                 orderPrice = parseInt(orderPrice)
-                orderPrice = orderPrice > sells[0].Price ? sells[1].Price : orderPrice
+                orderPrice = orderPrice > buys[0].Price ? buys[1].Price : orderPrice
             }else{
                 orderPrice = e.avgEntryPrice + this.marginAmount // ne kadara satacağım bilgisi eğer 3550 den aldıysam 3555 den satıcam. marginAmount 5$ ise
                 orderPrice = parseInt(orderPrice)
-                orderPrice = orderPrice < buys[0].Price ? buys[1].Price : orderPrice
+                orderPrice = orderPrice < sells[0].Price ? sells[1].Price : orderPrice
             }
 
             return {
