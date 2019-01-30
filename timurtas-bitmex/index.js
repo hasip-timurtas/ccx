@@ -106,11 +106,11 @@ class SellKontrol {
     async CheckPositions(){
         const history = JSON.parse(await this.ortak.BitmexHistory())
         const position = await this.GetPositions()
+        this.checkPositionAktif = false // normal şartlardan bunu deaktif yap.
         if(position && position.entryPrice) {  //  Açık posizyon varsa
             
             const lastFilled = history.find(e=> e.execType == 'Trade')
             const sonFillKacSaatOnce = Math.abs(new Date() - new Date(lastFilled.transactTime)) / 36e5;
-            this.checkPositionAktif = false // normal şartlardan bunu deaktif yap.
             if(sonFillKacSaatOnce >= 0.75){ // posizyon 1 saattir açıksa kapat
                 //await this.ortak.BitmexCalcelAllOrders()
                 const quantity = Math.abs(position.size)
