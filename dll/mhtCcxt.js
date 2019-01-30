@@ -59,7 +59,7 @@ class MhtCcxt {
   }
 
   async GetMarketOrders (market, orderCount) {
-    var orderBook = await this.exchange.fetchOrderBook (market)
+    var orderBook = await this.exchange.fetchOrderBook (market, orderCount)
     orderBook = this.CommonFormat('orderBook', {market, orderBook})
     return {Data:orderBook}
   }

@@ -31,20 +31,20 @@ class SellKontrol {
             const fazlaAlimVar = kacCarpiGeride == 3
             // POSİTİON YOKSA 2 TANE NORMAL ORDER AÇ şimdi yeni ordersları aç. Buy ve sell için -+ 5 dolardan açıcaz
             if(position.orderedType == 'sell'){ // eğer önceki işlem sell ise yeni açılan sell 2 katı daha arkada dursun
-                const price = position.orderPrice > position.ticker.last ? position.ticker.last - 0.5 : position.orderPrice
-                await this.CreateOrder('buy', quantity + this.amount, price)//ticker.last - this.marginAmount) // 
-                !fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.ticker.last + this.marginAmount * kacCarpiGeride)
+                //const price = position.orderPrice > position.ticker.last ? position.ticker.last - 1 : position.orderPrice
+                await this.CreateOrder('buy', quantity + this.amount, position.orderPrice)//ticker.last - this.marginAmount) // 
+                !fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.sells[0] + this.marginAmount * kacCarpiGeride)
             }else if(position.orderedType == 'buy'){
-                const price = position.orderPrice < position.ticker.last ? position.ticker.last + 0.5 : position.orderPrice
-                await this.CreateOrder('sell', quantity + this.amount, price)//ticker.last + this.marginAmount) // + quantity
-                !fazlaAlimVar && await this.CreateOrder('buy', this.amount, position.ticker.last - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun + this.amount
+                //const price = position.orderPrice < position.ticker.last ? position.ticker.last + 1 : position.orderPrice
+                await this.CreateOrder('sell', quantity + this.amount, position.orderPrice)//ticker.last + this.marginAmount) // + quantity
+                !fazlaAlimVar && await this.CreateOrder('buy', this.amount, position.buys[0] - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun + this.amount
             }
             
             
         }else{
             // POSİTİON YOKSA 2 TANE NORMAL ORDER AÇ şimdi yeni ordersları aç. Buy ve sell için -+ 5 dolardan açıcaz
-            await this.CreateOrder('buy', this.amount, position.ticker.last - this.marginAmount)
-            await this.CreateOrder('sell', this.amount, position.ticker.last + this.marginAmount)
+            await this.CreateOrder('buy', this.amount, position.buys[0] - this.marginAmount)
+            await this.CreateOrder('sell', this.amount, position.sells[0] + this.marginAmount)
         }
         
         
@@ -60,34 +60,38 @@ class SellKontrol {
     }
 
     async GetPositions(){
-        const ticker =  await this.ortak.ccx.exchange.fetchTicker(this.marketName) // awaitthis.ortak.ccx.GetMarket(marketName)
+        //const ticker =  await this.ortak.ccx.exchange.fetchTicker(this.marketName) // awaitthis.ortak.ccx.GetMarket(marketName)
+        const orderBooks = await this.ortak.ccx.GetMarketOrders(this.marketName, 2)
+        const sells = orderBooks.Data.Sell
+        const buys = orderBooks.Data.Buy
 
         // Get Positions
         const result = JSON.parse(await this.ortak.BitmexPositions())
         return result && result.map(e=>{
             const orderedType = e.currentQty < 0 ? 'sell' : 'buy' // size negatif ise sell yapılmış pozitif ise buy.
-            let profitYuzde, orderPrice
+            let orderPrice
             if(orderedType == 'sell'){
-                profitYuzde = (e.avgEntryPrice - ticker.last ) / ticker.last * 100 // sell yapmışsam güncel price Entry priceden %1 küçük olmalı en az.
                 orderPrice = e.avgEntryPrice - this.marginAmount // ne kadara satacağım bilgisi eğer 3550 den aldıysam 3545 den satıcam. marginAmount 5$ ise
+                orderPrice = parseInt(orderPrice)
+                orderPrice = orderPrice > sells[0].Price ? sells[1].Price : orderPrice
             }else{
-                profitYuzde = (ticker.last  - e.avgEntryPrice) / e.avgEntryPrice * 100 // sell yapmışsam last price Entry priceden %1 küçük olmalı en az.
                 orderPrice = e.avgEntryPrice + this.marginAmount // ne kadara satacağım bilgisi eğer 3550 den aldıysam 3555 den satıcam. marginAmount 5$ ise
+                orderPrice = parseInt(orderPrice)
+                orderPrice = orderPrice < buys[0].Price ? buys[1].Price : orderPrice
             }
 
-            profitYuzde = profitYuzde * this.kaldirac // gerçek kârı görmek için kaldıraç ile çarp. yoksa normal btc fiyat farkını verir.
-            orderPrice = parseInt(orderPrice)
-            
             return {
                 size: e.currentQty, 
                 entryPrice: e.avgEntryPrice, 
                 markPrice: e.markPrice, 
                 lastPrice: e.lastPrice, 
                 liqPrice: e.liquidationPrice,
-                profitYuzde,
                 orderedType,
                 orderPrice,
-                ticker
+                //ticker,
+                sells,
+                buys,
+                sellNowPrice: e.currentQty > 0 ? sells[1].Price : buys[1].Price // bir dahaki işlem yani yukarıdaki orderedType in tersini yaptık. almışsa yukarıda buy yazar, almış ve satacağı için burada sell yazar.
             }
         })[0]
     }
@@ -108,13 +112,12 @@ class SellKontrol {
             const sonFillKacSaatOnce = Math.abs(new Date() - new Date(lastFilled.transactTime)) / 36e5;
             this.checkPositionAktif = false // normal şartlardan bunu deaktif yap.
             if(sonFillKacSaatOnce >= 0.75){ // posizyon 1 saattir açıksa kapat
-
+                //await this.ortak.BitmexCalcelAllOrders()
                 const quantity = Math.abs(position.size)
                 const positionOpenOrderType = position.orderedType == 'sell' ? 'buy' : 'sell'
-                await this.ortak.BitmexCalcelAllOrders()
                 this.checkPositionAktif = true // check postion orderi açılacaksa bunu aktif etki normal kontrol yenisini açmasın.
-                const price = positionOpenOrderType == 'sell' ? position.ticker.last + 0.5 : position.ticker.last - 0.5 
-                return await this.CreateOrder(positionOpenOrderType, quantity, price)
+                //const price = positionOpenOrderType == 'sell' ? position.ticker.last + 1 : position.ticker.last - 1 
+                return await this.CreateOrder(positionOpenOrderType, quantity, position.sellNowPrice)
             }
             /*
             const openOrders = await this.GetOpenOrders()
