@@ -113,7 +113,7 @@ class SellKontrol {
                 const positionOpenOrderType = position.orderedType == 'sell' ? 'buy' : 'sell'
                 await this.ortak.BitmexCalcelAllOrders()
                 this.checkPositionAktif = true // check postion orderi açılacaksa bunu aktif etki normal kontrol yenisini açmasın.
-                const price = position.orderedType == 'sell' ? position.ticker.last + 0.5 : position.ticker.last - 0.5 
+                const price = positionOpenOrderType == 'sell' ? position.ticker.last + 0.5 : position.ticker.last - 0.5 
                 return await this.CreateOrder(positionOpenOrderType, quantity, price)
             }
             /*
