@@ -73,11 +73,11 @@ class SellKontrol {
             if(orderedType == 'sell'){
                 orderPrice = e.avgEntryPrice - this.marginAmount // ne kadara satacağım bilgisi eğer 3550 den aldıysam 3545 den satıcam. marginAmount 5$ ise
                 orderPrice = parseInt(orderPrice)
-                orderPrice = orderPrice > buys[0].Price ? buys[1].Price : orderPrice
+                orderPrice = orderPrice > buys[0].Price ? buys[0].Price : orderPrice
             }else{
                 orderPrice = e.avgEntryPrice + this.marginAmount // ne kadara satacağım bilgisi eğer 3550 den aldıysam 3555 den satıcam. marginAmount 5$ ise
                 orderPrice = parseInt(orderPrice)
-                orderPrice = orderPrice < sells[0].Price ? sells[1].Price : orderPrice
+                orderPrice = orderPrice < sells[0].Price ? sells[0].Price : orderPrice
             }
 
             return {
@@ -91,7 +91,7 @@ class SellKontrol {
                 //ticker,
                 sells,
                 buys,
-                sellNowPrice: e.currentQty > 0 ? sells[1].Price : buys[1].Price // bir dahaki işlem yani yukarıdaki orderedType in tersini yaptık. almışsa yukarıda buy yazar, almış ve satacağı için burada sell yazar.
+                sellNowPrice: e.currentQty > 0 ? sells[0].Price : buys[0].Price // bir dahaki işlem yani yukarıdaki orderedType in tersini yaptık. almışsa yukarıda buy yazar, almış ve satacağı için burada sell yazar.
             }
         })[0]
     }
