@@ -22,7 +22,7 @@ class SellKontrol {
 
         await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
         const position = await this.GetPositions()
-        const openPositionVar = position.entryPrice
+        const openPositionVar = position && position.entryPrice
         // Positionlarda kâr varsa sat.
         if(openPositionVar) {
             const quantity = Math.abs(position.size)
@@ -106,7 +106,7 @@ class SellKontrol {
     async CheckPositions(){
         const history = JSON.parse(await this.ortak.BitmexHistory())
         const position = await this.GetPositions()
-        if(position.entryPrice) {  //  Açık posizyon varsa
+        if(position && position.entryPrice) {  //  Açık posizyon varsa
             
             const lastFilled = history.find(e=> e.execType == 'Trade')
             const sonFillKacSaatOnce = Math.abs(new Date() - new Date(lastFilled.transactTime)) / 36e5;

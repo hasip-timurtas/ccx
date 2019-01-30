@@ -20,9 +20,6 @@ class Ortak {
         this.bitmexUrl = 'https://www.bitmex.com'
         this.site = 'bitmex'
 
-        this.key = "-_egsx9YrkGXTCNkSYxN9Ise" // hasip canlı
-        this.secret = "dlz1Ps-Oxh_A5uMUus3epmHP-PvmmuRCGYY69WVynfLHj3nA"
-
         this.key = "WUi67Xl7EjE6A0iUq1RFVENw" // timurtas.hasip canlı
         this.secret = "9alw1YOYGOlMrvW6N6AEC5ulmUl9ZKIP4a2RSdCQvs_xQCCn"
 /*
