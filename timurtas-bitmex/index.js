@@ -28,7 +28,7 @@ class SellKontrol {
         if(openBuyVeSellVar) return
         const position = await this.GetPositions()
         if(openOrders.Data.length == 1 && openOrders.Data[0].Amount == position.size ) return
-        
+
         await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
         const openPositionVar = position && position.entryPrice
         // Positionlarda kâr varsa sat.
@@ -50,6 +50,7 @@ class SellKontrol {
             case this.orderType.BUYSELL:
                 await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.marginAmount) // fiyat normal buy-sell yap
                 await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount)
+                break
             default:
                 console.log("OrderYokBuySellYap hatalı switch değeri. Değer: "+ result)
                 break;

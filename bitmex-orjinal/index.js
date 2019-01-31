@@ -50,6 +50,7 @@ class SellKontrol {
             case this.orderType.BUYSELL:
                 await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.marginAmount) // fiyat normal buy-sell yap
                 await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount)
+                break
             default:
                 console.log("OrderYokBuySellYap hatalı switch değeri. Değer: "+ result)
                 break;
