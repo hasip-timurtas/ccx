@@ -50,7 +50,7 @@ class SellKontrol {
                 await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.marginAmount) // fiyat normal buy-sell yap
                 await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount)
             default:
-                console.log("OrderYokBuySellYap hatalı switch değeri.")
+                console.log("OrderYokBuySellYap hatalı switch değeri. Değer: "+ result)
                 break;
         }
         
@@ -77,7 +77,7 @@ class SellKontrol {
 
 
     async GetOHLCV(price){
-        const oneHourAgo = new Date(new Date().getTime() - 60 * 60 * 1000)
+        const oneHourAgo = new Date(new Date().getTime() - 60 * 60 * 1500) // 1,5 saat öncesi
         let grafiks = await this.ortak.ccx.exchange.fetchOHLCV(this.marketName, '5m', oneHourAgo)
         grafiks = grafiks.map(e=> ({date: new Date(e[0]), open: e[1], high: e[2], low: e[3], close: e[4], volume: e[5]}))
 
