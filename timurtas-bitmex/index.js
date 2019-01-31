@@ -26,9 +26,10 @@ class SellKontrol {
         const openOrders = await this.GetOpenOrders()
         const openBuyVeSellVar = openOrders.buy && openOrders.sell
         if(openBuyVeSellVar) return
-
-        await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
         const position = await this.GetPositions()
+        if(openOrders.Data.length == 1 && openOrders.Data[0].Amount == position.size ) return
+        
+        await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
         const openPositionVar = position && position.entryPrice
         // Positionlarda kâr varsa sat.
         if(openPositionVar) {
@@ -53,28 +54,7 @@ class SellKontrol {
                 console.log("OrderYokBuySellYap hatalı switch değeri. Değer: "+ result)
                 break;
         }
-        
     }
-
-    async SellYaptiBuyYap(position){
-        const quantity = Math.abs(position.size)
-        const kacCarpiGeride = Math.round((quantity / this.amount) +1)
-        const fazlaAlimVar = kacCarpiGeride == 3
-
-        await this.CreateOrder('buy', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
-        !fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount * kacCarpiGeride)
-    }
-
-    async BuyYaptiSellYap(position){
-        const quantity = Math.abs(position.size)
-        const kacCarpiGeride = Math.round((quantity / this.amount) +1)
-        const fazlaAlimVar = kacCarpiGeride == 3
-
-        await this.CreateOrder('sell', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al 
-        !fazlaAlimVar && await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun + this.amount
-    }
-
-
 
     async GetOHLCV(price){
         const oneHourAgo = new Date(new Date().getTime() - 60 * 60 * 1500) // 1,5 saat öncesi
@@ -98,6 +78,24 @@ class SellKontrol {
             // price normal buy ve sell yap
             return this.orderType.BUYSELL
         }
+    }
+
+    async SellYaptiBuyYap(position){
+        const quantity = Math.abs(position.size)
+        const kacCarpiGeride = Math.round((quantity / this.amount) +1)
+        const fazlaAlimVar = kacCarpiGeride == 3
+
+        await this.CreateOrder('buy', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
+        !fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount * kacCarpiGeride)
+    }
+
+    async BuyYaptiSellYap(position){
+        const quantity = Math.abs(position.size)
+        const kacCarpiGeride = Math.round((quantity / this.amount) +1)
+        const fazlaAlimVar = kacCarpiGeride == 3
+
+        await this.CreateOrder('sell', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al 
+        !fazlaAlimVar && await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun + this.amount
     }
 
     async GetPositions(){
