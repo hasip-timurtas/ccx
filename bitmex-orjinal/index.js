@@ -42,10 +42,10 @@ class SellKontrol {
     async OrderYokBuySellYap(position){
         const result = await this.GetOHLCV(position.buys[0].Price)
         switch (result) {
-            case this.orderType.BUY:
-                return await this.CreateOrder('buy', this.amount, position.buys[0].Price) // fiyat çok düşük buy yap.
-            case this.orderType.SELL:
+            case this.orderType.BUY: // test için tam tersini yapıyoruz. çok sell varsa sell yap.
                 return await this.CreateOrder('sell', this.amount, position.sells[0].Price) // fiyat çok yüksek sell yap.
+            case this.orderType.SELL: // test için tam tersini yapıyoruz. çok buy varsa buy yap.
+                return await this.CreateOrder('buy', this.amount, position.buys[0].Price) // fiyat çok düşük buy yap.  
             case this.orderType.BUYSELL:
                 await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.marginAmount) // fiyat normal buy-sell yap
                 await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount)
