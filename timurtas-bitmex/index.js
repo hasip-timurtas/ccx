@@ -7,7 +7,7 @@ class SellKontrol {
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables('MONGO')
         this.amount = 10000
-        this.marginAmount = 1
+        this.marginAmount = 0.5
         this.marketName = 'BTC/USD'
         this.lastPrice = null
         this.checkPositionAktif = false
@@ -87,7 +87,7 @@ class SellKontrol {
         const fazlaAlimVar = kacCarpiGeride == 3
 
         await this.CreateOrder('buy', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
-        !fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount * 6)
+        !fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount + 6)
     }
 
     async BuyYaptiSellYap(position){
@@ -96,7 +96,7 @@ class SellKontrol {
         const fazlaAlimVar = kacCarpiGeride == 3
 
         await this.CreateOrder('sell', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al 
-        !fazlaAlimVar && await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.marginAmount * 6) // buy ise buy 2 katı arkada dursun + this.amount
+        !fazlaAlimVar && await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.marginAmount - 6) // buy ise buy 2 katı arkada dursun + this.amount
     }
 
     async GetPositions(){
@@ -110,13 +110,16 @@ class SellKontrol {
         return result && result.map(e=>{
             const orderedType = e.currentQty < 0 ? 'sell' : 'buy' // size negatif ise sell yapılmış pozitif ise buy.
             let orderPrice
+            
             if(orderedType == 'sell'){
                 orderPrice = e.avgEntryPrice - this.marginAmount // ne kadara satacağım bilgisi eğer 3550 den aldıysam 3545 den satıcam. marginAmount 5$ ise
-                orderPrice = parseInt(orderPrice)
+                const sayiSonu5Yada0 = ['0','5'].includes(orderPrice.toString().split(".")[1])
+                orderPrice = sayiSonu5Yada0 ? orderPrice : parseInt(orderPrice)
                 orderPrice = orderPrice > buys[0].Price ? buys[0].Price : orderPrice
             }else{
                 orderPrice = e.avgEntryPrice + this.marginAmount // ne kadara satacağım bilgisi eğer 3550 den aldıysam 3555 den satıcam. marginAmount 5$ ise
-                orderPrice = parseInt(orderPrice)
+                const sayiSonu5Yada0 = ['0','5'].includes(orderPrice.toString().split(".")[1])
+                orderPrice = sayiSonu5Yada0 ? orderPrice : parseInt(orderPrice)
                 orderPrice = orderPrice < sells[0].Price ? sells[0].Price : orderPrice
             }
 
