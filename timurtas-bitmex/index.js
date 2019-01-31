@@ -158,8 +158,8 @@ async function ReopenOrders(){
 
 async function CheckPositions(){
     while(true){
-        await sellKontrol.ortak.sleep(60 * waitTime * 2)
         await sellKontrol.CheckPositions()
+        await sellKontrol.ortak.sleep(60 * waitTime * 2)
     }
 }
 
