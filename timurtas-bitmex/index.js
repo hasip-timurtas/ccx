@@ -58,7 +58,7 @@ class SellKontrol {
     }
 
     async GetOHLCV(price){
-        const oneHourAgo = new Date(new Date().getTime() - 60 * 60 * 1500) // 1,5 saat öncesi
+        const oneHourAgo = new Date(new Date().getTime() - 60 * 60 * 1000) // 1,5 saat öncesi
         let grafiks = await this.ortak.ccx.exchange.fetchOHLCV(this.marketName, '5m', oneHourAgo)
         grafiks = grafiks.map(e=> ({date: new Date(e[0]), open: e[1], high: e[2], low: e[3], close: e[4], volume: e[5]}))
 
