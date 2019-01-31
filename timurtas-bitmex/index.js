@@ -11,7 +11,13 @@ class SellKontrol {
         this.marketName = 'BTC/USD'
         this.lastPrice = null
         this.checkPositionAktif = false
-        this.positionCancelTime = 1
+        this.orderType = {
+            BUY: 1,
+            DIRAKBUY: 2,
+            SELL: 3,
+            DIREKSELL: 4,
+            BUYSELL: 5
+        }
     }
 
     async BitmexBasla(){
@@ -26,36 +32,72 @@ class SellKontrol {
         const openPositionVar = position && position.entryPrice
         // Positionlarda kâr varsa sat.
         if(openPositionVar) {
-            const quantity = Math.abs(position.size)
-
-            const kacCarpiGeride = Math.round((quantity / this.amount) +1)
-            const fazlaAlimVar = kacCarpiGeride == 3
-            // POSİTİON YOKSA 2 TANE NORMAL ORDER AÇ şimdi yeni ordersları aç. Buy ve sell için -+ 5 dolardan açıcaz
-            if(position.orderedType == 'sell'){ // eğer önceki işlem sell ise yeni açılan sell 2 katı daha arkada dursun
-                //const price = position.orderPrice > position.ticker.last ? position.ticker.last - 1 : position.orderPrice
-                await this.CreateOrder('buy', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
-                !fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount * kacCarpiGeride)
-            }else if(position.orderedType == 'buy'){
-                //const price = position.orderPrice < position.ticker.last ? position.ticker.last + 1 : position.orderPrice
-                await this.CreateOrder('sell', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al 
-                !fazlaAlimVar && await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun + this.amount
-            }
-            
-            
+            position.orderedType == 'sell' && this.SellYaptiBuyYap(position)
+            position.orderedType == 'buy' && this.BuyYaptiSellYap(position)
         }else{
-            // POSİTİON YOKSA 2 TANE NORMAL ORDER AÇ şimdi yeni ordersları aç. Buy ve sell için -+ 5 dolardan açıcaz
-            await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.marginAmount)
-            await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount)
+           this.OrderYokBuySellYap(position) // price bilgisi bunun içinde
         }
-        
+    }
+
+    async OrderYokBuySellYap(position){
+        const result = await this.GetOHLCV(position.buys[0].Price)
+        switch (result) {
+            case this.orderType.BUY: // test için tam tersini yapıyoruz. çok sell varsa sell yap.
+                return await this.CreateOrder('buy', this.amount, position.buys[0].Price)
+            case this.orderType.SELL: // test için tam tersini yapıyoruz. çok buy varsa buy yap.
+                return await this.CreateOrder('sell', this.amount, position.sells[0].Price)
+            case this.orderType.BUYSELL:
+                await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.marginAmount) // fiyat normal buy-sell yap
+                await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount)
+            default:
+                console.log("OrderYokBuySellYap hatalı switch değeri. Değer: "+ result)
+                break;
+        }
         
     }
 
-    async GetOhlcv(){
-        const oneHourAgo = new Date(new Date().getTime() - 60 * 60 * 1000)
-        let grafik = await this.ortak.ccx.exchange.fetchOHLCV(this.marketName, '1h', oneHourAgo)
-        grafik = grafik.map(e=> ({date: new Date(e[0]), open: e[1], high: e[2], low: e[3], close: e[4], volume: e[5]}))[1]
-        
+    async SellYaptiBuyYap(position){
+        const quantity = Math.abs(position.size)
+        const kacCarpiGeride = Math.round((quantity / this.amount) +1)
+        const fazlaAlimVar = kacCarpiGeride == 3
+
+        await this.CreateOrder('buy', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
+        !fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount * kacCarpiGeride)
+    }
+
+    async BuyYaptiSellYap(position){
+        const quantity = Math.abs(position.size)
+        const kacCarpiGeride = Math.round((quantity / this.amount) +1)
+        const fazlaAlimVar = kacCarpiGeride == 3
+
+        await this.CreateOrder('sell', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al 
+        !fazlaAlimVar && await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun + this.amount
+    }
+
+
+
+    async GetOHLCV(price){
+        const oneHourAgo = new Date(new Date().getTime() - 60 * 60 * 1500) // 1,5 saat öncesi
+        let grafiks = await this.ortak.ccx.exchange.fetchOHLCV(this.marketName, '5m', oneHourAgo)
+        grafiks = grafiks.map(e=> ({date: new Date(e[0]), open: e[1], high: e[2], low: e[3], close: e[4], volume: e[5]}))
+
+        const low = grafiks.map(e=> e.low).sort((a,b)=> a-b)[0]
+        const high = grafiks.map(e=> e.high).sort((a,b)=> b-a)[0]
+        const fark = high - low
+        const farkYuzde20 = fark / 5 // %20 fark hesaplama için 5'e böldük
+        const lowVe20 = low + farkYuzde20
+        const highVe20 = high - farkYuzde20
+
+        if(price < lowVe20){
+            // Price çok düküş buy yap.
+            return this.orderType.BUY
+        }else if(price > highVe20){
+            // Price Çok Düşük sell yap
+            return this.orderType.SELL
+        }else{
+            // price normal buy ve sell yap
+            return this.orderType.BUYSELL
+        }
     }
 
     async GetPositions(){
@@ -110,7 +152,7 @@ class SellKontrol {
             
             const lastFilled = history.find(e=> e.execType == 'Trade')
             const sonFillKacSaatOnce = Math.abs(new Date() - new Date(lastFilled.transactTime)) / 36e5;
-            if(sonFillKacSaatOnce >= this.positionCancelTime){ // posizyon 1 saattir açıksa kapat
+            if(sonFillKacSaatOnce >= 0.75){ // posizyon 1 saattir açıksa kapat
                 await this.ortak.BitmexCalcelAllOrders()
                 const quantity = Math.abs(position.size)
                 const positionOpenOrderType = position.orderedType == 'sell' ? 'buy' : 'sell'
