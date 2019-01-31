@@ -87,7 +87,7 @@ class SellKontrol {
         const fazlaAlimVar = kacCarpiGeride == 3
 
         await this.CreateOrder('buy', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
-        !fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount * kacCarpiGeride)
+        !fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount * 5)
     }
 
     async BuyYaptiSellYap(position){
@@ -96,7 +96,7 @@ class SellKontrol {
         const fazlaAlimVar = kacCarpiGeride == 3
 
         await this.CreateOrder('sell', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al 
-        !fazlaAlimVar && await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.marginAmount * kacCarpiGeride) // buy ise buy 2 katı arkada dursun + this.amount
+        !fazlaAlimVar && await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.marginAmount * 5) // buy ise buy 2 katı arkada dursun + this.amount
     }
 
     async GetPositions(){
