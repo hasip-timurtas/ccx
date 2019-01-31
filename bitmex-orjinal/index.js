@@ -27,7 +27,7 @@ class SellKontrol {
         const openBuyVeSellVar = openOrders.buy && openOrders.sell
         if(openBuyVeSellVar) return
         const position = await this.GetPositions()
-        //if(openOrders.Data.length == 1 && openOrders.Data[0].Amount == position.size ) return
+        if(openOrders.Data.length == 1 && openOrders.Data[0].Amount == Math.abs(position.size) && openOrders.Data[0].Rate == position.orderPrice) return
         
         await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
         const openPositionVar = position && position.entryPrice
