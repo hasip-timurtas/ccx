@@ -40,10 +40,6 @@ class SellKontrol {
         }
     }
 
-    async BuyYadaSellYap(position){
-
-    }
-
     async OrderYokBuySellYap(position){
         const result = await this.GetOHLCV(position.buys[0].Price)
         switch (result) {

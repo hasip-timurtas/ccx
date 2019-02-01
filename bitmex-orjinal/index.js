@@ -1,16 +1,16 @@
 const Ortak = require('./ortak')
-const rp = require('request-promise')
-const waitTime = 5 // dakika
+const waitTime = 2 // dakika
 
 class SellKontrol {
     async LoadVeriables(){
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables('MONGO')
         this.amount = 1000
-        this.marginAmount = 2
+        this.marginAmount = 0.5
         this.marketName = 'BTC/USD'
         this.lastPrice = null
         this.checkPositionAktif = false
+        this.ikinciIslemFark = 10
         this.orderType = {
             BUY: 1,
             DIRAKBUY: 2,
@@ -27,8 +27,8 @@ class SellKontrol {
         const openBuyVeSellVar = openOrders.buy && openOrders.sell
         if(openBuyVeSellVar) return
         const position = await this.GetPositions()
-        if(openOrders.Data.length == 1 && openOrders.Data[0].Amount == Math.abs(position.size) && openOrders.Data[0].Rate == position.orderPrice) return
-        
+        //if(openOrders.Data.length == 1 && openOrders.Data[0].Amount == Math.abs(position.size) && openOrders.Data[0].Rate == position.orderPrice) return
+
         await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
         const openPositionVar = position && position.entryPrice
         // Positionlarda kâr varsa sat.
@@ -44,39 +44,18 @@ class SellKontrol {
         const result = await this.GetOHLCV(position.buys[0].Price)
         switch (result) {
             case this.orderType.BUY: // test için tam tersini yapıyoruz. çok sell varsa sell yap.
-                return await this.CreateOrder('sell', this.amount, position.sells[0].Price) // fiyat çok yüksek sell yap.
+                return await this.CreateOrder('buy', this.amount, position.buys[0].Price)
             case this.orderType.SELL: // test için tam tersini yapıyoruz. çok buy varsa buy yap.
-                return await this.CreateOrder('buy', this.amount, position.buys[0].Price) // fiyat çok düşük buy yap.  
+                return await this.CreateOrder('sell', this.amount, position.sells[0].Price)
             case this.orderType.BUYSELL:
-                await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.marginAmount) // fiyat normal buy-sell yap
-                await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount)
+                await this.CreateOrder('buy', this.amount, position.buys[0].Price) // fiyat normal buy-sell yap
+                await this.CreateOrder('sell', this.amount, position.sells[0].Price)
                 break
             default:
                 console.log("OrderYokBuySellYap hatalı switch değeri. Değer: "+ result)
                 break;
         }
-        
     }
-
-    async SellYaptiBuyYap(position){
-        const quantity = Math.abs(position.size)
-        const kacCarpiGeride = Math.round((quantity / this.amount) +1)
-        const fazlaAlimVar = kacCarpiGeride == 3
-
-        await this.CreateOrder('buy', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
-        !fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount * 3) // 1 defa alım varsa 
-    }
-
-    async BuyYaptiSellYap(position){
-        const quantity = Math.abs(position.size)
-        const kacCarpiGeride = Math.round((quantity / this.amount) +1)
-        const fazlaAlimVar = kacCarpiGeride == 3
-
-        await this.CreateOrder('sell', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al 
-        !fazlaAlimVar && await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.marginAmount * 3) // buy ise buy 2 katı arkada dursun + this.amount
-    }
-
-
 
     async GetOHLCV(price){
         const oneHourAgo = new Date(new Date().getTime() - 60 * 60 * 1000) // 1,5 saat öncesi
@@ -102,6 +81,24 @@ class SellKontrol {
         }
     }
 
+    async SellYaptiBuyYap(position){
+        const quantity = Math.abs(position.size)
+        const kacCarpiGeride = Math.round((quantity / this.amount) +1)
+        const fazlaAlimVar = kacCarpiGeride == 3
+
+        await this.CreateOrder('buy', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
+        !fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.ikinciIslemFark)
+    }
+
+    async BuyYaptiSellYap(position){
+        const quantity = Math.abs(position.size)
+        const kacCarpiGeride = Math.round((quantity / this.amount) +1)
+        const fazlaAlimVar = kacCarpiGeride == 3
+
+        await this.CreateOrder('sell', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al 
+        !fazlaAlimVar && await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.ikinciIslemFark) // buy ise buy 2 katı arkada dursun + this.amount
+    }
+
     async GetPositions(){
         //const ticker =  await this.ortak.ccx.exchange.fetchTicker(this.marketName) // awaitthis.ortak.ccx.GetMarket(marketName)
         const orderBooks = await this.ortak.ccx.GetMarketOrders(this.marketName, 2)
@@ -110,16 +107,19 @@ class SellKontrol {
 
         // Get Positions
         const result = JSON.parse(await this.ortak.BitmexPositions())
-        return result && result.map(e=>{
+        const positions =  result && result[0].avgEntryPrice && result.map(e=>{
             const orderedType = e.currentQty < 0 ? 'sell' : 'buy' // size negatif ise sell yapılmış pozitif ise buy.
             let orderPrice
+            
             if(orderedType == 'sell'){
                 orderPrice = e.avgEntryPrice - this.marginAmount // ne kadara satacağım bilgisi eğer 3550 den aldıysam 3545 den satıcam. marginAmount 5$ ise
-                orderPrice = parseInt(orderPrice)
+                const sayiSonu5Yada0 = ['0','5'].includes(orderPrice.toString().split(".")[1])
+                orderPrice = sayiSonu5Yada0 ? orderPrice : parseInt(orderPrice)
                 orderPrice = orderPrice > buys[0].Price ? buys[0].Price : orderPrice
             }else{
                 orderPrice = e.avgEntryPrice + this.marginAmount // ne kadara satacağım bilgisi eğer 3550 den aldıysam 3555 den satıcam. marginAmount 5$ ise
-                orderPrice = parseInt(orderPrice)
+                const sayiSonu5Yada0 = ['0','5'].includes(orderPrice.toString().split(".")[1])
+                orderPrice = sayiSonu5Yada0 ? orderPrice : parseInt(orderPrice)
                 orderPrice = orderPrice < sells[0].Price ? sells[0].Price : orderPrice
             }
 
@@ -137,6 +137,9 @@ class SellKontrol {
                 sellNowPrice: e.currentQty > 0 ? sells[0].Price : buys[0].Price // bir dahaki işlem yani yukarıdaki orderedType in tersini yaptık. almışsa yukarıda buy yazar, almış ve satacağı için burada sell yazar.
             }
         })[0]
+
+        return positions || {buys, sells}
+
     }
 
     async CreateOrder(type, quantity, price, marketType = "limit"){
