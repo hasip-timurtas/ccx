@@ -41,6 +41,10 @@ class SellKontrol {
     }
 
     async OrderYokBuySellYap(position){
+        await this.CreateOrder('buy', this.amount, position.buys[0].Price) // fiyat normal buy-sell yap
+        await this.CreateOrder('sell', this.amount, position.sells[0].Price)
+        // Fiyata göre işlem şimdilik deaktif
+        return
         const result = await this.GetOHLCV(position.buys[0].Price)
         switch (result) {
             case this.orderType.BUY: // test için tam tersini yapıyoruz. çok sell varsa sell yap.
