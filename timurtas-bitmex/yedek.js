@@ -107,7 +107,7 @@ class SellKontrol {
 
         // Get Positions
         const result = JSON.parse(await this.ortak.BitmexPositions())
-        const positions =  result && result[0].avgEntryPrice && result.map(e=>{
+        return result && result.map(e=>{
             const orderedType = e.currentQty < 0 ? 'sell' : 'buy' // size negatif ise sell yapılmış pozitif ise buy.
             let orderPrice
             
@@ -137,9 +137,6 @@ class SellKontrol {
                 sellNowPrice: e.currentQty > 0 ? sells[0].Price : buys[0].Price // bir dahaki işlem yani yukarıdaki orderedType in tersini yaptık. almışsa yukarıda buy yazar, almış ve satacağı için burada sell yazar.
             }
         })[0]
-
-        return positions || {buys, sells}
-
     }
 
     async CreateOrder(type, quantity, price, marketType = "limit"){
