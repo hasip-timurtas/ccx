@@ -10,7 +10,7 @@ class SellKontrol {
         this.marketName = 'BTC/USD'
         this.lastPrice = null
         this.checkPositionAktif = false
-        this.ikinciIslemFark = 10
+        this.ikinciIslemFark = 6
         this.orderType = {
             BUY: 1,
             DIRAKBUY: 2,
