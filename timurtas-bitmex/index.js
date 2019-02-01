@@ -6,7 +6,7 @@ class SellKontrol {
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables('MONGO')
         this.amount = 10000
-        this.marginAmount = 0
+        this.marginAmount = 0.5
         this.marketName = 'BTC/USD'
         this.lastPrice = null
         this.checkPositionAktif = false
@@ -48,8 +48,8 @@ class SellKontrol {
             case this.orderType.SELL: // test için tam tersini yapıyoruz. çok buy varsa buy yap.
                 return await this.CreateOrder('sell', this.amount, position.sells[0].Price)
             case this.orderType.BUYSELL:
-                await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.marginAmount) // fiyat normal buy-sell yap
-                await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.marginAmount)
+                await this.CreateOrder('buy', this.amount, position.buys[0].Price) // fiyat normal buy-sell yap
+                await this.CreateOrder('sell', this.amount, position.sells[0].Price)
                 break
             default:
                 console.log("OrderYokBuySellYap hatalı switch değeri. Değer: "+ result)
