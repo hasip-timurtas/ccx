@@ -1,5 +1,5 @@
 const Ortak = require('./ortak')
-const waitTime = 2 // dakika
+const waitTime = 5 // dakika
 
 class SellKontrol {
     async LoadVeriables(){
@@ -27,7 +27,7 @@ class SellKontrol {
         const openBuyVeSellVar = openOrders.buy && openOrders.sell
         if(openBuyVeSellVar) return
         const position = await this.GetPositions()
-        if(openOrders.Data.length == 1 && openOrders.Data[0].Amount == Math.abs(position.size) && openOrders.Data[0].Rate == position.orderPrice) return
+        //if(openOrders.Data.length == 1 && openOrders.Data[0].Amount == Math.abs(position.size) && openOrders.Data[0].Rate == position.orderPrice) return
 
         await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
         const openPositionVar = position && position.entryPrice
@@ -38,6 +38,10 @@ class SellKontrol {
         }else{
            this.OrderYokBuySellYap(position) // price bilgisi bunun içinde
         }
+    }
+
+    async BuyYadaSellYap(position){
+
     }
 
     async OrderYokBuySellYap(position){
