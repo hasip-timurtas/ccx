@@ -24,9 +24,21 @@ class SellKontrol {
         if(this.checkPositionAktif) return
         //const balances = await this.ortak.GetBalance()
         const openOrders = await this.GetOpenOrders()
-        const openBuyVeSellVar = openOrders.buy && openOrders.sell
-        if(openBuyVeSellVar) return
         const position = await this.GetPositions()
+        const openBuyVeSellVar = openOrders.buy && openOrders.sell
+        if(openBuyVeSellVar){
+            let openOrderIkiTaneAmaPoisionAcikDegil = false
+            for (const openOrder of openOrders.Data) {
+                if(openOrder.Amount == Math.abs(position.size)){
+                    openOrderIkiTaneAmaPoisionAcikDegil = true
+                }
+            }
+            if(openOrderIkiTaneAmaPoisionAcikDegil){
+                return
+            }
+        }
+        
+        
         //if(openOrders.Data.length == 1 && openOrders.Data[0].Amount == Math.abs(position.size) && openOrders.Data[0].Rate == position.orderPrice) return
 
         await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
@@ -172,7 +184,6 @@ class SellKontrol {
         const position = await this.GetPositions()
         this.checkPositionAktif = false // normal şartlardan bunu deaktif yap.
         if(position && position.entryPrice) {  //  Açık posizyon varsa
-            
             const lastFilled = history.find(e=> e.execType == 'Trade')
             const sonFillKacSaatOnce = Math.abs(new Date() - new Date(lastFilled.transactTime)) / 36e5;
             if(sonFillKacSaatOnce >= 1.5){ // posizyon 1 saattir açıksa kapat
