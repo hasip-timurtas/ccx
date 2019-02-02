@@ -27,22 +27,26 @@ class SellKontrol {
         const position = await this.GetPositions()
         const openBuyVeSellVar = openOrders.buy && openOrders.sell
         if(openBuyVeSellVar){
-            let openOrderIkiTaneAmaPoisionAcikDegil = false
-            for (const openOrder of openOrders.Data) {
-                if(openOrder.Amount == Math.abs(position.size)){
-                    openOrderIkiTaneAmaPoisionAcikDegil = true
+            const openPositionVar = position && position.entryPrice
+            if(openPositionVar){
+                let openOrderIkiTaneAmaPoisionAcikDegil = false
+                for (const openOrder of openOrders.Data) {
+                    if(openOrder.Amount == Math.abs(position.size)){
+                        openOrderIkiTaneAmaPoisionAcikDegil = true
+                    }
+                }
+                if(openOrderIkiTaneAmaPoisionAcikDegil){
+                    return
                 }
             }
-            if(openOrderIkiTaneAmaPoisionAcikDegil){
-                return
-            }
+            
         }
         
         
         //if(openOrders.Data.length == 1 && openOrders.Data[0].Amount == Math.abs(position.size) && openOrders.Data[0].Rate == position.orderPrice) return
 
         await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
-        const openPositionVar = position && position.entryPrice
+        
         // Positionlarda kâr varsa sat.
         if(openPositionVar) {
             position.orderedType == 'sell' && this.SellYaptiBuyYap(position)
