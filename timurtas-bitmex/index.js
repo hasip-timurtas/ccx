@@ -10,7 +10,7 @@ class SellKontrol {
         this.marketName = 'BTC/USD'
         this.lastPrice = null
         this.checkPositionAktif = false
-        this.ikinciIslemFark = 6
+        this.ikinciIslemFark = 8
         this.orderType = {
             BUY: 1,
             DIRAKBUY: 2,
@@ -78,20 +78,21 @@ class SellKontrol {
         // örnek: low = 1000, high = 2000; price = 1000
         if(price < lowVe20){ // mesela fiyat 1200 den küçükse sell yap çünkü daha düşerbilir ama
             if(price < lowVe10){ // fiyat 1100 den küçükse buy yap. çok düştü dipte tekrar çıkacak demek
-                console.log('Fiyat çok düşük, dipte, buy yapılıyor. Çünkü fiyatı çıkacak.')
+                console.log('Fiyat çok düşük, dipte, buy yapılıyor. Çünkü fiyatı çıkacak. high, low, price: ', high, low, price)
                 return this.orderType.BUY // Price çok düküş buy yap.
             }
-            console.log('Fiyat düşük ama dipte değil, az çıktı tekrar düşebilir. o yüzden sell yapılıyor.')
+            console.log('Fiyat düşük ama dipte değil, az çıktı tekrar düşebilir. o yüzden sell yapılıyor. high, low, price: ', high, low, price)
             return this.orderType.SELL // Price düştü ama dipte değil, az çıktı tekrar düşebilir, o yüzden sell yap.
         }else if(price > highVe20){
             if(price > highVe10){
-                console.log('Fiyat çok çıktı, tepede, sell yapılıyor. Çünkü fiyatı düşecek.')
+                console.log('Fiyat çok çıktı, tepede, sell yapılıyor. Çünkü fiyatı düşecek. high, low, price: ', high, low, price)
                 return this.orderType.SELL // Price Çok çıktı sell yap
             }
-            console.log('Fiyat çıktı ama tepede değil, az düştü tekrar çıkabilir. o yüzden buy yapılıyor.')
+            console.log('Fiyat çıktı ama tepede değil, az düştü tekrar çıkabilir. o yüzden buy yapılıyor. high, low, price: ', high, low, price)
             return this.orderType.BUY // Price çıktı ama tepede değil, az düştü tekrar çıkabilir.
         }else{
             // price normal buy ve sell yap
+            console.log('Fiyat ortalamada buy ve sell yap ', high, low, price)
             return this.orderType.BUYSELL
         }
     }
