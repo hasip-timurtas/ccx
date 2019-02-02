@@ -10,7 +10,7 @@ class SellKontrol {
         this.marketName = 'BTC/USD'
         this.lastPrice = null
         this.checkPositionAktif = false
-        this.ikinciIslemFark = 8
+        this.ikinciIslemFark = 7
         this.orderType = {
             BUY: 1,
             DIRAKBUY: 2,
@@ -38,6 +38,26 @@ class SellKontrol {
         }else{
            this.OrderYokBuySellYap(position) // price bilgisi bunun içinde
         }
+    }
+
+    async SellYaptiBuyYap(position){
+        const quantity = Math.abs(position.size)
+        const kacCarpiGeride = Math.round((quantity / this.amount) +1)
+        const fazlaAlimVar = kacCarpiGeride == 3
+
+        await this.CreateOrder('buy', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
+        !fazlaAlimVar && await this.CreateOrder('sell', this.amount * 2, position.sells[0].Price + this.ikinciIslemFark)
+        !fazlaAlimVar && await this.CreateOrder('sell', 8500, position.sells[0].Price + this.ikinciIslemFark + this.ikinciIslemFark) // 3. işlem
+    }
+
+    async BuyYaptiSellYap(position){
+        const quantity = Math.abs(position.size)
+        const kacCarpiGeride = Math.round((quantity / this.amount) +1)
+        const fazlaAlimVar = kacCarpiGeride == 3
+
+        await this.CreateOrder('sell', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al 
+        !fazlaAlimVar && await this.CreateOrder('buy', this.amount * 2, position.buys[0].Price - this.ikinciIslemFark) // buy ise buy 2 katı arkada dursun + this.amount
+        !fazlaAlimVar && await this.CreateOrder('buy', 8500, position.buys[0].Price - this.ikinciIslemFark - this.ikinciIslemFark ) // 3. işlem
     }
 
     async OrderYokBuySellYap(position){
@@ -95,24 +115,6 @@ class SellKontrol {
             console.log('Fiyat ortalamada buy ve sell yap ', high, low, price)
             return this.orderType.BUYSELL
         }
-    }
-
-    async SellYaptiBuyYap(position){
-        const quantity = Math.abs(position.size)
-        const kacCarpiGeride = Math.round((quantity / this.amount) +1)
-        const fazlaAlimVar = kacCarpiGeride == 3
-
-        await this.CreateOrder('buy', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
-        !fazlaAlimVar && await this.CreateOrder('sell', this.amount * 2, position.sells[0].Price + this.ikinciIslemFark)
-    }
-
-    async BuyYaptiSellYap(position){
-        const quantity = Math.abs(position.size)
-        const kacCarpiGeride = Math.round((quantity / this.amount) +1)
-        const fazlaAlimVar = kacCarpiGeride == 3
-
-        await this.CreateOrder('sell', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al 
-        !fazlaAlimVar && await this.CreateOrder('buy', this.amount * 2, position.buys[0].Price - this.ikinciIslemFark) // buy ise buy 2 katı arkada dursun + this.amount
     }
 
     async GetPositions(){
