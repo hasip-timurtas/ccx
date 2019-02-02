@@ -5,7 +5,7 @@ class SellKontrol {
     async LoadVeriables(){
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables('MONGO')
-        this.amount = 10000
+        this.amount = 5000
         this.marginAmount = 0.5
         this.marketName = 'BTC/USD'
         this.lastPrice = null
@@ -98,7 +98,7 @@ class SellKontrol {
         const fazlaAlimVar = kacCarpiGeride == 3
 
         await this.CreateOrder('buy', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
-        !fazlaAlimVar && await this.CreateOrder('sell', this.amount, position.sells[0].Price + this.ikinciIslemFark)
+        !fazlaAlimVar && await this.CreateOrder('sell', this.amount * 2, position.sells[0].Price + this.ikinciIslemFark)
     }
 
     async BuyYaptiSellYap(position){
@@ -107,7 +107,7 @@ class SellKontrol {
         const fazlaAlimVar = kacCarpiGeride == 3
 
         await this.CreateOrder('sell', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al 
-        !fazlaAlimVar && await this.CreateOrder('buy', this.amount, position.buys[0].Price - this.ikinciIslemFark) // buy ise buy 2 katı arkada dursun + this.amount
+        !fazlaAlimVar && await this.CreateOrder('buy', this.amount * 2, position.buys[0].Price - this.ikinciIslemFark) // buy ise buy 2 katı arkada dursun + this.amount
     }
 
     async GetPositions(){
