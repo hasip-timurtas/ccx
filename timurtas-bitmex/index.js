@@ -1,5 +1,5 @@
 const Ortak = require('./ortak')
-const waitTime = 2 // dakika
+const waitTime = 5 // dakika
 
 class SellKontrol {
     async LoadVeriables(){
