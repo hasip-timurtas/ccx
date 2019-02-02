@@ -48,11 +48,9 @@ class SellKontrol {
         const result = await this.GetOHLCV(position.buys[0].Price)
         switch (result) {
             case this.orderType.BUY: // test için tam tersini yapıyoruz. çok sell varsa sell yap.
-                //return await this.CreateOrder('buy', this.amount, position.buys[0].Price)
-                return await this.CreateOrder('sell', this.amount, position.sells[0].Price)
-            case this.orderType.SELL: // test için tam tersini yapıyoruz. çok buy varsa buy yap.
                 return await this.CreateOrder('buy', this.amount, position.buys[0].Price)
-                //return await this.CreateOrder('sell', this.amount, position.sells[0].Price)
+            case this.orderType.SELL: // test için tam tersini yapıyoruz. çok buy varsa buy yap.
+                return await this.CreateOrder('sell', this.amount, position.sells[0].Price)
             case this.orderType.BUYSELL:
                 await this.CreateOrder('buy', this.amount, position.buys[0].Price) // fiyat normal buy-sell yap
                 await this.CreateOrder('sell', this.amount, position.sells[0].Price)
@@ -72,15 +70,22 @@ class SellKontrol {
         const high = grafiks.map(e=> e.high).sort((a,b)=> b-a)[0]
         const fark = high - low
         const farkYuzde20 = fark / 5 // %20 fark hesaplama için 5'e böldük
+        const farkYuzde10 = fark / 10
+        const lowVe10 = low + farkYuzde10
         const lowVe20 = low + farkYuzde20
+        const highVe10 = high - farkYuzde10
         const highVe20 = high - farkYuzde20
-
-        if(price < lowVe20){
-            // Price çok düküş buy yap.
-            return this.orderType.BUY
+        // örnek: low = 1000, high = 2000; price = 1000
+        if(price < lowVe20){ // mesela fiyat 1200 den küçükse sell yap çünkü daha düşerbilir ama
+            if(price < lowVe10){ // fiyat 1100 den küçükse buy yap. çok düştü dipte tekrar çıkacak demek
+                return this.orderType.BUY // Price çok düküş buy yap.
+            }
+            return this.orderType.SELL // Price düştü ama dipte değil, az çıktı tekrar düşebilir, o yüzden sell yap.
         }else if(price > highVe20){
-            // Price Çok Düşük sell yap
-            return this.orderType.SELL
+            if(price > highVe10){
+                return this.orderType.SELL // Price Çok çıktı sell yap
+            }
+            return this.orderType.BUY // Price çıktı ama tepede değil, az düştü tekrar çıkabilir.
         }else{
             // price normal buy ve sell yap
             return this.orderType.BUYSELL
