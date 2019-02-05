@@ -160,7 +160,7 @@ class SellKontrol {
                 size: e.currentQty, 
                 entryPrice: e.avgEntryPrice, 
                 markPrice: e.markPrice, 
-                lastPrice: e.lastPrice, 
+                //lastPrice: e.lastPrice, 
                 liqPrice: e.liquidationPrice,
                 orderedType,
                 orderPrice,
@@ -181,7 +181,7 @@ class SellKontrol {
             console.log(e, 'BTC/USD')
         })
     }
-
+ 
     async CheckPositions(){
         const history = JSON.parse(await this.ortak.BitmexHistory())
         const position = await this.GetPositions()
@@ -189,7 +189,8 @@ class SellKontrol {
         if(position && position.entryPrice) {  //  Açık posizyon varsa
             const lastFilled = history.find(e=> e.execType == 'Trade')
             const sonFillKacSaatOnce = Math.abs(new Date() - new Date(lastFilled.transactTime)) / 36e5;
-            if(sonFillKacSaatOnce >= 2){ // posizyon 1 saattir açıksa kapat
+            const ilkDorducnuSirada = Math.abs(position.entryPrice - position.sellNowPrice) < 3
+            if(sonFillKacSaatOnce >= 2 && ilkDorducnuSirada){ // posizyon 1 saattir açıksa kapat
                 await this.ortak.BitmexCalcelAllOrders()
                 const quantity = Math.abs(position.size)
                 const positionOpenOrderType = position.orderedType == 'sell' ? 'buy' : 'sell'
@@ -226,7 +227,7 @@ async function Basla(){
     sellKontrol = new SellKontrol()
     await sellKontrol.LoadVeriables()
     ReopenOrders()
-    //CheckPositions()
+    CheckPositions()
 }
 
 async function ReopenOrders(){
