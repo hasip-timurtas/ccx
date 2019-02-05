@@ -227,7 +227,7 @@ async function Basla(){
     sellKontrol = new SellKontrol()
     await sellKontrol.LoadVeriables()
     ReopenOrders()
-    CheckPositions()
+    //CheckPositions()
 }
 
 async function ReopenOrders(){
