@@ -49,6 +49,10 @@ class SellKontrol {
             this.amount = balance.Available * position.sells[0].Price * this.kaldirac
             this.amount = this.amount - (this.amount * 0.05)
             this.amount = parseInt(this.amount)
+            if(this.amount < 100){
+                console.log('Balance 100 den küçük o yüzden çıkılıyor.');
+                return false
+            }
             console.log('Yeni Balance: '+ this.amount);
         }
     
