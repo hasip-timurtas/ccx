@@ -5,7 +5,7 @@ class SellKontrol {
     async LoadVeriables(){
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables('MONGO')
-        this.amount = 10000
+        this.amount = 5000
         this.marginAmount = 0.5
         this.marketName = 'BTC/USD'
         this.lastPrice = null
@@ -22,12 +22,9 @@ class SellKontrol {
     }
 
     async Basla10Dakika(){
-        const balances = await this.ortak.GetBalance()
-        const openOrders = await this.GetOpenOrders()
         const position = await this.GetPositions()
-
-        if(!this.KontrollerUygun(balances, openOrders, position)) return
-
+        const kontrollerUygun = await this.KontrollerUygun(position)
+        if(!kontrollerUygun) return
         await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
         
         const openPositionVar = position && position.entryPrice
@@ -40,16 +37,19 @@ class SellKontrol {
         await this.CreateOrder('sell', this.amount, position.sells[0].Price)
     }
 
-    KontrollerUygun(balances, openOrders, position){
+    async KontrollerUygun(position){
         // BALANCE KONTROL
+        /*
+        const balances = await this.ortak.GetBalance()
         const openOrdersBalance = this.amount / position.sells[0].Price / this.kaldirac
         const balanceValid = balances.find(e=> e.Symbol == 'XBT' && e.Available > openOrdersBalance)
         if(!balanceValid){
             console.log('Balance yok o yüzden çıkılıyor.', new Date())
             return false
         }
-        
+        */
         // OPEN ORDERSLAR ÜSTTE
+        const openOrders = await this.GetOpenOrders()
         const buyUstte = openOrders.buy && openOrders.buy.Rate == position.buys[0].Price
         const sellUstte = openOrders.sell && openOrders.sell.Rate == position.sells[0].Price
         if(buyUstte || sellUstte){
