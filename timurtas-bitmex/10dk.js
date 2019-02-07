@@ -24,8 +24,8 @@ class SellKontrol {
         const balances = await this.ortak.GetBalance()
         const balanceValid = balances.find(e=> e.Symbol == 'XBT' && e.Available > (this.amount * 2))
         if(!balanceValid){
-            console.log('Balance yok o yüzden çıkılıyor.', new Date());
-            return
+            console.log('Balance yok o yüzden çıkılıyor. (çıkılamıyor çünkü bu özellik deaktif.)', new Date());
+            //return
         }
         await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
         const position = await this.GetPositions()
