@@ -18,17 +18,18 @@ class SellKontrol {
             DIREKSELL: 4,
             BUYSELL: 5
         }
+        this.kaldirac = 25
     }
 
     async Basla10Dakika(){
         const balances = await this.ortak.GetBalance()
-        const balanceValid = balances.find(e=> e.Symbol == 'XBT' && e.Available > (this.amount * 2))
-        if(!balanceValid){
-            console.log('Balance yok o yüzden çıkılıyor. (çıkılamıyor çünkü bu özellik deaktif.)', new Date());
-            //return
-        }
-        await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
+        const openOrders = await this.GetOpenOrders()
         const position = await this.GetPositions()
+
+        if(!this.KontrollerUygun(balances, openOrders, position)) return
+
+        await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
+        
         const openPositionVar = position && position.entryPrice
         if(openPositionVar){
             const quantity = Math.abs(position.size)
@@ -38,6 +39,36 @@ class SellKontrol {
         await this.CreateOrder('buy', this.amount, position.buys[0].Price) 
         await this.CreateOrder('sell', this.amount, position.sells[0].Price)
     }
+
+    KontrollerUygun(balances, openOrders, position){
+        // BALANCE KONTROL
+        const openOrdersBalance = this.amount / position.sells[0].Price / this.kaldirac
+        const balanceValid = balances.find(e=> e.Symbol == 'XBT' && e.Available > openOrdersBalance)
+        if(!balanceValid){
+            console.log('Balance yok o yüzden çıkılıyor.', new Date())
+            return false
+        }
+        
+        // OPEN ORDERSLAR ÜSTTE
+        const buyUstte = openOrders.buy && openOrders.buy.Rate == position.buys[0].Price
+        const sellUstte = openOrders.sell && openOrders.sell.Rate == position.sells[0].Price
+        if(buyUstte || sellUstte){
+            console.log('OpenOrder(s) üstte, yani sırada, işlem olacak. o yüzden çıkılıyor.', new Date())
+            return false
+        }
+
+        /*
+        const openBuyVeSellVar = openOrders.buy && openOrders.sell
+        const amountlarUygun = openOrders.buy.Amount == this.amount && openOrders.sell.Amount == this.amount // open buy ve sell varsa (amount uygunsa)
+        const openOrdersVar = openBuyVeSellVar && amountlarUygun
+        if(!openOrdersVar){
+            console.log('open orderslar zaten var. o yüzden çıkılıyor.', new Date())
+            return false
+        }
+        */
+        return true // final
+    }
+    
 
     async BitmexBasla(){
         //if(this.checkPositionAktif) return
