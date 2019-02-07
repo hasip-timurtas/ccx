@@ -59,9 +59,19 @@ class SellKontrol {
     
         // OPEN ORDERSLAR ÜSTTE
         const openOrders = await this.GetOpenOrders()
-        const buyUstte = openOrders.buy && openOrders.buy.Rate == position.buys[0].Price
-        const sellUstte = openOrders.sell && openOrders.sell.Rate == position.sells[0].Price
-        if(buyUstte || sellUstte){
+        let buyYadaSellUstte = false
+        for (const openOrder of openOrders.Data) {
+            if(openOrder.Rate == position.buys[0].Price){ // BUY
+                buyYadaSellUstte = true
+            }
+
+            if(openOrder.Rate == position.sells[0].Price){ // SELL
+                buyYadaSellUstte = true
+            }
+        }
+       
+        //const sellUstte = openOrders.sell && openOrders.sell.Rate == position.sells[0].Price
+        if(buyYadaSellUstte){
             console.log('OpenOrder(s) üstte, yani sırada, işlem olacak. o yüzden çıkılıyor.', new Date())
             return false
         }
