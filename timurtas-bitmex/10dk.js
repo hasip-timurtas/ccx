@@ -39,15 +39,19 @@ class SellKontrol {
 
     async KontrollerUygun(position){
         // BALANCE KONTROL
-        /*
+        
         const balances = await this.ortak.GetBalance()
         const openOrdersBalance = this.amount / position.sells[0].Price / this.kaldirac
-        const balanceValid = balances.find(e=> e.Symbol == 'XBT' && e.Available > openOrdersBalance)
+        const balance = balances.find(e=> e.Symbol == 'XBT')
+        const balanceValid = balance.Available > openOrdersBalance
         if(!balanceValid){
-            console.log('Balance yok o yüzden çıkılıyor.', new Date())
-            return false
+            console.log('Balance yeterli değil, güncelleniyor.', new Date())
+            this.amount = balance.Available * position.sells[0].Price * this.kaldirac
+            this.amount = this.amount - (this.amount * 0.05)
+            this.amount = parseInt(this.amount)
+            console.log('Yeni Balance: '+ this.amount);
         }
-        */
+    
         // OPEN ORDERSLAR ÜSTTE
         const openOrders = await this.GetOpenOrders()
         const buyUstte = openOrders.buy && openOrders.buy.Rate == position.buys[0].Price
