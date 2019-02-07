@@ -21,6 +21,9 @@ class SellKontrol {
     }
 
     async Basla10Dakika(){
+        const balances = await this.ortak.GetBalance()
+        const balanceValid = balances.find(e=> e.Symbol == 'XBT' && e.Available > (this.amount * 2))
+        if(!balanceValid) return
         await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
         const position = await this.GetPositions()
         const openPositionVar = position && position.entryPrice
