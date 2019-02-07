@@ -22,6 +22,7 @@ class SellKontrol {
     }
 
     async Basla10Dakika(){
+        this.yeniAmount = this.amount
         const position = await this.GetPositions()
         const kontrollerUygun = await this.KontrollerUygun(position)
         if(!kontrollerUygun) return
@@ -32,9 +33,9 @@ class SellKontrol {
             const quantity = Math.abs(position.size)
             await this.CreateOrder(position.nextOrderType, quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
         }
-
-        await this.CreateOrder('buy', this.amount, position.buys[0].Price) 
-        await this.CreateOrder('sell', this.amount, position.sells[0].Price)
+        // BURAYA BALANCE KONTROL EKLENECEK
+        await this.CreateOrder('buy', this.yeniAmount, position.buys[0].Price) 
+        await this.CreateOrder('sell', this.yeniAmount, position.sells[0].Price)
     }
 
     async KontrollerUygun(position){
@@ -46,14 +47,14 @@ class SellKontrol {
         const balanceValid = balance.Available > openOrdersBalance
         if(!balanceValid){
             console.log('Balance yeterli değil, güncelleniyor.', new Date())
-            this.amount = balance.Available * position.sells[0].Price * this.kaldirac
-            this.amount = this.amount - (this.amount * 0.05)
-            this.amount = parseInt(this.amount)
+            this.yeniAmount = balance.Available * position.sells[0].Price * this.kaldirac
+            this.yeniAmount = this.amount - (this.amount * 0.05)
+            this.yeniAmount = parseInt(this.amount)
             if(this.amount < 100){
                 console.log('Balance 100 den küçük o yüzden çıkılıyor.');
                 return false
             }
-            console.log('Yeni Balance: '+ this.amount);
+            console.log('Yeni Balance: '+ this.yeniAmount);
         }
     
         // OPEN ORDERSLAR ÜSTTE
