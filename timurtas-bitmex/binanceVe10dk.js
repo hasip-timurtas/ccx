@@ -173,12 +173,13 @@ class SellKontrol {
         const kontrollerUygun = await this.KontrollerUygun(position)
         if(!kontrollerUygun) return
         await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
-        
+        /*
         const openPositionVar = position && position.entryPrice
         if(openPositionVar){
             const quantity = Math.abs(position.size)
             await this.CreateOrder(position.nextOrderType, quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
         }
+        */
         // BURAYA BALANCE KONTROL EKLENECEK
         await this.CreateOrder('buy', this.yeniAmount, position.buys[0].Price) 
         await this.CreateOrder('sell', this.yeniAmount, position.sells[0].Price)
