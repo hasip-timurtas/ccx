@@ -48,7 +48,7 @@ class SellKontrol {
             //console.log(trade.price)
         })
         setInterval(() => {
-            if(!this.lastPrice){
+            if(!this.lastPrice || this.lastPrice == this.binancePrice){
                 this.lastPrice = this.binancePrice
                 return
             }
