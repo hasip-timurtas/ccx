@@ -42,14 +42,13 @@ class SellKontrol {
         this.bitmexLastPrice = null
         this.bitmexPrice = null
         this.bitmexPriceList = []
-        this.binanceFark = 3
+        this.binanceFark = 2
         this.loglama = false
         this.lastOrderDate = new Date()
 
     }
 
     CheckPrice5Saniye(){
-        
         // console.log(suankiPrice, besSaniyeOncekiPrice, besSaniyeFark, onSaniyeFark);
         const binance5saniyeFark = this.Get5SaniyeFark(markets.BINANCE)
         const bitmex5saniyeFark = this.Get5SaniyeFark(markets.BITMEX)
@@ -126,6 +125,17 @@ class SellKontrol {
 
             this.CheckPrice5Saniye()
         }, 1000)
+    }
+
+    async PositionKontrol(){
+        while(true){
+            const position = await this.GetPositions()
+            await this.ortak.BitmexCalcelAllOrders() 
+            const quantity = Math.abs(position.size)
+            const type = position.orderedType == 'sell' ? OrderType.BUY : OrderType.SELL
+            await this.CreateOrder(type, quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
+            this.ortak.sleep(60 * 10) // 10 dkda bir çalışır
+        }
     }
 
     CheckPrice5ve10Saniye(){
@@ -408,6 +418,7 @@ async function Basla(){
     sellKontrol = new SellKontrol()
     await sellKontrol.LoadVeriables()
     sellKontrol.BinanceBasla()
+    sellKontrol.PositionKontrol()
 }
 
 Basla()
