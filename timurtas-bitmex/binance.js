@@ -1,6 +1,21 @@
 const Ortak = require('./ortak')
 const waitTime = 15 // dakika
 const Binance = require('binance-api-node').default
+const BitMEXClient = require('bitmex-realtime-api');
+const markets = {
+    BINANCE: 0,
+    BITMEX: 1
+}
+
+const OrderType = {
+    SELL: 'sell',
+    BUY: 'buy'
+}
+
+const FiyatType = {
+    DUSTU: 'Fiyat DÜŞTÜ',
+    CIKTI: 'Fiyat ÇIKTI'
+}
 
 class SellKontrol {
     async LoadVeriables(){
@@ -20,18 +35,93 @@ class SellKontrol {
         }
         this.kaldirac = 25
         // BİNANCE
-        this.lastPrice = null
-        this.fark = null 
+        this.binanceLastPrice = null
         this.binancePrice = null
-        this.prices = []
+        this.binancePriceList = []
+        // BİTMEX
+        this.bitmexLastPrice = null
+        this.bitmexPrice = null
+        this.bitmexPriceList = []
+
     }
 
-    CheckPrice(){
-        this.prices.unshift(this.binancePrice)
-        this.prices =  this.prices.slice(0, 10)
-        const suankiPrice = this.prices[0]
-        const besSaniyeOncekiPrice = this.prices[4]
-        const onSaniyeOncekiPrice = this.prices[9]
+    CheckPrice5Saniye(){
+        
+        // console.log(suankiPrice, besSaniyeOncekiPrice, besSaniyeFark, onSaniyeFark);
+        const binance5saniyeFark = this.Get5SaniyeFark(markets.BINANCE)
+        const bitmex5saniyeFark = this.Get5SaniyeFark(markets.BITMEX)
+
+        if(isNaN(binance5saniyeFark) || isNaN(bitmex5saniyeFark)) return
+        const binanceFarkUyuyor = Math.abs(binance5saniyeFark) > 1
+        if(binanceFarkUyuyor){ // ilk önce binance farkı kontrol edilir.
+            const binanceFiyatType = binance5saniyeFark < 0 ? FiyatType.DUSTU : FiyatType.CIKTI
+            const bitmexFiyatType = bitmex5saniyeFark < 0 ? FiyatType.DUSTU : FiyatType.CIKTI
+            if(binanceFiyatType == bitmexFiyatType){
+                const binanceBitmexFark = Math.abs(binance5saniyeFark) - Math.abs(bitmex5saniyeFark)
+                if(binanceBitmexFark > 1) return   
+            }
+
+            const type = binance5saniyeFark < 0 ? OrderType.SELL : OrderType.BUY // eğer fark eksi ise sell yap, artı ise buy.
+
+            this.CreateOrder(type, 100, null, 'market')
+        }
+    }
+
+    Get5SaniyeFark(market){
+        if(market == markets.BINANCE){
+            this.binancePriceList.unshift(this.binancePrice)
+            this.binancePriceList =  this.binancePriceList.slice(0, 10)
+            const suankiPrice = this.binancePriceList[0]
+            const besSaniyeOncekiPrice = this.binancePriceList[4]
+            const besSaniyeFark = suankiPrice - besSaniyeOncekiPrice
+            console.log(`Binance Suanki Price : ${suankiPrice}, 5saniyeÖnceki: ${besSaniyeOncekiPrice}, fark: ${besSaniyeFark}`)
+            return besSaniyeFark
+        }else{ // binance değilse bitmex dir.
+            this.bitmexPriceList.unshift(this.bitmexPrice)
+            this.bitmexPriceList =  this.bitmexPriceList.slice(0, 10)
+            const suankiPrice = this.bitmexPriceList[0]
+            const besSaniyeOncekiPrice = this.bitmexPriceList[4]
+            const besSaniyeFark = suankiPrice - besSaniyeOncekiPrice
+            console.log(`BİTMEX   Suanki Price : ${suankiPrice}, 5saniyeÖnceki: ${besSaniyeOncekiPrice}, fark: ${besSaniyeFark}`)
+            return besSaniyeFark
+        }
+    }
+
+    async BinanceBasla(){
+        const binance = Binance()
+        
+        // See 'options' reference below
+        const bitmex = new BitMEXClient({testnet: false});
+
+        binance.ws.aggTrades(['BTCUSDT'], trade => {
+            this.binancePrice = trade.price
+        })
+
+        bitmex.addStream('XBTUSD', 'instrument', (data, symbol, tableName) => {
+            this.bitmexPrice = data[data.length - 1].lastPrice
+        })
+
+        setInterval(() => {
+            if(!this.binanceLastPrice ){ // || this.binanceLastPrice == this.binancePrice
+                this.binanceLastPrice = this.binancePrice
+                return
+            }
+
+            if(!this.bitmexLastPrice ){ // || this.bitmexLastPrice == this.bitmexPrice
+                this.bitmexLastPrice = this.bitmexPrice
+                return
+            }
+
+            this.CheckPrice5Saniye()
+        }, 1000)
+    }
+
+    CheckPrice5ve10Saniye(){
+        this.binancePriceList.unshift(this.binancePrice)
+        this.binancePriceList =  this.binancePriceList.slice(0, 10)
+        const suankiPrice = this.binancePriceList[0]
+        const besSaniyeOncekiPrice = this.binancePriceList[4]
+        const onSaniyeOncekiPrice = this.binancePriceList[9]
         const besSaniyeFark = suankiPrice - besSaniyeOncekiPrice
         const onSaniyeFark = suankiPrice - onSaniyeOncekiPrice
         console.log(suankiPrice, besSaniyeOncekiPrice, besSaniyeFark, onSaniyeFark);
@@ -44,37 +134,6 @@ class SellKontrol {
             const type = onSaniyeFark < 0 ? 'sell' : 'buy' // eğer fark eksi ise sell yap, artı ise buy.
             this.CreateOrder(type, 100, null, 'market')
         }
-    }
-
-    async Basla10Dakika(){
-        const binance = Binance()
-        binance.ws.aggTrades(['BTCUSDT'], trade => {
-            this.binancePrice = trade.price
-            //console.log(trade.price)
-        })
-        setInterval(() => {
-            if(!this.lastPrice || this.lastPrice == this.binancePrice){
-                this.lastPrice = this.binancePrice
-                return
-            }
-
-            this.CheckPrice()
-        }, 1000);
-        return
-        this.yeniAmount = this.amount
-        const position = await this.GetPositions()
-        const kontrollerUygun = await this.KontrollerUygun(position)
-        if(!kontrollerUygun) return
-        await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
-        
-        const openPositionVar = position && position.entryPrice
-        if(openPositionVar){
-            const quantity = Math.abs(position.size)
-            await this.CreateOrder(position.nextOrderType, quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
-        }
-        // BURAYA BALANCE KONTROL EKLENECEK
-        await this.CreateOrder('buy', this.yeniAmount, position.buys[0].Price) 
-        await this.CreateOrder('sell', this.yeniAmount, position.sells[0].Price)
     }
 
     async KontrollerUygun(position){
@@ -336,22 +395,7 @@ async function Basla(){
     sayac++
     sellKontrol = new SellKontrol()
     await sellKontrol.LoadVeriables()
-    ReopenOrders()
-    //CheckPositions()
-}
-
-async function ReopenOrders(){
-    while(true){
-        await sellKontrol.Basla10Dakika().catch(e=> console.log(e))
-        await sellKontrol.ortak.sleep(60 * waitTime)
-    }
-}
-
-async function CheckPositions(){
-    while(true){
-        await sellKontrol.CheckPositions()
-        await sellKontrol.ortak.sleep(60 * waitTime * 2)
-    }
+    sellKontrol.BinanceBasla()
 }
 
 Basla()
