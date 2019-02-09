@@ -31,7 +31,7 @@ class SellKontrol {
         this.prices =  this.prices.slice(0, 10)
         const suankiPrice = this.prices[0]
         const BesSaniyeOncekiPrice = this.prices[4]
-        const fark = BesSaniyeOncekiPrice - suankiPrice
+        const fark = suankiPrice - BesSaniyeOncekiPrice
         console.log(suankiPrice, BesSaniyeOncekiPrice, fark);
         
         if(fark && Math.abs(fark) > 2){
