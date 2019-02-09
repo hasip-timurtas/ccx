@@ -42,6 +42,7 @@ class SellKontrol {
         this.bitmexLastPrice = null
         this.bitmexPrice = null
         this.bitmexPriceList = []
+        this.binanceFark = 2
 
     }
 
@@ -52,18 +53,22 @@ class SellKontrol {
         const bitmex5saniyeFark = this.Get5SaniyeFark(markets.BITMEX)
 
         if(isNaN(binance5saniyeFark) || isNaN(bitmex5saniyeFark)) return
-        const binanceFarkUyuyor = Math.abs(binance5saniyeFark) > 1
+        const binanceFarkUyuyor = Math.abs(binance5saniyeFark) > this.binanceFark
         if(binanceFarkUyuyor){ // ilk önce binance farkı kontrol edilir.
             const binanceFiyatType = binance5saniyeFark < 0 ? FiyatType.DUSTU : FiyatType.CIKTI
             const bitmexFiyatType = bitmex5saniyeFark < 0 ? FiyatType.DUSTU : FiyatType.CIKTI
             if(binanceFiyatType == bitmexFiyatType){
-                const binanceBitmexFark = Math.abs(binance5saniyeFark) - Math.abs(bitmex5saniyeFark)
-                if(binanceBitmexFark > 1) return   
+                if(binance5saniyeFark > bitmex5saniyeFark){ // binance farkı bitmx farkından büyükse
+                    const binanceBitmexFark = Math.abs(binance5saniyeFark) - Math.abs(bitmex5saniyeFark)
+                    if(binanceBitmexFark < this.binanceFark) return   // binance ile bitmex farkları 2 den düşükse boşver.
+                }else{
+                    return // bitmex farkı binance farkından büykse çıkç zarar edersin.
+                }
             }
 
             const type = binance5saniyeFark < 0 ? OrderType.SELL : OrderType.BUY // eğer fark eksi ise sell yap, artı ise buy.
 
-            this.CreateOrder(type, 100, null, 'market')
+            //this.CreateOrder(type, 100, null, 'market')
         }
     }
 
