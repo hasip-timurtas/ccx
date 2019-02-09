@@ -135,7 +135,8 @@ class SellKontrol {
             const quantity = Math.abs(position.size)
             const type = position.orderedType == 'sell' ? OrderType.BUY : OrderType.SELL
             const openOrderZatenVar = openOrders.Data.find(e=> e.Amount == quantity && e.Type == type)
-            if(openOrderZatenVar){
+            const openPositionVar = position && position.entryPrice
+            if(openOrderZatenVar || !openPositionVar){
                 await this.ortak.sleep(60) // 10 dkda bir çalışır
                 continue
             }
