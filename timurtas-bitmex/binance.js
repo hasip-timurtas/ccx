@@ -23,12 +23,27 @@ class SellKontrol {
         this.lastPrice = null
         this.fark = null 
         this.binancePrice = null
+        this.prices = []
+    }
+
+    CheckPrice(){
+        this.lastPrice = this.binancePrice
+        this.prices.unshift(this.binancePrice)
+        this.prices =  this.prices.slice(0, 10)
+        const suankiPrice = this.prices[0]
+        const BesSaniyeOncekiPrice = this.prices[4]
+        const fark = BesSaniyeOncekiPrice - suankiPrice
+        if(fark && Math.abs(fark) > 2){
+            const type = fark < 0 ? 'sell' : 'buy' // eğer fark eksi ise sell yap, artı ise buy.
+            this.CreateOrder(type, 100, null, 'market')
+        }
     }
 
     async Basla10Dakika(){
         const binance = Binance()
         binance.ws.aggTrades(['BTCUSDT'], trade => {
             this.binancePrice = trade.price
+            //console.log(trade.price)
         })
         setInterval(() => {
             if(!this.lastPrice){
@@ -37,7 +52,7 @@ class SellKontrol {
             }
 
             this.CheckPrice()
-        }, 5000);
+        }, 1000);
         return
         this.yeniAmount = this.amount
         const position = await this.GetPositions()
@@ -53,16 +68,6 @@ class SellKontrol {
         // BURAYA BALANCE KONTROL EKLENECEK
         await this.CreateOrder('buy', this.yeniAmount, position.buys[0].Price) 
         await this.CreateOrder('sell', this.yeniAmount, position.sells[0].Price)
-    }
-
-    CheckPrice(){
-        this.fark = this.binancePrice - this.lastPrice
-        if(Math.abs(this.fark) > 2){
-            const type = this.fark < 0 ? 'sell' : 'buy' // eğer fark eksi ise sell yap, artı ise buy.
-            this.CreateOrder(type, 100, null, 'market')
-        }
-        console.log(this.fark.toFixed(2))
-        this.lastPrice = this.binancePrice
     }
 
     async KontrollerUygun(position){
