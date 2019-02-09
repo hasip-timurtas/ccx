@@ -27,13 +27,12 @@ class SellKontrol {
     }
 
     CheckPrice(){
-        this.lastPrice = this.binancePrice
         this.prices.unshift(this.binancePrice)
         this.prices =  this.prices.slice(0, 10)
         const suankiPrice = this.prices[0]
         const BesSaniyeOncekiPrice = this.prices[4]
         const fark = BesSaniyeOncekiPrice - suankiPrice
-        console.log(fark);
+        console.log(suankiPrice, BesSaniyeOncekiPrice, fark);
         
         if(fark && Math.abs(fark) > 2){
             const type = fark < 0 ? 'sell' : 'buy' // eğer fark eksi ise sell yap, artı ise buy.
