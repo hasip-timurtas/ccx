@@ -134,7 +134,7 @@ class SellKontrol {
             const quantity = Math.abs(position.size)
             const type = position.orderedType == 'sell' ? OrderType.BUY : OrderType.SELL
             await this.CreateOrder(type, quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
-            this.ortak.sleep(60 * 10) // 10 dkda bir çalışır
+            await this.ortak.sleep(60 * 10) // 10 dkda bir çalışır
         }
     }
 
