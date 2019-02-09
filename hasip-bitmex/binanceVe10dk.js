@@ -22,7 +22,7 @@ class SellKontrol {
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables('MONGO')
         this.amount = 500
-        this.marginAmount = 1
+        this.marginAmount = 2
         this.marketName = 'BTC/USD'
         this.kaldirac = 25
         // BİNANCE
@@ -73,6 +73,8 @@ class SellKontrol {
             const timeDiff = new Date().getTime() - this.lastOrderDate.getTime()
             const enAz2SaniyeUygun = (timeDiff / 1000) > this.sonIslemBeklemeSuresi
             if(!enAz2SaniyeUygun) return
+
+            await this.ortak.BitmexCalcelAllOrders() // binance işleminden önce orderleri iptal et.
 
             const type = binance5saniyeFark < 0 ? OrderType.SELL : OrderType.BUY // eğer fark eksi ise sell yap, artı ise buy.
             console.log(`!!!!!! İŞLEM YAPILIYOR. Fark 2 den büyük! Binance fark: ${binance5saniyeFark}, Bitmex fark: ${bitmex5saniyeFark} !!!!!!`)
