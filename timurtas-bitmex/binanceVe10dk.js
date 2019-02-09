@@ -42,6 +42,7 @@ class SellKontrol {
         this.BinanceBasla()
         await this.ortak.sleep(1) // Nonce için 1 saniye bekle.
         this.PositionKontrol()
+        await this.ortak.sleep(1) // Nonce için 1 saniye bekle.
         while(true){
             await this.Basla10Dakika().catch(e=> console.log(e))
             await this.ortak.sleep(60 * waitTime)
