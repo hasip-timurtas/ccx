@@ -42,7 +42,7 @@ class SellKontrol {
         this.bitmexLastPrice = null
         this.bitmexPrice = null
         this.bitmexPriceList = []
-        this.binanceFark = 2
+        this.binanceFark = 3
         this.loglama = false
         this.lastOrderDate = new Date()
 
@@ -71,7 +71,7 @@ class SellKontrol {
             const timeDiff = new Date().getTime() - this.lastOrderDate.getTime()
             const enAz2SaniyeUygun = (timeDiff / 1000) > 2
             if(!enAz2SaniyeUygun) return
-            
+
             const type = binance5saniyeFark < 0 ? OrderType.SELL : OrderType.BUY // eğer fark eksi ise sell yap, artı ise buy.
             console.log(`!!!!!! İŞLEM YAPILIYOR. Fark 2 den büyük! Binance fark: ${binance5saniyeFark}, Bitmex fark: ${bitmex5saniyeFark} !!!!!!`)
             this.CreateOrder(type, 100, null, 'market')
