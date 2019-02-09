@@ -67,6 +67,7 @@ class SellKontrol {
                 }
             }
             
+            console.log('Time Difference Kontrolü')
             const timeDiff = new Date().getTime() - this.lastOrderDate.getTime()
             const enAz2SaniyeUygun = (timeDiff / 1000) > 2
             if(!enAz2SaniyeUygun) return
@@ -130,9 +131,13 @@ class SellKontrol {
     async PositionKontrol(){
         while(true){
             const position = await this.GetPositions()
-            await this.ortak.BitmexCalcelAllOrders() 
+            const openOrders = await this.GetOpenOrders()
             const quantity = Math.abs(position.size)
             const type = position.orderedType == 'sell' ? OrderType.BUY : OrderType.SELL
+            const openOrderZatenVar = openOrders.Data.find(e=> e.Amount == quantity && e.Type == type)
+            if(openOrderZatenVar) continue
+            await this.ortak.BitmexCalcelAllOrders() 
+
             await this.CreateOrder(type, quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
             await this.ortak.sleep(60) // 10 dkda bir çalışır
         }
