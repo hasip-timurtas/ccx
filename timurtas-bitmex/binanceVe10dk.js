@@ -1,5 +1,5 @@
 const Ortak = require('./ortak')
-const waitTime = 15 // dakika
+const waitTime = 1 // dakika
 const Binance = require('binance-api-node').default
 const BitMEXClient = require('bitmex-realtime-api');
 const markets = {
@@ -75,7 +75,7 @@ class SellKontrol {
 
             const type = binance5saniyeFark < 0 ? OrderType.SELL : OrderType.BUY // eğer fark eksi ise sell yap, artı ise buy.
             console.log(`!!!!!! İŞLEM YAPILIYOR. Fark 2 den büyük! Binance fark: ${binance5saniyeFark}, Bitmex fark: ${bitmex5saniyeFark} !!!!!!`)
-            this.CreateOrder(type, this.amount * 10, null, 'market')
+            this.CreateOrder(type, this.amount * 2, null, 'market')
             this.lastOrderDate = new Date()
         }
     }
