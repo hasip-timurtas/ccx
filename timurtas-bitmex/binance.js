@@ -33,6 +33,8 @@ class SellKontrol {
         const suankiPrice = this.prices[0]
         const BesSaniyeOncekiPrice = this.prices[4]
         const fark = BesSaniyeOncekiPrice - suankiPrice
+        console.log(fark);
+        
         if(fark && Math.abs(fark) > 2){
             const type = fark < 0 ? 'sell' : 'buy' // eğer fark eksi ise sell yap, artı ise buy.
             this.CreateOrder(type, 100, null, 'market')
