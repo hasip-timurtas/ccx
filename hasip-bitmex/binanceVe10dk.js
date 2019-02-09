@@ -50,7 +50,7 @@ class SellKontrol {
         }
     }
 
-    CheckPrice5Saniye(){
+    async CheckPrice5Saniye(){
         // console.log(suankiPrice, besSaniyeOncekiPrice, besSaniyeFark, onSaniyeFark);
         const binance5saniyeFark = this.Get5SaniyeFark(markets.BINANCE)
         const bitmex5saniyeFark = this.Get5SaniyeFark(markets.BITMEX)
