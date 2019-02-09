@@ -43,6 +43,7 @@ class SellKontrol {
         this.bitmexPrice = null
         this.bitmexPriceList = []
         this.binanceFark = 2
+        this.loglama = false
 
     }
 
@@ -79,7 +80,7 @@ class SellKontrol {
             const suankiPrice = this.binancePriceList[0]
             const besSaniyeOncekiPrice = this.binancePriceList[4]
             const besSaniyeFark = suankiPrice - besSaniyeOncekiPrice
-            console.log(`Binance Suanki Price : ${suankiPrice}, 5saniyeÖnceki: ${besSaniyeOncekiPrice}, fark: ${besSaniyeFark}`)
+            this.loglama && console.log(`Binance Suanki Price : ${suankiPrice}, 5saniyeÖnceki: ${besSaniyeOncekiPrice}, fark: ${besSaniyeFark}`)
             return besSaniyeFark
         }else{ // binance değilse bitmex dir.
             this.bitmexPriceList.unshift(this.bitmexPrice)
@@ -87,7 +88,7 @@ class SellKontrol {
             const suankiPrice = this.bitmexPriceList[0]
             const besSaniyeOncekiPrice = this.bitmexPriceList[4]
             const besSaniyeFark = suankiPrice - besSaniyeOncekiPrice
-            console.log(`BİTMEX   Suanki Price : ${suankiPrice}, 5saniyeÖnceki: ${besSaniyeOncekiPrice}, fark: ${besSaniyeFark}`)
+            this.loglama && console.log(`BİTMEX   Suanki Price : ${suankiPrice}, 5saniyeÖnceki: ${besSaniyeOncekiPrice}, fark: ${besSaniyeFark}`)
             return besSaniyeFark
         }
     }
