@@ -21,8 +21,8 @@ class SellKontrol {
     async LoadVeriables(){
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables('MONGO')
-        this.amount = 5000
-        this.marginAmount = 0.5
+        this.amount = 100
+        this.marginAmount = 1
         this.marketName = 'BTC/USD'
         this.checkPositionAktif = false
         this.ikinciIslemFark = 7
@@ -73,7 +73,7 @@ class SellKontrol {
 
             const type = binance5saniyeFark < 0 ? OrderType.SELL : OrderType.BUY // eğer fark eksi ise sell yap, artı ise buy.
             console.log(`!!!!!! İŞLEM YAPILIYOR. Fark 2 den büyük! Binance fark: ${binance5saniyeFark}, Bitmex fark: ${bitmex5saniyeFark} !!!!!!`)
-            this.CreateOrder(type, 100, null, 'market')
+            this.CreateOrder(type, this.amount, null, 'market')
             this.lastOrderDate = new Date()
         }
     }
@@ -134,7 +134,7 @@ class SellKontrol {
             const quantity = Math.abs(position.size)
             const type = position.orderedType == 'sell' ? OrderType.BUY : OrderType.SELL
             await this.CreateOrder(type, quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
-            await this.ortak.sleep(60 * 10) // 10 dkda bir çalışır
+            await this.ortak.sleep(60) // 10 dkda bir çalışır
         }
     }
 
