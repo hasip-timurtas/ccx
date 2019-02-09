@@ -36,6 +36,7 @@ class SellKontrol {
         this.binanceFark = 2
         this.loglama = true
         this.lastOrderDate = new Date()
+        this.sonIslemBeklemeSuresi = 5 // saniye
     }
 
     async Basla(){
@@ -70,7 +71,7 @@ class SellKontrol {
             
             console.log('Time Difference Kontrolü')
             const timeDiff = new Date().getTime() - this.lastOrderDate.getTime()
-            const enAz2SaniyeUygun = (timeDiff / 1000) > 2
+            const enAz2SaniyeUygun = (timeDiff / 1000) > this.sonIslemBeklemeSuresi
             if(!enAz2SaniyeUygun) return
 
             const type = binance5saniyeFark < 0 ? OrderType.SELL : OrderType.BUY // eğer fark eksi ise sell yap, artı ise buy.
