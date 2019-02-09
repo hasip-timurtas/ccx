@@ -135,7 +135,10 @@ class SellKontrol {
             const quantity = Math.abs(position.size)
             const type = position.orderedType == 'sell' ? OrderType.BUY : OrderType.SELL
             const openOrderZatenVar = openOrders.Data.find(e=> e.Amount == quantity && e.Type == type)
-            if(openOrderZatenVar) continue
+            if(openOrderZatenVar){
+                await this.ortak.sleep(60) // 10 dkda bir çalışır
+                continue
+            }
             await this.ortak.BitmexCalcelAllOrders() 
 
             await this.CreateOrder(type, quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
