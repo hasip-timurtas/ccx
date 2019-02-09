@@ -67,8 +67,8 @@ class SellKontrol {
             }
 
             const type = binance5saniyeFark < 0 ? OrderType.SELL : OrderType.BUY // eğer fark eksi ise sell yap, artı ise buy.
-
-            //this.CreateOrder(type, 100, null, 'market')
+            console.log(`!!!!!! İŞLEM YAPILIYOR. Fark 2 den büyük! Binance fiyat: ${this.binancePrice}, Bitmex Fiyat: ${this.bitmexPrice} !!!!!!`)
+            this.CreateOrder(type, 100, null, 'market')
         }
     }
 
