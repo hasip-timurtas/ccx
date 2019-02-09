@@ -30,12 +30,18 @@ class SellKontrol {
         this.prices.unshift(this.binancePrice)
         this.prices =  this.prices.slice(0, 10)
         const suankiPrice = this.prices[0]
-        const BesSaniyeOncekiPrice = this.prices[4]
-        const fark = suankiPrice - BesSaniyeOncekiPrice
-        console.log(suankiPrice, BesSaniyeOncekiPrice, fark);
-        
-        if(fark && Math.abs(fark) > 2){
-            const type = fark < 0 ? 'sell' : 'buy' // eğer fark eksi ise sell yap, artı ise buy.
+        const besSaniyeOncekiPrice = this.prices[4]
+        const onSaniyeOncekiPrice = this.prices[9]
+        const besSaniyeFark = suankiPrice - besSaniyeOncekiPrice
+        const onSaniyeFark = suankiPrice - onSaniyeOncekiPrice
+        console.log(suankiPrice, besSaniyeOncekiPrice, besSaniyeFark, onSaniyeFark);
+        const besSaniyeFarkUyuyor = besSaniyeFark && Math.abs(besSaniyeFark) > 2
+        const onSaniyeFarkUyuyor = onSaniyeFark && Math.abs(onSaniyeFark) > 3
+        if(besSaniyeFarkUyuyor){
+            const type = besSaniyeFark < 0 ? 'sell' : 'buy' // eğer fark eksi ise sell yap, artı ise buy.
+            this.CreateOrder(type, 100, null, 'market')
+        }else if(onSaniyeFarkUyuyor){
+            const type = onSaniyeFark < 0 ? 'sell' : 'buy' // eğer fark eksi ise sell yap, artı ise buy.
             this.CreateOrder(type, 100, null, 'market')
         }
     }
