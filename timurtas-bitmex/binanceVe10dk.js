@@ -76,10 +76,17 @@ class SellKontrol {
             console.log('Time Difference Kontrolü')
             const timeDiff = new Date().getTime() - this.lastOrderDate.getTime()
             const enAz2SaniyeUygun = (timeDiff / 1000) > this.sonIslemBeklemeSuresi
-            if(!enAz2SaniyeUygun) return
+            if(!enAz2SaniyeUygun || this.position) return
 
+            const quantity = Math.abs(this.position.size)
+            const kacCarpiGeride = Math.round((quantity / this.amount) +1)
+            const fazlaAlimVar = kacCarpiGeride >= 5
+            if(fazlaAlimVar){
+                console.log("amountun 5 katı alış yaptı daha aynı işlemden alım yapma")
+                return 
+            }
             ///await this.ortak.BitmexCalcelAllOrders() // binance işleminden önce orderleri iptal et.
-
+            
             const type = binance5saniyeFark < 0 ? OrderType.SELL : OrderType.BUY // eğer fark eksi ise sell yap, artı ise buy.
             console.log(`!!!!!! İŞLEM YAPILIYOR. Fark 2 den büyük! Binance fark: ${binance5saniyeFark}, Bitmex fark: ${bitmex5saniyeFark} !!!!!!`)
             this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), null, 'market')
@@ -138,18 +145,18 @@ class SellKontrol {
 
     async PositionKontrol(){
         while(true){
-            const position = await this.GetPositions()
+            this.position = await this.GetPositions()
             const openOrders = await this.GetOpenOrders()
-            const quantity = Math.abs(position.size)
-            const type = position.orderedType == 'sell' ? OrderType.BUY : OrderType.SELL
+            const quantity = Math.abs(this.position.size)
+            const type = this.position.orderedType == 'sell' ? OrderType.BUY : OrderType.SELL
             const openOrderZatenVar = openOrders.Data.find(e=> e.Amount == quantity && e.Type == type)
-            const openPositionVar = position && position.entryPrice
+            const openPositionVar = this.position && this.position.entryPrice
             if(openOrderZatenVar || !openPositionVar){
                 await this.ortak.sleep(60) // 10 dkda bir çalışır
                 continue
             }
             
-            await this.CreateOrder(type, quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
+            await this.CreateOrder(type, quantity, this.position.orderPrice)// quantity + this.amount -> sattıktan sonra al
             await this.ortak.sleep(60) // 10 dkda bir çalışır
         }
     }
