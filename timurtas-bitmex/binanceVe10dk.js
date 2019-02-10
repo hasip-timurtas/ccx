@@ -87,7 +87,7 @@ class SellKontrol {
             const quantity = Math.abs(this.position.size)
             const kacCarpiGeride = Math.round((quantity / this.amount) +1)
             const fazlaAlimVar = kacCarpiGeride >= 6
-            if(position.orderedType == type && fazlaAlimVar){ // position typeı ile yeni order type aynı ve fazla alım varsa girme.
+            if(this.position.orderedType == type && fazlaAlimVar){ // position typeı ile yeni order type aynı ve fazla alım varsa girme.
                 console.log("Binance: amountun 5 katı alış yaptı daha aynı işlemden alım yapma")
                 return 
             }
