@@ -156,6 +156,7 @@ class SellKontrol {
                 continue
             }
             
+            await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
             await this.CreateOrder(type, quantity, this.position.orderPrice)// quantity + this.amount -> sattıktan sonra al
             await this.ortak.sleep(10) // 10 saniye bir çalışır
         }
