@@ -88,7 +88,7 @@ class SellKontrol {
             const kacCarpiGeride = Math.round((quantity / this.amount) +1)
             const fazlaAlimVar = kacCarpiGeride >= 5
             if(position.orderedType == type && fazlaAlimVar){ // position typeı ile yeni order type aynı ve fazla alım varsa girme.
-                console.log("amountun 5 katı alış yaptı daha aynı işlemden alım yapma")
+                console.log("Binance: amountun 5 katı alış yaptı daha aynı işlemden alım yapma")
                 return 
             }
             
@@ -157,7 +157,7 @@ class SellKontrol {
             const openOrderZatenVar = openOrders.Data.find(e=> e.Amount == quantity && e.Type == type)
             const openPositionVar = this.position && this.position.entryPrice
             if(openOrderZatenVar || !openPositionVar){
-                await this.ortak.sleep(10) // 10 saniye bir çalışır
+                await this.ortak.sleep(60) // 10 saniye bir çalışır
                 continue
             }
 
@@ -242,6 +242,16 @@ class SellKontrol {
             console.log('OpenOrder(s) üstte, yani sırada, işlem olacak. o yüzden çıkılıyor.', new Date())
             return false
         }
+
+        // Fazla Alım Kontrolü
+        const quantity = Math.abs(position.size)
+        const kacCarpiGeride = Math.round((quantity / this.amount) +1)
+        const fazlaAlimVar = kacCarpiGeride >= 5
+        if(fazlaAlimVar){ // position typeı ile yeni order type aynı ve fazla alım varsa girme.
+            console.log("10dk: amountun 5 katı alış yaptı daha aynı işlemden alım yapma")
+            return 
+        }
+        
 
         return true // final
     }
