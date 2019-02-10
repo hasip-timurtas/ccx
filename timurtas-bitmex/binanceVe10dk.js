@@ -152,12 +152,12 @@ class SellKontrol {
             const openOrderZatenVar = openOrders.Data.find(e=> e.Amount == quantity && e.Type == type)
             const openPositionVar = this.position && this.position.entryPrice
             if(openOrderZatenVar || !openPositionVar){
-                await this.ortak.sleep(60) // 10 dkda bir çalışır
+                await this.ortak.sleep(10) // 10 saniye bir çalışır
                 continue
             }
             
             await this.CreateOrder(type, quantity, this.position.orderPrice)// quantity + this.amount -> sattıktan sonra al
-            await this.ortak.sleep(60) // 10 dkda bir çalışır
+            await this.ortak.sleep(10) // 10 saniye bir çalışır
         }
     }
 
