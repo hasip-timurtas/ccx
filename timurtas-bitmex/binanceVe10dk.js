@@ -187,7 +187,7 @@ class SellKontrol {
         const position = await this.GetPositions()
         const kontrollerUygun = await this.KontrollerUygun(position)
         if(!kontrollerUygun) return
-        await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
+        //await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
         /*
         const openPositionVar = position && position.entryPrice
         if(openPositionVar){
