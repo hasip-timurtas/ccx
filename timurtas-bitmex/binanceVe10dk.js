@@ -79,17 +79,20 @@ class SellKontrol {
             const timeDiff = new Date().getTime() - this.lastOrderDate.getTime()
             const enAz2SaniyeUygun = (timeDiff / 1000) > this.sonIslemBeklemeSuresi
             if(!enAz2SaniyeUygun || !this.position) return
-
-            const quantity = Math.abs(this.position.size)
-            const kacCarpiGeride = Math.round((quantity / this.amount) +1)
-            const fazlaAlimVar = kacCarpiGeride >= 5
-            if(fazlaAlimVar){
-                console.log("amountun 5 katı alış yaptı daha aynı işlemden alım yapma")
-                return 
-            }
+            
             ///await this.ortak.BitmexCalcelAllOrders() // binance işleminden önce orderleri iptal et.
             
             const type = binance5saniyeFark < 0 ? OrderType.SELL : OrderType.BUY // eğer fark eksi ise sell yap, artı ise buy.
+            // Fazla Alım Kontrolü
+            const quantity = Math.abs(this.position.size)
+            const kacCarpiGeride = Math.round((quantity / this.amount) +1)
+            const fazlaAlimVar = kacCarpiGeride >= 5
+            if(position.orderedType == type && fazlaAlimVar){ // position typeı ile yeni order type aynı ve fazla alım varsa girme.
+                console.log("amountun 5 katı alış yaptı daha aynı işlemden alım yapma")
+                return 
+            }
+            
+
             console.log(`!!!!!! İŞLEM YAPILIYOR. Fark 2 den büyük! Binance fark: ${binance5saniyeFark}, Bitmex fark: ${bitmex5saniyeFark} !!!!!!`)
             this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), null, 'market')
             this.lastOrderDate = new Date()
