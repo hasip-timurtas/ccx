@@ -78,7 +78,7 @@ class SellKontrol {
             console.log('Time Difference Kontrolü')
             const timeDiff = new Date().getTime() - this.lastOrderDate.getTime()
             const enAz2SaniyeUygun = (timeDiff / 1000) > this.sonIslemBeklemeSuresi
-            if(!enAz2SaniyeUygun || this.position) return
+            if(!enAz2SaniyeUygun || !this.position) return
 
             const quantity = Math.abs(this.position.size)
             const kacCarpiGeride = Math.round((quantity / this.amount) +1)
