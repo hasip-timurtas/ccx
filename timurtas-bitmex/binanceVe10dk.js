@@ -40,11 +40,13 @@ class SellKontrol {
     }
 
     async Basla(){
+        
+        this.PositionKontrol()
+        await this.ortak.sleep(1) // Nonce için 1 saniye bekle.
         this.OnDakika()
         await this.ortak.sleep(1) // Nonce için 1 saniye bekle.
         this.BinanceBasla()
-        await this.ortak.sleep(1) // Nonce için 1 saniye bekle.
-        this.PositionKontrol()
+        
     }
 
     async OnDakika(){
