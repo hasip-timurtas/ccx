@@ -250,24 +250,7 @@ class SellKontrol {
     }
 
     async KontrollerUygun(){
-        // BALANCE KONTROL
         
-        const balances = await this.ortak.GetBalance()
-        const openOrdersBalance = this.amount / this.position.sells[0].Price / this.kaldirac
-        const balance = balances.find(e=> e.Symbol == 'XBT')
-        const balanceValid = balance.Available > openOrdersBalance
-        if(!balanceValid){
-            console.log('Balance yeterli değil, güncelleniyor.', new Date())
-            this.yeniAmount = balance.Available * this.position.sells[0].Price * this.kaldirac
-            this.yeniAmount = this.amount - (this.amount * 0.05)
-            this.yeniAmount = parseInt(this.amount)
-            if(this.amount < 100){
-                console.log('Balance 100 den küçük o yüzden çıkılıyor.');
-                return false
-            }
-            console.log('Yeni Balance: '+ this.yeniAmount);
-        }
-    
         // OPEN ORDERSLAR ÜSTTE
         //const openOrders = await this.GetOpenOrders()
         let buyYadaSellUstte = false
@@ -296,6 +279,24 @@ class SellKontrol {
             return 
         }
         
+
+        // BALANCE KONTROL
+        
+        const balances = await this.ortak.GetBalance()
+        const openOrdersBalance = this.amount / this.position.sells[0].Price / this.kaldirac
+        const balance = balances.find(e=> e.Symbol == 'XBT')
+        const balanceValid = balance.Available > openOrdersBalance
+        if(!balanceValid){
+            console.log('Balance yeterli değil, güncelleniyor.', new Date())
+            this.yeniAmount = balance.Available * this.position.sells[0].Price * this.kaldirac
+            this.yeniAmount = this.amount - (this.amount * 0.05)
+            this.yeniAmount = parseInt(this.amount)
+            if(this.amount < 100){
+                console.log('Balance 100 den küçük o yüzden çıkılıyor.');
+                return false
+            }
+            console.log('Yeni Balance: '+ this.yeniAmount);
+        }
 
         return true // final
     }
