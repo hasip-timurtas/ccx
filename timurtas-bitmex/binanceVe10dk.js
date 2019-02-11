@@ -121,7 +121,7 @@ class SellKontrol {
             console.log(`!!!!!! İŞLEM YAPILIYOR. Fark 2 den büyük! Binance fark: ${binance5saniyeFark}, Bitmex fark: ${bitmex5saniyeFark} !!!!!!`)
             this.lastOrderDate = new Date()
 
-            if(Math.abs(binance5saniyeFark) > 5){
+            if(Math.abs(binance5saniyeFark) > 3){
                 this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), null, 'market')
             }else{
                 //this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), null, 'market')
