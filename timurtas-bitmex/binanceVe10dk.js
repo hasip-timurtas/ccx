@@ -33,7 +33,7 @@ class SellKontrol {
         this.bitmexLastPrice = null
         this.bitmexPrice = null
         this.bitmexPriceList = []
-        this.binanceFark = 2
+        this.binanceFark = 1
         this.loglama = false
         this.lastOrderDate = new Date()
         this.sonIslemBeklemeSuresi = 5 // saniye
@@ -134,7 +134,6 @@ class SellKontrol {
                 return 
             }
             
-
             console.log(`!!!!!! İŞLEM YAPILIYOR. Fark 2 den büyük! Binance fark: ${binance5saniyeFark}, Bitmex fark: ${bitmex5saniyeFark} !!!!!!`)
             this.lastOrderDate = new Date()
 
@@ -144,6 +143,16 @@ class SellKontrol {
                 //this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), null, 'market')
                 this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), this.position[type+"s"][0].Price) // type ye sells için s takısı ekledim.
             }
+
+            // binance sinyali geldiğinde buy ise selli open ordersları iptal et. sell ise buyları iptal et. 
+            const willCacancelType = type == 'sell' ? 'buy' : 'sell'
+            this.openOrders.Data.filter(e=> {
+                if(e.Type == willCacancelType){
+                    this.ortak.ccx.CancelTrade(e.OrderId,this.marketName)
+                }
+            })
+            
+            
         }
     }
 
