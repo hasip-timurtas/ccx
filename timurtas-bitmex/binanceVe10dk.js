@@ -1,7 +1,18 @@
 const Ortak = require('./ortak')
 const waitTime = 1 // dakika
 const Binance = require('binance-api-node').default
-const BitMEXClient = require('bitmex-realtime-api');
+const BitMEXClient = require('bitmex-realtime-api')
+
+const binance = Binance()
+const bitmexOptions = {
+    testnet: false, // set `true` to connect to the testnet site (testnet.bitmex.com)
+    apiKeyID: "WUi67Xl7EjE6A0iUq1RFVENw", // timurtas.hasip canlı
+    apiKeySecret: "9alw1YOYGOlMrvW6N6AEC5ulmUl9ZKIP4a2RSdCQvs_xQCCn",
+    maxTableLen: 10000  // the maximum number of table elements to keep in memory (FIFO queue)
+  }
+
+const bitmex = new BitMEXClient(bitmexOptions)
+
 const markets = {
     BINANCE: 0,
     BITMEX: 1
@@ -37,16 +48,41 @@ class SellKontrol {
         this.loglama = false
         this.lastOrderDate = new Date()
         this.sonIslemBeklemeSuresi = 5 // saniye
+        // WEBSOCKET
+        this.position = null
+        this.orderBooks = null
+        this.openOrders = {Data: []}
+        
+
     }
 
     async Basla(){
-        
+        this.StartWsData()
+        await this.ortak.sleep(5)
         this.PositionKontrol()
         await this.ortak.sleep(1) // Nonce için 1 saniye bekle.
         this.OnDakika()
         await this.ortak.sleep(1) // Nonce için 1 saniye bekle.
         this.BinanceBasla()
         
+    }
+
+    async StartWsData(){
+        bitmex.addStream('XBTUSD', 'order', (data, symbol, tableName) => {
+            this.GetOpenOrders(data)
+        })
+
+        await this.ortak.sleep(1)
+
+        bitmex.addStream('XBTUSD', 'orderBook10', (data, symbol, tableName) => {
+            this.orderBooks = data[data.length - 1]
+        })
+
+        await this.ortak.sleep(1)
+
+        bitmex.addStream('XBTUSD', 'position', (data, symbol, tableName) => {
+            this.GetPositions(data)
+        })
     }
 
     async OnDakika(){
@@ -126,10 +162,6 @@ class SellKontrol {
     }
 
     async BinanceBasla(){
-        const binance = Binance()
-        
-        // See 'options' reference below
-        const bitmex = new BitMEXClient({testnet: false});
 
         binance.ws.aggTrades(['BTCUSDT'], trade => {
             this.binancePrice = trade.price
@@ -156,11 +188,11 @@ class SellKontrol {
 
     async PositionKontrol(){
         while(true){
-            this.position = await this.GetPositions()
-            const openOrders = await this.GetOpenOrders()
+            //this.position = await this.GetPositions()
+            //const openOrders = await this.GetOpenOrders()
             const quantity = Math.abs(this.position.size)
             const type = this.position.orderedType == 'sell' ? OrderType.BUY : OrderType.SELL
-            const openOrderZatenVar = openOrders.Data.find(e=> e.Amount == quantity && e.Type == type)
+            const openOrderZatenVar = this.openOrders.Data.find(e=> e.Amount == quantity && e.Type == type)
             const openPositionVar = this.position && this.position.entryPrice
             if(openOrderZatenVar || !openPositionVar){
                 await this.ortak.sleep(10) // 10 saniye bir çalışır
@@ -195,8 +227,8 @@ class SellKontrol {
 
     async Basla10Dakika(){
         this.yeniAmount = this.amount
-        const position = await this.GetPositions()
-        const kontrollerUygun = await this.KontrollerUygun(position)
+        //const position = await this.GetPositions()
+        const kontrollerUygun = await this.KontrollerUygun()
         if(!kontrollerUygun) return
         //await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
         /*
@@ -207,20 +239,20 @@ class SellKontrol {
         }
         */
         // BURAYA BALANCE KONTROL EKLENECEK
-        await this.CreateOrder('buy', this.yeniAmount, position.buys[0].Price) 
-        await this.CreateOrder('sell', this.yeniAmount, position.sells[0].Price)
+        await this.CreateOrder('buy', this.yeniAmount, this.position.buys[0].Price) 
+        await this.CreateOrder('sell', this.yeniAmount, this.position.sells[0].Price)
     }
 
-    async KontrollerUygun(position){
+    async KontrollerUygun(){
         // BALANCE KONTROL
         
         const balances = await this.ortak.GetBalance()
-        const openOrdersBalance = this.amount / position.sells[0].Price / this.kaldirac
+        const openOrdersBalance = this.amount / this.position.sells[0].Price / this.kaldirac
         const balance = balances.find(e=> e.Symbol == 'XBT')
         const balanceValid = balance.Available > openOrdersBalance
         if(!balanceValid){
             console.log('Balance yeterli değil, güncelleniyor.', new Date())
-            this.yeniAmount = balance.Available * position.sells[0].Price * this.kaldirac
+            this.yeniAmount = balance.Available * this.position.sells[0].Price * this.kaldirac
             this.yeniAmount = this.amount - (this.amount * 0.05)
             this.yeniAmount = parseInt(this.amount)
             if(this.amount < 100){
@@ -231,14 +263,14 @@ class SellKontrol {
         }
     
         // OPEN ORDERSLAR ÜSTTE
-        const openOrders = await this.GetOpenOrders()
+        //const openOrders = await this.GetOpenOrders()
         let buyYadaSellUstte = false
-        for (const openOrder of openOrders.Data) {
-            if(openOrder.Rate == position.buys[0].Price){ // BUY
+        for (const openOrder of this.openOrders.Data) {
+            if(openOrder.Rate == this.position.buys[0].Price){ // BUY
                 buyYadaSellUstte = true
             }
 
-            if(openOrder.Rate == position.sells[0].Price){ // SELL
+            if(openOrder.Rate == this.position.sells[0].Price){ // SELL
                 buyYadaSellUstte = true
             }
         }
@@ -250,7 +282,7 @@ class SellKontrol {
         }
 
         // Fazla Alım Kontrolü
-        const quantity = Math.abs(position.size)
+        const quantity = Math.abs(this.position.size)
         const kacCarpiGeride = Math.round((quantity / this.amount) +1)
         const fazlaAlimVar = kacCarpiGeride >= 6
         if(fazlaAlimVar){ // position typeı ile yeni order type aynı ve fazla alım varsa girme.
@@ -263,15 +295,15 @@ class SellKontrol {
     }
     
 
-    async GetPositions(){
+    async GetPositions(position){
         //const ticker =  await this.ortak.ccx.exchange.fetchTicker(this.marketName) // awaitthis.ortak.ccx.GetMarket(marketName)
-        const orderBooks = await this.ortak.ccx.GetMarketOrders(this.marketName, 2)
-        const sells = orderBooks.Data.Sell
-        const buys = orderBooks.Data.Buy
+        //const orderBooks = await this.ortak.ccx.GetMarketOrders(this.marketName, 2)
+        const sells = this.orderBooks.asks.map(e=> ({Price: e[0]}))
+        const buys = this.orderBooks.bids.map(e=> ({Price: e[0]}))
 
         // Get Positions
-        const result = JSON.parse(await this.ortak.BitmexPositions())
-        const positions =  result && result[0].avgEntryPrice && result.map(e=>{
+        //const position = JSON.parse(await this.ortak.BitmexPositions())
+        const positions =  position && position[0].avgEntryPrice && position.map(e=>{
             const orderedType = e.currentQty < 0 ? 'sell' : 'buy' // size negatif ise sell yapılmış pozitif ise buy.
             const nextOrderType =  orderedType == 'sell' ? 'buy' : 'sell' // next order of the position
             let orderPrice
@@ -304,6 +336,7 @@ class SellKontrol {
             }
         })[0]
 
+        this.position = positions || {buys, sells}
         return positions || {buys, sells}
 
     }
@@ -315,16 +348,18 @@ class SellKontrol {
         })
     }
 
-    async GetOpenOrders(){
-        const openOrders = await this.ortak.ccx.GetOpenOrders(this.marketName)
-        openOrders.buy = openOrders.Data.find(e=> e.Type == 'buy') 
-        openOrders.sell = openOrders.Data.find(e=> e.Type == 'sell') 
+    async GetOpenOrders(data){
+        this.openOrders.Data = data.map(e=>({
+            OrderId: e.orderID,
+            Market: e.symbol,
+            Type: e.side.toLowerCase(),
+            Rate: e.price,
+            Amount: e.orderQty,
+            entryDate: e.timestamp
+        }))
 
-        for (const openOrder of openOrders.Data) {
-            openOrder.kacSaatOnce = Math.abs(new Date(openOrder.entryDate) - new Date()) / 36e5;
-        }
-
-        return openOrders
+        this.openOrders.buy = this.openOrders.Data.find(e=> e.Type == 'buy') 
+        this.openOrders.sell = this.openOrders.Data.find(e=> e.Type == 'sell') 
     }
 
 }

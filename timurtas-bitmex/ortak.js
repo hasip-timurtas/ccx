@@ -20,8 +20,8 @@ class Ortak {
         this.bitmexUrl = 'https://www.bitmex.com'
         this.site = 'bitmex'
 
-        this.key = "WUi67Xl7EjE6A0iUq1RFVENw" // timurtas.hasip canlı
-        this.secret = "9alw1YOYGOlMrvW6N6AEC5ulmUl9ZKIP4a2RSdCQvs_xQCCn"
+        this.key = "9XeRFuMri_7VoF1Dtd-MT_aY" // timurtas.hasip canlı
+        this.secret = "DT4615ZUSR25CqoEyimai1EeK_U-hipSWoCsZREWIEQM9NVV"
 /*
         this.key = '5C6nxPX7768xRZCiqVhT_Sk7' // Testnet
         this.secret = 'zR3S_p7yBHfBzzyNm469awW5xvYV_0iSn8WGQMQPhBZ3sGSN'
