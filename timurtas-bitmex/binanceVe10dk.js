@@ -33,7 +33,7 @@ class SellKontrol {
         this.bitmexLastPrice = null
         this.bitmexPrice = null
         this.bitmexPriceList = []
-        this.binanceFark = 4
+        this.binanceFark = 2.5
         this.loglama = false
         this.lastOrderDate = new Date()
         this.sonIslemBeklemeSuresi = 5 // saniye
