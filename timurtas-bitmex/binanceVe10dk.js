@@ -52,7 +52,7 @@ class SellKontrol {
     async OnDakika(){
         while(true){
             await this.Basla10Dakika().catch(e=> console.log(e))
-            await this.ortak.sleep(60 * waitTime)
+            await this.ortak.sleep(10)
         }
     }
 
@@ -157,13 +157,13 @@ class SellKontrol {
             const openOrderZatenVar = openOrders.Data.find(e=> e.Amount == quantity && e.Type == type)
             const openPositionVar = this.position && this.position.entryPrice
             if(openOrderZatenVar || !openPositionVar){
-                await this.ortak.sleep(60) // 10 saniye bir çalışır
+                await this.ortak.sleep(10) // 10 saniye bir çalışır
                 continue
             }
 
             await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
             await this.CreateOrder(type, quantity, this.position.orderPrice)// quantity + this.amount -> sattıktan sonra al
-            await this.ortak.sleep(60) // 10 saniye bir çalışır
+            await this.ortak.sleep(10) // 10 saniye bir çalışır
         }
     }
 
