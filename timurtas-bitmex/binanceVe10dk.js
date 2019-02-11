@@ -54,7 +54,6 @@ class SellKontrol {
         this.StartWsData()
         await this.ortak.sleep(10)
         console.log('Web socket dataları hazır.')
-        //this.PositionKontrol()
         this.OnDakika()
         this.BinanceBasla()
         
@@ -62,13 +61,7 @@ class SellKontrol {
 
     async StartWsData(){
     
-        bitmex.addStream('XBTUSD', 'order', (data, symbol, tableName) => {
-            const gercekOrderlar = data.filter(e=> e.ordStatus)
-            if(data.length == 0 || gercekOrderlar.length == 0) return
-            this.GetOpenOrders(data)
-        })
-
-        await this.ortak.sleep(4)
+        
 
         bitmex.addStream('XBTUSD', 'orderBook10', (data, symbol, tableName) => {
             this.orderBooks = data[data.length - 1]
@@ -85,6 +78,16 @@ class SellKontrol {
 
             this.GetPositions([this.positionData])
         })
+        
+        await this.ortak.sleep(4)
+
+        bitmex.addStream('XBTUSD', 'order', (data, symbol, tableName) => {
+            const gercekOrderlar = data.filter(e=> e.ordStatus)
+            if(data.length == 0 || gercekOrderlar.length == 0) return
+            this.GetOpenOrders(data)
+        })
+
+        
 
         
 
@@ -354,7 +357,6 @@ class SellKontrol {
         })[0]
 
         this.position = positions || {buys, sells}
-        this.PositionKontrol()
         return positions || {buys, sells}
 
     }
@@ -394,7 +396,7 @@ class SellKontrol {
         })
 */
 
-
+        this.PositionKontrol()
         this.openOrders.buy = this.openOrders.Data.find(e=> e.Type == 'buy') 
         this.openOrders.sell = this.openOrders.Data.find(e=> e.Type == 'sell')
     }
