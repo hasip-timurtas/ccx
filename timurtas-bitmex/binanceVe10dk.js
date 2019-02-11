@@ -50,9 +50,7 @@ class SellKontrol {
         this.StartWsData()
         await this.ortak.sleep(10)
         console.log('Web socket dataları hazır.');
-        return
         this.PositionKontrol()
-        
         this.OnDakika()
         this.BinanceBasla()
         
