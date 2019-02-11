@@ -174,6 +174,7 @@ class SellKontrol {
         })
 
         bitmex.addStream('XBTUSD', 'instrument', (data, symbol, tableName) => {
+            if(!data[data.length - 1].lastPrice) return
             this.bitmexPrice = data[data.length - 1].lastPrice
         })
 
