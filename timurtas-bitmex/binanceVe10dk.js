@@ -39,16 +39,8 @@ class SellKontrol {
         this.sonIslemBeklemeSuresi = 5 // saniye
     }
 
-    async PositionRefreshle(){
-        while(true){
-            this.position = await this.GetPositions()
-            await this.ortak.sleep(1)
-        }
-    }
-
     async Basla(){
-        this.PositionRefreshle()
-        await this.ortak.sleep(1)
+        
         this.PositionKontrol()
         await this.ortak.sleep(1) // Nonce için 1 saniye bekle.
         this.OnDakika()
@@ -99,16 +91,11 @@ class SellKontrol {
                 console.log("Binance: amountun 5 katı alış yaptı daha aynı işlemden alım yapma")
                 return 
             }
-            console.log(`!!!!!! İŞLEM YAPILIYOR. Fark 2 den büyük! Binance fark: ${binance5saniyeFark}, Bitmex fark: ${bitmex5saniyeFark} !!!!!!`)
-            this.lastOrderDate = new Date()
             
-            if(binance5saniyeFark > 5){
-                this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), null, 'market')
-            }else{
-                this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), this.position[type][0].Price)
-            }
 
-            
+            console.log(`!!!!!! İŞLEM YAPILIYOR. Fark 2 den büyük! Binance fark: ${binance5saniyeFark}, Bitmex fark: ${bitmex5saniyeFark} !!!!!!`)
+            this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), null, 'market')
+            this.lastOrderDate = new Date()
         }
     }
 
@@ -163,6 +150,7 @@ class SellKontrol {
 
     async PositionKontrol(){
         while(true){
+            this.position = await this.GetPositions()
             const openOrders = await this.GetOpenOrders()
             const quantity = Math.abs(this.position.size)
             const type = this.position.orderedType == 'sell' ? OrderType.BUY : OrderType.SELL
@@ -201,7 +189,8 @@ class SellKontrol {
 
     async Basla10Dakika(){
         this.yeniAmount = this.amount
-        const kontrollerUygun = await this.KontrollerUygun()
+        const position = await this.GetPositions()
+        const kontrollerUygun = await this.KontrollerUygun(position)
         if(!kontrollerUygun) return
         //await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
         /*
@@ -212,20 +201,20 @@ class SellKontrol {
         }
         */
         // BURAYA BALANCE KONTROL EKLENECEK
-        await this.CreateOrder('buy', this.yeniAmount, this.position.buys[0].Price) 
-        await this.CreateOrder('sell', this.yeniAmount, this.position.sells[0].Price)
+        await this.CreateOrder('buy', this.yeniAmount, position.buys[0].Price) 
+        await this.CreateOrder('sell', this.yeniAmount, position.sells[0].Price)
     }
 
-    async KontrollerUygun(){
+    async KontrollerUygun(position){
         // BALANCE KONTROL
         
         const balances = await this.ortak.GetBalance()
-        const openOrdersBalance = this.amount / this.position.sells[0].Price / this.kaldirac
+        const openOrdersBalance = this.amount / position.sells[0].Price / this.kaldirac
         const balance = balances.find(e=> e.Symbol == 'XBT')
         const balanceValid = balance.Available > openOrdersBalance
         if(!balanceValid){
             console.log('Balance yeterli değil, güncelleniyor.', new Date())
-            this.yeniAmount = balance.Available * this.position.sells[0].Price * this.kaldirac
+            this.yeniAmount = balance.Available * position.sells[0].Price * this.kaldirac
             this.yeniAmount = this.amount - (this.amount * 0.05)
             this.yeniAmount = parseInt(this.amount)
             if(this.amount < 100){
@@ -239,11 +228,11 @@ class SellKontrol {
         const openOrders = await this.GetOpenOrders()
         let buyYadaSellUstte = false
         for (const openOrder of openOrders.Data) {
-            if(openOrder.Rate == this.position.buys[0].Price){ // BUY
+            if(openOrder.Rate == position.buys[0].Price){ // BUY
                 buyYadaSellUstte = true
             }
 
-            if(openOrder.Rate == this.position.sells[0].Price){ // SELL
+            if(openOrder.Rate == position.sells[0].Price){ // SELL
                 buyYadaSellUstte = true
             }
         }
@@ -255,7 +244,7 @@ class SellKontrol {
         }
 
         // Fazla Alım Kontrolü
-        const quantity = Math.abs(this.position.size)
+        const quantity = Math.abs(position.size)
         const kacCarpiGeride = Math.round((quantity / this.amount) +1)
         const fazlaAlimVar = kacCarpiGeride >= 6
         if(fazlaAlimVar){ // position typeı ile yeni order type aynı ve fazla alım varsa girme.
