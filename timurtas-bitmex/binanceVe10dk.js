@@ -99,6 +99,7 @@ class SellKontrol {
             if(binance5saniyeFark > 5){
                 this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), null, 'market')
             }else{
+                this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), null, 'market')
                 //this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), this.position[type][0].Price)
             }
         }
