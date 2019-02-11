@@ -1,7 +1,7 @@
 const Ortak = require('./ortak')
 const waitTime = 1 // dakika
 const Binance = require('binance-api-node').default
-const BitMEXClient = require('bitmex-realtime-api')
+const BitMEXClient = require('./bitmex-realtime-api')
 
 const binance = Binance()
 const bitmexOptions = {
@@ -38,6 +38,7 @@ class SellKontrol {
         this.lastOrderDate = new Date()
         this.sonIslemBeklemeSuresi = 5 // saniye
         // WEBSOCKET
+        this.positionData = []
         this.position = null
         this.orderBooks = null
         this.openOrders = {Data: []}
@@ -46,19 +47,24 @@ class SellKontrol {
     }
 
     async Basla(){
-        console.log('Web socket dataları hazırlanıyor...');
+        console.log('Bütün orderlar iptal ediliyor.')
+        await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
+        
+        console.log('Web socket dataları hazırlanıyor...')
         this.StartWsData()
         await this.ortak.sleep(10)
-        console.log('Web socket dataları hazır.');
-        this.PositionKontrol()
+        console.log('Web socket dataları hazır.')
+        //this.PositionKontrol()
         this.OnDakika()
         this.BinanceBasla()
         
     }
 
     async StartWsData(){
+    
         bitmex.addStream('XBTUSD', 'order', (data, symbol, tableName) => {
-            if(data.length == 0) return
+            const gercekOrderlar = data.filter(e=> e.ordStatus)
+            if(data.length == 0 || gercekOrderlar.length == 0) return
             this.GetOpenOrders(data)
         })
 
@@ -71,8 +77,18 @@ class SellKontrol {
         await this.ortak.sleep(4)
 
         bitmex.addStream('XBTUSD', 'position', (data, symbol, tableName) => {
-            this.GetPositions(data)
+            for (const key in data[0]) {
+                if (data[0].hasOwnProperty(key)) {
+                    this.positionData[key] = data[0][key];
+                }
+            }
+
+            this.GetPositions([this.positionData])
         })
+
+        
+
+        
     }
 
     async OnDakika(){
@@ -293,7 +309,7 @@ class SellKontrol {
 
         // Get Positions
         //const position = JSON.parse(await this.ortak.BitmexPositions())
-        const positions =  position && position[0].avgEntryPrice && position.map(e=>{
+        const positions =  position && position.map(e=>{
             const orderedType = e.currentQty < 0 ? 'sell' : 'buy' // size negatif ise sell yapılmış pozitif ise buy.
             const nextOrderType =  orderedType == 'sell' ? 'buy' : 'sell' // next order of the position
             let orderPrice
@@ -327,6 +343,7 @@ class SellKontrol {
         })[0]
 
         this.position = positions || {buys, sells}
+        this.PositionKontrol()
         return positions || {buys, sells}
 
     }
@@ -339,19 +356,36 @@ class SellKontrol {
     }
 
     async GetOpenOrders(data){
-        this.openOrders.Data = data.filter(e=> e.ordStatus == 'New').map(e=>({
+        for (const e of data) {
+            if( e.ordStatus == 'New'){
+                this.openOrders.Data.push({
+                    OrderId: e.orderID,
+                    Market: e.symbol,
+                    Type: e.side.toLowerCase(),
+                    Rate: e.price,
+                    Amount: e.orderQty,
+                    entryDate: e.timestamp
+                })
+            }else{
+                this.openOrders.Data = this.openOrders.Data.filter(a => a.OrderId != e.orderID)
+            }
+        }
+        /*
+        data.filter(e=> e.ordStatus == 'New').map(e=>({
             OrderId: e.orderID,
             Market: e.symbol,
             Type: e.side.toLowerCase(),
             Rate: e.price,
             Amount: e.orderQty,
             entryDate: e.timestamp
-        }))
+        })).filter(e=>{
+            this.openOrders.Data.push(e)
+        })
+*/
+
 
         this.openOrders.buy = this.openOrders.Data.find(e=> e.Type == 'buy') 
         this.openOrders.sell = this.openOrders.Data.find(e=> e.Type == 'sell')
-
-        this.PositionKontrol()
     }
 
 }

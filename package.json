@@ -6,7 +6,7 @@
   "dependencies": {
     "binance-api-node": "^0.8.18",
     "bitmex-realtime-api": "^0.4.0",
-    "ccxt": "^1.18.152",
+    "ccxt": "^1.18.225",
     "crypto": "^1.0.1",
     "firebase-admin": "^6.5.1",
     "mongodb": "^3.1.13",
