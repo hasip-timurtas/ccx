@@ -13,20 +13,9 @@ const bitmexOptions = {
 
 const bitmex = new BitMEXClient(bitmexOptions)
 
-const markets = {
-    BINANCE: 0,
-    BITMEX: 1
-}
-
-const OrderType = {
-    SELL: 'sell',
-    BUY: 'buy'
-}
-
-const FiyatType = {
-    DUSTU: 'Fiyat DÜŞTÜ',
-    CIKTI: 'Fiyat ÇIKTI'
-}
+const markets = { BINANCE: 0, BITMEX: 1 }
+const OrderType = { SELL: 'sell', BUY: 'buy' }
+const FiyatType = { DUSTU: 'Fiyat DÜŞTÜ', CIKTI: 'Fiyat ÇIKTI' }
 
 class SellKontrol {
     async LoadVeriables(){
@@ -44,7 +33,7 @@ class SellKontrol {
         this.bitmexLastPrice = null
         this.bitmexPrice = null
         this.bitmexPriceList = []
-        this.binanceFark = 3
+        this.binanceFark = 2
         this.loglama = false
         this.lastOrderDate = new Date()
         this.sonIslemBeklemeSuresi = 5 // saniye
@@ -57,12 +46,12 @@ class SellKontrol {
     }
 
     async Basla(){
+        console.log('Web socket dataları hazırlanıyor...');
         this.StartWsData()
-        await this.ortak.sleep(5)
+        await this.ortak.sleep(10)
+        console.log('Web socket dataları hazır.');
         this.PositionKontrol()
-        await this.ortak.sleep(1) // Nonce için 1 saniye bekle.
         this.OnDakika()
-        await this.ortak.sleep(1) // Nonce için 1 saniye bekle.
         this.BinanceBasla()
         
     }
@@ -72,13 +61,13 @@ class SellKontrol {
             this.GetOpenOrders(data)
         })
 
-        await this.ortak.sleep(1)
+        await this.ortak.sleep(4)
 
         bitmex.addStream('XBTUSD', 'orderBook10', (data, symbol, tableName) => {
             this.orderBooks = data[data.length - 1]
         })
 
-        await this.ortak.sleep(1)
+        await this.ortak.sleep(4)
 
         bitmex.addStream('XBTUSD', 'position', (data, symbol, tableName) => {
             this.GetPositions(data)
@@ -135,8 +124,8 @@ class SellKontrol {
             if(Math.abs(binance5saniyeFark) > 5){
                 this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), null, 'market')
             }else{
-                this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), null, 'market')
-                //this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), this.position[type][0].Price)
+                //this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), null, 'market')
+                this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), this.position[type+"s"][0].Price) // type ye sells için s takısı ekledim.
             }
         }
     }
