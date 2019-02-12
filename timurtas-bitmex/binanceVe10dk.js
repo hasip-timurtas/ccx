@@ -269,7 +269,6 @@ class SellKontrol {
     }
 
     async KontrollerUygun(){
-        if(!this.position) return false
         // OPEN ORDERSLAR ÜSTTE
         //const openOrders = await this.GetOpenOrders()
         let buyYadaSellUstte = false
@@ -290,13 +289,16 @@ class SellKontrol {
         }
 
         // Fazla Alım Kontrolü
-        const quantity = Math.abs(this.position.size)
-        const kacCarpiGeride = Math.round((quantity / this.amount) +1)
-        const fazlaAlimVar = kacCarpiGeride >= 6
-        if(fazlaAlimVar){ // position typeı ile yeni order type aynı ve fazla alım varsa girme.
-            console.log("10dk: amountun 5 katı alış yaptı daha aynı işlemden alım yapma")
-            return 
+        if(this.position){ // posizyon varsa
+            const quantity = Math.abs(this.position.size)
+            const kacCarpiGeride = Math.round((quantity / this.amount) +1)
+            const fazlaAlimVar = kacCarpiGeride >= 6
+            if(fazlaAlimVar){ // position typeı ile yeni order type aynı ve fazla alım varsa girme.
+                console.log("10dk: amountun 5 katı alış yaptı daha aynı işlemden alım yapma")
+                return 
+            }
         }
+        
         
 
         // BALANCE KONTROL
