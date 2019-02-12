@@ -214,7 +214,7 @@ class SellKontrol {
             const openPositionVar = this.position && this.position.entryPrice
             if(openOrderZatenVar || !openPositionVar){
                 await this.ortak.sleep(10) // 10 saniye bir çalışır
-                return
+                continue
             }
 
             await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
