@@ -96,7 +96,7 @@ class SellKontrol {
     async OnDakika(){
         while(true){
             await this.Basla10Dakika().catch(e=> console.log(e))
-            await this.ortak.sleep(10)
+            await this.ortak.sleep(60)
         }
     }
 
