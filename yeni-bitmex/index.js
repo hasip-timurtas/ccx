@@ -63,6 +63,16 @@ class SellKontrol {
     }
 
     async StartWsData(){
+
+        binance.ws.aggTrades(['BTCUSDT'], trade => {
+            this.binancePrice = trade.price
+        })
+
+        bitmex.addStream('XBTUSD', 'instrument', (data, symbol, tableName) => {
+            if(!data[data.length - 1].lastPrice) return
+            this.bitmexPrice = data[data.length - 1].lastPrice
+        })
+
     
         bitmex.addStream('XBTUSD', 'order', (data, symbol, tableName) => {
             const gercekOrderlar = data.filter(e=> e.ordStatus)
@@ -89,11 +99,7 @@ class SellKontrol {
             }
 
             this.GetPositions([this.positionData])
-        })
-
-        
-
-        
+        })        
     }
 
     async OnDakika(){
@@ -135,7 +141,7 @@ class SellKontrol {
             const willCacancelType = type == 'sell' ? 'buy' : 'sell'
             this.openOrders.Data.filter(e=> {
                 if(e.Type == willCacancelType){
-                    this.ortak.ccx.CancelTrade(e.OrderId,this.marketName)
+                    this.ortak.ccx.CancelTrade(e.OrderId,this.marketName).catch(e=> console.log(e))
                 }
             })
             
@@ -145,7 +151,7 @@ class SellKontrol {
                 const kacCarpiGeride = Math.round((quantity / this.amount) +1)
                 const fazlaAlimVar = kacCarpiGeride >= 6
                 if(fazlaAlimVar){ // position typeı ile yeni order type aynı ve fazla alım varsa girme.
-                    console.log("10dk: amountun 5 katı alış yaptı daha aynı işlemden alım yapma")
+                    console.log("BİNANCE: amountun 5 katı alış yaptı daha aynı işlemden alım yapma")
                     return false
                 }
             }
@@ -185,15 +191,6 @@ class SellKontrol {
 
     async BinanceBasla(){
 
-        binance.ws.aggTrades(['BTCUSDT'], trade => {
-            this.binancePrice = trade.price
-        })
-
-        bitmex.addStream('XBTUSD', 'instrument', (data, symbol, tableName) => {
-            if(!data[data.length - 1].lastPrice) return
-            this.bitmexPrice = data[data.length - 1].lastPrice
-        })
-
         setInterval(() => {
             if(!this.binanceLastPrice ){ // || this.binanceLastPrice == this.binancePrice
                 this.binanceLastPrice = this.binancePrice
@@ -205,7 +202,7 @@ class SellKontrol {
                 return
             }
 
-            this.CheckPrice5Saniye()
+            this.CheckPrice5Saniye().catch(e=> console.log(e))
         }, 1000)
     }
 
@@ -260,13 +257,6 @@ class SellKontrol {
         const kontrollerUygun = await this.KontrollerUygun()
         if(!kontrollerUygun) return
         //await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
-        /*
-        const openPositionVar = position && position.entryPrice
-        if(openPositionVar){
-            const quantity = Math.abs(position.size)
-            await this.CreateOrder(position.nextOrderType, quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
-        }
-        */
         // BURAYA BALANCE KONTROL EKLENECEK
         await this.CreateOrder('buy', this.yeniAmount, this.orderBooks.buys[0].Price)
         await this.ortak.sleep(1)
@@ -304,10 +294,7 @@ class SellKontrol {
             }
         }
         
-        
-
         // BALANCE KONTROL
-        
         const balances = await this.ortak.GetBalance()
         const openOrdersBalance = this.amount / this.orderBooks.sells[0].Price / this.kaldirac
         const balance = balances.find(e=> e.Symbol == 'XBT')
@@ -323,17 +310,11 @@ class SellKontrol {
             }
             console.log('Yeni Balance: '+ this.yeniAmount);
         }
-
         return true // final
     }
     
 
     GetPositions(position){
-        //const ticker =  await this.ortak.ccx.exchange.fetchTicker(this.marketName) // awaitthis.ortak.ccx.GetMarket(marketName)
-        //const orderBooks = await this.ortak.ccx.GetMarketOrders(this.marketName, 2)
-
-        // Get Positions
-        //const position = JSON.parse(await this.ortak.BitmexPositions())
         const positions =  position && position.map(e=>{
             const orderedType = e.currentQty < 0 ? 'sell' : 'buy' // size negatif ise sell yapılmış pozitif ise buy.
             const nextOrderType =  orderedType == 'sell' ? 'buy' : 'sell' // next order of the position
@@ -355,18 +336,15 @@ class SellKontrol {
                 size: e.currentQty, 
                 entryPrice: e.avgEntryPrice, 
                 markPrice: e.markPrice, 
-                //lastPrice: e.lastPrice, 
                 liqPrice: e.liquidationPrice,
                 orderedType,
                 nextOrderType,
                 orderPrice,
-                //ticker,
                 sellNowPrice: e.currentQty > 0 ? this.orderBooks.sells[0].Price : this.orderBooks.buys[0].Price // bir dahaki işlem yani yukarıdaki orderedType in tersini yaptık. almışsa yukarıda buy yazar, almış ve satacağı için burada sell yazar.
             }
         })[0]
 
         this.position = positions
-        //this.PositionKontrol()
         return positions
 
     }
@@ -393,19 +371,6 @@ class SellKontrol {
                 this.openOrders.Data = this.openOrders.Data.filter(a => a.OrderId != e.orderID)
             }
         }
-        /*
-        data.filter(e=> e.ordStatus == 'New').map(e=>({
-            OrderId: e.orderID,
-            Market: e.symbol,
-            Type: e.side.toLowerCase(),
-            Rate: e.price,
-            Amount: e.orderQty,
-            entryDate: e.timestamp
-        })).filter(e=>{
-            this.openOrders.Data.push(e)
-        })
-*/
-
 
         this.openOrders.buy = this.openOrders.Data.find(e=> e.Type == 'buy') 
         this.openOrders.sell = this.openOrders.Data.find(e=> e.Type == 'sell')
