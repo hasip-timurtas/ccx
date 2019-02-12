@@ -147,12 +147,12 @@ class SellKontrol {
             
             console.log(`!!!!!! İŞLEM YAPILIYOR. Fark 2 den büyük! Binance fark: ${binance5saniyeFark}, Bitmex fark: ${bitmex5saniyeFark} !!!!!!`)
             this.lastOrderDate = new Date()
-
+            const newAmount = parseInt(this.amount * Math.abs(binance5saniyeFark))
             if(Math.abs(binance5saniyeFark) > 3){
-                this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), null, 'market')
+                this.CreateOrder(type, newAmount, null, 'market')
             }else{
                 //this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), null, 'market')
-                this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), this.position[type+"s"][0].Price) // type ye sells için s takısı ekledim.
+                this.CreateOrder(type, newAmount, this.position[type+"s"][0].Price) // type ye sells için s takısı ekledim.
             }
 
         }
@@ -218,7 +218,9 @@ class SellKontrol {
             }
 
             await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
-            await this.CreateOrder(type, quantity, this.position.orderPrice)// quantity + this.amount -> sattıktan sonra al
+            //if(this.lastPositionOrderId) await this.ortak.ccx.CancelTrade(this.lastPositionOrderId, this.marketName)
+            const result = await this.CreateOrder(type, quantity, this.position.orderPrice)// quantity + this.amount -> sattıktan sonra al
+            this.lastPositionOrderId = result.id
             await this.ortak.sleep(10) // 10 saniye bir çalışır
         }
     }
@@ -257,7 +259,8 @@ class SellKontrol {
         }
         */
         // BURAYA BALANCE KONTROL EKLENECEK
-        await this.CreateOrder('buy', this.yeniAmount, this.position.buys[0].Price) 
+        await this.CreateOrder('buy', this.yeniAmount, this.position.buys[0].Price)
+        await this.ortak.sleep(1)
         await this.CreateOrder('sell', this.yeniAmount, this.position.sells[0].Price)
     }
 
