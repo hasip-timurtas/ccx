@@ -21,7 +21,7 @@ class SellKontrol {
     async LoadVeriables(){
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables('MONGO')
-        this.amount = 100
+        this.amount = 50
         this.marginAmount = 0.5
         this.marketName = 'BTC/USD'
         this.kaldirac = 50
@@ -208,6 +208,10 @@ class SellKontrol {
         while(true){
             //this.position = await this.GetPositions()
             //const openOrders = await this.GetOpenOrders()
+            if(!this.position){
+                await this.ortak.sleep(1)
+                continue
+            }
             const quantity = Math.abs(this.position.size)
             const type = this.position.orderedType == 'sell' ? OrderType.BUY : OrderType.SELL
             const openOrderZatenVar = this.openOrders.Data.find(e=> e.Amount == quantity && e.Type == type)
@@ -265,7 +269,7 @@ class SellKontrol {
     }
 
     async KontrollerUygun(){
-        
+        if(!this.position) return false
         // OPEN ORDERSLAR ÜSTTE
         //const openOrders = await this.GetOpenOrders()
         let buyYadaSellUstte = false
