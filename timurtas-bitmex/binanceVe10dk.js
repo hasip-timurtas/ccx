@@ -54,7 +54,7 @@ class SellKontrol {
         this.StartWsData()
         await this.ortak.sleep(10)
         console.log('Web socket dataları hazır.')
-        //this.PositionKontrol()
+        this.PositionKontrol()
         this.OnDakika()
         this.BinanceBasla()
         
@@ -356,7 +356,6 @@ class SellKontrol {
         })[0]
 
         this.position = positions || {buys, sells}
-        this.PositionKontrol()
         return positions || {buys, sells}
 
     }
@@ -399,6 +398,7 @@ class SellKontrol {
 
         this.openOrders.buy = this.openOrders.Data.find(e=> e.Type == 'buy') 
         this.openOrders.sell = this.openOrders.Data.find(e=> e.Type == 'sell')
+        this.PositionKontrol()
     }
 
 }
