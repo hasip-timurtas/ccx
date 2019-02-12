@@ -55,51 +55,36 @@ class SellKontrol {
         this.StartWsData()
         await this.ortak.sleep(10)
         console.log('Web socket dataları hazır.')
-        //if(!this.position) this.GetPositions([])
+
         this.PositionKontrol()
         this.OnDakika()
         this.BinanceBasla()
         
     }
 
-    async StartWsData(){
-
-        binance.ws.aggTrades(['BTCUSDT'], trade => {
-            this.binancePrice = trade.price
-        })
-
-        bitmex.addStream('XBTUSD', 'instrument', (data, symbol, tableName) => {
-            if(!data[data.length - 1].lastPrice) return
-            this.bitmexPrice = data[data.length - 1].lastPrice
-        })
-
-    
-        bitmex.addStream('XBTUSD', 'order', (data, symbol, tableName) => {
-            const gercekOrderlar = data.filter(e=> e.ordStatus)
-            if(data.length == 0 || gercekOrderlar.length == 0) return
-            this.GetOpenOrders(data)
-        })
-
-        await this.ortak.sleep(4)
-
-        bitmex.addStream('XBTUSD', 'orderBook10', (data, symbol, tableName) => {
-            const datam = data[data.length - 1]
-            this.orderBooks = { sells: datam.asks.map(e=> ({Price: e[0]})) , buys: datam.bids.map(e=> ({Price: e[0]}))}
-        })
-
-        await this.ortak.sleep(4)
-
-        bitmex.addStream('XBTUSD', 'position', (data, symbol, tableName) => {
-            const gercekPositions = data.filter(e=> e.avgEntryPrice)
-            if(gercekPositions.length == 0) return
-            for (const key in data[0]) {
-                if (data[0].hasOwnProperty(key)) {
-                    this.positionData[key] = data[0][key];
-                }
+    async PositionKontrol(){
+        while(true){
+            //this.position = await this.GetPositions()
+            //const openOrders = await this.GetOpenOrders()
+            if(!this.position){
+                await this.ortak.sleep(1)
+                continue
+            }
+            const quantity = Math.abs(this.position.size)
+            const type = this.position.orderedType == 'sell' ? OrderType.BUY : OrderType.SELL
+            const openOrderZatenVar = this.openOrders.Data.find(e=> e.Amount == quantity && e.Type == type)
+            const openPositionVar = this.position && this.position.entryPrice
+            if(openOrderZatenVar || !openPositionVar){
+                await this.ortak.sleep(10) // 10 saniye bir çalışır
+                continue
             }
 
-            this.GetPositions([this.positionData])
-        })        
+            await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
+            //if(this.lastPositionOrderId) await this.ortak.ccx.CancelTrade(this.lastPositionOrderId, this.marketName)
+            const result = await this.CreateOrder(type, quantity, this.position.orderPrice)// quantity + this.amount -> sattıktan sonra al
+            this.lastPositionOrderId = result.id
+            await this.ortak.sleep(10) // 10 saniye bir çalışır
+        }
     }
 
     async OnDakika(){
@@ -108,6 +93,69 @@ class SellKontrol {
             await this.ortak.sleep(60)
         }
     }
+    
+    async Basla10Dakika(){
+        this.yeniAmount = this.amount
+        //const position = await this.GetPositions()
+        const kontrollerUygun = await this.KontrollerUygun()
+        if(!kontrollerUygun) return
+        //await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
+        // BURAYA BALANCE KONTROL EKLENECEK
+        await this.CreateOrder('buy', this.yeniAmount, this.orderBooks.buys[0].Price)
+        await this.ortak.sleep(1)
+        await this.CreateOrder('sell', this.yeniAmount, this.orderBooks.sells[0].Price)
+    }
+
+    async KontrollerUygun(){
+        // OPEN ORDERSLAR ÜSTTE
+        //const openOrders = await this.GetOpenOrders()
+        let buyYadaSellUstte = false
+        for (const openOrder of this.openOrders.Data) {
+            if(openOrder.Rate == this.orderBooks.buys[0].Price){ // BUY
+                buyYadaSellUstte = true
+            }
+
+            if(openOrder.Rate == this.orderBooks.sells[0].Price){ // SELL
+                buyYadaSellUstte = true
+            }
+        }
+       
+        //const sellUstte = openOrders.sell && openOrders.sell.Rate == position.sells[0].Price
+        if(buyYadaSellUstte){
+            console.log('OpenOrder(s) üstte, yani sırada, işlem olacak. o yüzden çıkılıyor.', new Date())
+            return false
+        }
+
+        // Fazla Alım Kontrolü
+        if(this.position){ // posizyon varsa
+            const quantity = Math.abs(this.position.size)
+            const kacCarpiGeride = Math.round((quantity / this.amount) +1)
+            const fazlaAlimVar = kacCarpiGeride >= 6
+            if(fazlaAlimVar){ // position typeı ile yeni order type aynı ve fazla alım varsa girme.
+                console.log("10dk: amountun 5 katı alış yaptı daha aynı işlemden alım yapma")
+                return false
+            }
+        }
+        
+        // BALANCE KONTROL
+        const balances = await this.ortak.GetBalance()
+        const openOrdersBalance = this.amount / this.orderBooks.sells[0].Price / this.kaldirac
+        const balance = balances.find(e=> e.Symbol == 'XBT')
+        const balanceValid = balance.Available > openOrdersBalance
+        if(!balanceValid){
+            console.log('Balance yeterli değil, güncelleniyor.', new Date())
+            this.yeniAmount = balance.Available * this.orderBooks.sells[0].Price * this.kaldirac
+            this.yeniAmount = this.amount - (this.amount * 0.05)
+            this.yeniAmount = parseInt(this.amount)
+            if(this.amount < 100){
+                console.log('Balance 100 den küçük o yüzden çıkılıyor.');
+                return false
+            }
+            console.log('Yeni Balance: '+ this.yeniAmount);
+        }
+        return true // final
+    }
+
 
     async CheckPrice5Saniye(){
         // console.log(suankiPrice, besSaniyeOncekiPrice, besSaniyeFark, onSaniyeFark);
@@ -136,7 +184,9 @@ class SellKontrol {
             ///await this.ortak.BitmexCalcelAllOrders() // binance işleminden önce orderleri iptal et.
             
             const type = binance5saniyeFark < 0 ? OrderType.SELL : OrderType.BUY // eğer fark eksi ise sell yap, artı ise buy.
-
+            
+            console.log(type + ' YAPACAK');
+            
             // binance sinyali geldiğinde buy ise selli open ordersları iptal et. sell ise buyları iptal et. 
             const willCacancelType = type == 'sell' ? 'buy' : 'sell'
             this.openOrders.Data.filter(e=> {
@@ -206,31 +256,6 @@ class SellKontrol {
         }, 1000)
     }
 
-    async PositionKontrol(){
-        while(true){
-            //this.position = await this.GetPositions()
-            //const openOrders = await this.GetOpenOrders()
-            if(!this.position){
-                await this.ortak.sleep(1)
-                continue
-            }
-            const quantity = Math.abs(this.position.size)
-            const type = this.position.orderedType == 'sell' ? OrderType.BUY : OrderType.SELL
-            const openOrderZatenVar = this.openOrders.Data.find(e=> e.Amount == quantity && e.Type == type)
-            const openPositionVar = this.position && this.position.entryPrice
-            if(openOrderZatenVar || !openPositionVar){
-                await this.ortak.sleep(10) // 10 saniye bir çalışır
-                continue
-            }
-
-            await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
-            //if(this.lastPositionOrderId) await this.ortak.ccx.CancelTrade(this.lastPositionOrderId, this.marketName)
-            const result = await this.CreateOrder(type, quantity, this.position.orderPrice)// quantity + this.amount -> sattıktan sonra al
-            this.lastPositionOrderId = result.id
-            await this.ortak.sleep(10) // 10 saniye bir çalışır
-        }
-    }
-
     CheckPrice5ve10Saniye(){
         this.binancePriceList.unshift(this.binancePrice)
         this.binancePriceList =  this.binancePriceList.slice(0, 10)
@@ -249,70 +274,7 @@ class SellKontrol {
             const type = onSaniyeFark < 0 ? 'sell' : 'buy' // eğer fark eksi ise sell yap, artı ise buy.
             this.CreateOrder(type, 100, null, 'market')
         }
-    }
-
-    async Basla10Dakika(){
-        this.yeniAmount = this.amount
-        //const position = await this.GetPositions()
-        const kontrollerUygun = await this.KontrollerUygun()
-        if(!kontrollerUygun) return
-        //await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
-        // BURAYA BALANCE KONTROL EKLENECEK
-        await this.CreateOrder('buy', this.yeniAmount, this.orderBooks.buys[0].Price)
-        await this.ortak.sleep(1)
-        await this.CreateOrder('sell', this.yeniAmount, this.orderBooks.sells[0].Price)
-    }
-
-    async KontrollerUygun(){
-        // OPEN ORDERSLAR ÜSTTE
-        //const openOrders = await this.GetOpenOrders()
-        let buyYadaSellUstte = false
-        for (const openOrder of this.openOrders.Data) {
-            if(openOrder.Rate == this.orderBooks.buys[0].Price){ // BUY
-                buyYadaSellUstte = true
-            }
-
-            if(openOrder.Rate == this.orderBooks.sells[0].Price){ // SELL
-                buyYadaSellUstte = true
-            }
-        }
-       
-        //const sellUstte = openOrders.sell && openOrders.sell.Rate == position.sells[0].Price
-        if(buyYadaSellUstte){
-            console.log('OpenOrder(s) üstte, yani sırada, işlem olacak. o yüzden çıkılıyor.', new Date())
-            return false
-        }
-
-        // Fazla Alım Kontrolü
-        if(this.position){ // posizyon varsa
-            const quantity = Math.abs(this.position.size)
-            const kacCarpiGeride = Math.round((quantity / this.amount) +1)
-            const fazlaAlimVar = kacCarpiGeride >= 6
-            if(fazlaAlimVar){ // position typeı ile yeni order type aynı ve fazla alım varsa girme.
-                console.log("10dk: amountun 5 katı alış yaptı daha aynı işlemden alım yapma")
-                return false
-            }
-        }
-        
-        // BALANCE KONTROL
-        const balances = await this.ortak.GetBalance()
-        const openOrdersBalance = this.amount / this.orderBooks.sells[0].Price / this.kaldirac
-        const balance = balances.find(e=> e.Symbol == 'XBT')
-        const balanceValid = balance.Available > openOrdersBalance
-        if(!balanceValid){
-            console.log('Balance yeterli değil, güncelleniyor.', new Date())
-            this.yeniAmount = balance.Available * this.orderBooks.sells[0].Price * this.kaldirac
-            this.yeniAmount = this.amount - (this.amount * 0.05)
-            this.yeniAmount = parseInt(this.amount)
-            if(this.amount < 100){
-                console.log('Balance 100 den küçük o yüzden çıkılıyor.');
-                return false
-            }
-            console.log('Yeni Balance: '+ this.yeniAmount);
-        }
-        return true // final
-    }
-    
+    }    
 
     GetPositions(position){
         const positions =  position && position.map(e=>{
@@ -374,6 +336,46 @@ class SellKontrol {
 
         this.openOrders.buy = this.openOrders.Data.find(e=> e.Type == 'buy') 
         this.openOrders.sell = this.openOrders.Data.find(e=> e.Type == 'sell')
+    }
+
+    async StartWsData(){
+
+        binance.ws.aggTrades(['BTCUSDT'], trade => {
+            this.binancePrice = trade.price
+        })
+
+        bitmex.addStream('XBTUSD', 'instrument', (data, symbol, tableName) => {
+            if(!data[data.length - 1].lastPrice) return
+            this.bitmexPrice = data[data.length - 1].lastPrice
+        })
+
+    
+        bitmex.addStream('XBTUSD', 'order', (data, symbol, tableName) => {
+            const gercekOrderlar = data.filter(e=> e.ordStatus)
+            if(data.length == 0 || gercekOrderlar.length == 0) return
+            this.GetOpenOrders(data)
+        })
+
+        await this.ortak.sleep(4)
+
+        bitmex.addStream('XBTUSD', 'orderBook10', (data, symbol, tableName) => {
+            const datam = data[data.length - 1]
+            this.orderBooks = { sells: datam.asks.map(e=> ({Price: e[0]})) , buys: datam.bids.map(e=> ({Price: e[0]}))}
+        })
+
+        await this.ortak.sleep(4)
+
+        bitmex.addStream('XBTUSD', 'position', (data, symbol, tableName) => {
+            const gercekPositions = data.filter(e=> e.avgEntryPrice)
+            if(gercekPositions.length == 0) return
+            for (const key in data[0]) {
+                if (data[0].hasOwnProperty(key)) {
+                    this.positionData[key] = data[0][key];
+                }
+            }
+
+            this.GetPositions([this.positionData])
+        })        
     }
 
 }
