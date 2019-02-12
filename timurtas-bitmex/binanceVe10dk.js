@@ -54,6 +54,7 @@ class SellKontrol {
         this.StartWsData()
         await this.ortak.sleep(10)
         console.log('Web socket dataları hazır.')
+        this.GetPositions([]) // for fillig position. orderbooks
         this.PositionKontrol()
         this.OnDakika()
         this.BinanceBasla()
@@ -295,7 +296,7 @@ class SellKontrol {
             const fazlaAlimVar = kacCarpiGeride >= 6
             if(fazlaAlimVar){ // position typeı ile yeni order type aynı ve fazla alım varsa girme.
                 console.log("10dk: amountun 5 katı alış yaptı daha aynı işlemden alım yapma")
-                return 
+                return false
             }
         }
         
@@ -323,7 +324,7 @@ class SellKontrol {
     }
     
 
-    async GetPositions(position){
+    GetPositions(position){
         //const ticker =  await this.ortak.ccx.exchange.fetchTicker(this.marketName) // awaitthis.ortak.ccx.GetMarket(marketName)
         //const orderBooks = await this.ortak.ccx.GetMarketOrders(this.marketName, 2)
         const sells = this.orderBooks.asks.map(e=> ({Price: e[0]}))
