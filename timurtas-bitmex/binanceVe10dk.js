@@ -24,7 +24,7 @@ class SellKontrol {
         this.amount = 100
         this.marginAmount = 0.5
         this.marketName = 'BTC/USD'
-        this.kaldirac = 25
+        this.kaldirac = 50
         // BİNANCE
         this.binanceLastPrice = null
         this.binancePrice = null
@@ -68,35 +68,32 @@ class SellKontrol {
             this.GetOpenOrders(data)
         })
 
-        await this.ortak.sleep(4)
+        await this.ortak.sleep(3)
 
         bitmex.addStream('XBTUSD', 'orderBook10', (data, symbol, tableName) => {
             this.orderBooks = data[data.length - 1]
         })
 
-        await this.ortak.sleep(4)
+        await this.ortak.sleep(3)
 
         bitmex.addStream('XBTUSD', 'position', (data, symbol, tableName) => {
             const gercekPositions = data.filter(e=> e.avgEntryPrice)
             if(gercekPositions.length == 0) return
             for (const key in data[0]) {
                 if (data[0].hasOwnProperty(key)) {
-                    this.positionData[key] = data[0][key];
+                    this.positionData[key] = data[0][key]
                 }
             }
 
             this.GetPositions([this.positionData])
         })
 
-        
-
-        
     }
 
     async OnDakika(){
         while(true){
             await this.Basla10Dakika().catch(e=> console.log(e))
-            await this.ortak.sleep(10)
+            await this.ortak.sleep(60)
         }
     }
 
