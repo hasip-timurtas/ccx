@@ -127,6 +127,15 @@ class SellKontrol {
             ///await this.ortak.BitmexCalcelAllOrders() // binance işleminden önce orderleri iptal et.
             
             const type = binance5saniyeFark < 0 ? OrderType.SELL : OrderType.BUY // eğer fark eksi ise sell yap, artı ise buy.
+
+            // binance sinyali geldiğinde buy ise selli open ordersları iptal et. sell ise buyları iptal et. 
+            const willCacancelType = type == 'sell' ? 'buy' : 'sell'
+            this.openOrders.Data.filter(e=> {
+                if(e.Type == willCacancelType){
+                    this.ortak.ccx.CancelTrade(e.OrderId,this.marketName)
+                }
+            })
+            
             // Fazla Alım Kontrolü
             const quantity = Math.abs(this.position.size)
             const kacCarpiGeride = Math.round((quantity / this.amount) +1)
@@ -146,15 +155,6 @@ class SellKontrol {
                 this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), this.position[type+"s"][0].Price) // type ye sells için s takısı ekledim.
             }
 
-            // binance sinyali geldiğinde buy ise selli open ordersları iptal et. sell ise buyları iptal et. 
-            const willCacancelType = type == 'sell' ? 'buy' : 'sell'
-            this.openOrders.Data.filter(e=> {
-                if(e.Type == willCacancelType){
-                    this.ortak.ccx.CancelTrade(e.OrderId,this.marketName)
-                }
-            })
-            
-            
         }
     }
 
