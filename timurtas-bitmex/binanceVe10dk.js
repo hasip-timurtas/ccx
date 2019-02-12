@@ -54,7 +54,7 @@ class SellKontrol {
         this.StartWsData()
         await this.ortak.sleep(10)
         console.log('Web socket dataları hazır.')
-        //this.PositionKontrol()
+        this.PositionKontrol()
         this.OnDakika()
         this.BinanceBasla()
         
@@ -205,7 +205,7 @@ class SellKontrol {
     }
 
     async PositionKontrol(){
-        //while(true){
+        while(true){
             //this.position = await this.GetPositions()
             //const openOrders = await this.GetOpenOrders()
             const quantity = Math.abs(this.position.size)
@@ -213,14 +213,14 @@ class SellKontrol {
             const openOrderZatenVar = this.openOrders.Data.find(e=> e.Amount == quantity && e.Type == type)
             const openPositionVar = this.position && this.position.entryPrice
             if(openOrderZatenVar || !openPositionVar){
-                //await this.ortak.sleep(10) // 10 saniye bir çalışır
+                await this.ortak.sleep(10) // 10 saniye bir çalışır
                 return
             }
 
             await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
             await this.CreateOrder(type, quantity, this.position.orderPrice)// quantity + this.amount -> sattıktan sonra al
-            //await this.ortak.sleep(10) // 10 saniye bir çalışır
-        //}
+            await this.ortak.sleep(10) // 10 saniye bir çalışır
+        }
     }
 
     CheckPrice5ve10Saniye(){
@@ -356,7 +356,7 @@ class SellKontrol {
         })[0]
 
         this.position = positions || {buys, sells}
-        this.PositionKontrol()
+        //this.PositionKontrol()
         return positions || {buys, sells}
 
     }
