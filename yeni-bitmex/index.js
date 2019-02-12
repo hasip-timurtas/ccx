@@ -212,7 +212,10 @@ class SellKontrol {
                 this.CreateOrder(type, newAmount, null, 'market')
             }else{
                 //this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), null, 'market')
-                this.CreateOrder(type, newAmount, this.orderBooks[type+"s"][0].Price) // type ye sells için s takısı ekledim.
+                const result = this.CreateOrder(type, newAmount, this.orderBooks[type+"s"][0].Price) // type ye sells için s takısı ekledim.
+                setTimeout(() => { // 10 saniye sonra oluşturulan limit orderi iptal et eklendi
+                    this.ortak.ccx.CancelTrade(result.id,this.marketName).catch(e=> console.log(e))
+                }, 10000);
             }
 
         }
