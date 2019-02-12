@@ -132,7 +132,7 @@ class SellKontrol {
             const kacCarpiGeride = Math.round((quantity / this.amount) +1)
             const fazlaAlimVar = kacCarpiGeride >= 6
             if(fazlaAlimVar){ // position typeı ile yeni order type aynı ve fazla alım varsa girme.
-                console.log("10dk: amountun 5 katı alış yaptı daha aynı işlemden alım yapma")
+                console.log("10dk: position 5 katı, geç.")
                 return false
             }
         }
