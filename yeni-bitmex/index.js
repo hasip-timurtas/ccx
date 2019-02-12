@@ -48,9 +48,9 @@ class SellKontrol {
     }
 
     async Basla(){
+        this.BalanceYazdir()
         console.log('Bütün orderlar iptal ediliyor.')
         await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
-        
         console.log('Web socket dataları hazırlanıyor...')
         this.StartWsData()
         await this.ortak.sleep(10)
@@ -377,7 +377,21 @@ class SellKontrol {
             }
 
             this.GetPositions([this.positionData])
-        })        
+        })
+        
+        bitmex.addStream('XBTUSD', 'margin', (data, symbol, tableName) => {
+            console.log(data)
+        })
+    }
+
+    async BalanceYazdir(){
+        while(true){
+            const balances = await this.ortak.GetBalance()
+            const balance = balances.find(e=> e.Symbol=='XBT') 
+            console.log('BALANCE Total: '+ balance.Total+ ' - Balance Available: '+ balance.Available);
+            await this.ortak.sleep(10)
+        }
+        
     }
 
 }
