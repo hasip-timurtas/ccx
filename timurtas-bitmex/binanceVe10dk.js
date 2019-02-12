@@ -54,7 +54,7 @@ class SellKontrol {
         this.StartWsData()
         await this.ortak.sleep(10)
         console.log('Web socket dataları hazır.')
-        this.PositionKontrol()
+        //this.PositionKontrol()
         this.OnDakika()
         this.BinanceBasla()
         
@@ -79,7 +79,13 @@ class SellKontrol {
         bitmex.addStream('XBTUSD', 'position', (data, symbol, tableName) => {
             const gercekPositions = data.filter(e=> e.avgEntryPrice)
             if(gercekPositions.length == 0) return
-            this.GetPositions()
+            for (const key in data[0]) {
+                if (data[0].hasOwnProperty(key)) {
+                    this.positionData[key] = data[0][key];
+                }
+            }
+
+            this.GetPositions([this.positionData])
         })
 
         
@@ -308,14 +314,14 @@ class SellKontrol {
     }
     
 
-    async GetPositions(){
+    async GetPositions(position){
         //const ticker =  await this.ortak.ccx.exchange.fetchTicker(this.marketName) // awaitthis.ortak.ccx.GetMarket(marketName)
         //const orderBooks = await this.ortak.ccx.GetMarketOrders(this.marketName, 2)
         const sells = this.orderBooks.asks.map(e=> ({Price: e[0]}))
         const buys = this.orderBooks.bids.map(e=> ({Price: e[0]}))
 
         // Get Positions
-        const position = JSON.parse(await this.ortak.BitmexPositions())
+        //const position = JSON.parse(await this.ortak.BitmexPositions())
         const positions =  position && position.map(e=>{
             const orderedType = e.currentQty < 0 ? 'sell' : 'buy' // size negatif ise sell yapılmış pozitif ise buy.
             const nextOrderType =  orderedType == 'sell' ? 'buy' : 'sell' // next order of the position
@@ -350,6 +356,7 @@ class SellKontrol {
         })[0]
 
         this.position = positions || {buys, sells}
+        this.PositionKontrol()
         return positions || {buys, sells}
 
     }
@@ -360,7 +367,7 @@ class SellKontrol {
             console.log(e, 'BTC/USD')
         })
     }
-    /*
+
     async GetOpenOrders(data){
         for (const e of data) {
             if( e.ordStatus == 'New'){
@@ -376,22 +383,22 @@ class SellKontrol {
                 this.openOrders.Data = this.openOrders.Data.filter(a => a.OrderId != e.orderID)
             }
         }
+        /*
+        data.filter(e=> e.ordStatus == 'New').map(e=>({
+            OrderId: e.orderID,
+            Market: e.symbol,
+            Type: e.side.toLowerCase(),
+            Rate: e.price,
+            Amount: e.orderQty,
+            entryDate: e.timestamp
+        })).filter(e=>{
+            this.openOrders.Data.push(e)
+        })
+*/
+
 
         this.openOrders.buy = this.openOrders.Data.find(e=> e.Type == 'buy') 
         this.openOrders.sell = this.openOrders.Data.find(e=> e.Type == 'sell')
-        this.PositionKontrol()
-    }
-*/
-    async GetOpenOrders(){
-        this.openOrders = await this.ortak.ccx.GetOpenOrders(this.marketName)
-        this.openOrders.buy = this.openOrders.Data.find(e=> e.Type == 'buy') 
-        this.openOrders.sell = this.openOrders.Data.find(e=> e.Type == 'sell') 
-
-        for (const openOrder of this.openOrders.Data) {
-            openOrder.kacSaatOnce = Math.abs(new Date(openOrder.entryDate) - new Date()) / 36e5;
-        }
-        this.PositionKontrol()
-        //return openOrders
     }
 
 }
