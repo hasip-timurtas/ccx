@@ -186,7 +186,7 @@ class SellKontrol {
             const type = binance5saniyeFark < 0 ? OrderType.SELL : OrderType.BUY // eğer fark eksi ise sell yap, artı ise buy.
             
             console.log(type + ' YAPACAK');
-            
+            console.log(`!!!!!! İŞLEM YAPILIYOR. Fark 2 den büyük! Binance fark: ${binance5saniyeFark}, Bitmex fark: ${bitmex5saniyeFark} !!!!!!`)
             // binance sinyali geldiğinde buy ise selli open ordersları iptal et. sell ise buyları iptal et. 
             const willCacancelType = type == 'sell' ? 'buy' : 'sell'
             this.openOrders.Data.filter(e=> {
@@ -206,7 +206,6 @@ class SellKontrol {
                 }
             }
             
-            console.log(`!!!!!! İŞLEM YAPILIYOR. Fark 2 den büyük! Binance fark: ${binance5saniyeFark}, Bitmex fark: ${bitmex5saniyeFark} !!!!!!`)
             this.lastOrderDate = new Date()
             const newAmount = parseInt(this.amount * Math.abs(binance5saniyeFark))
             if(Math.abs(binance5saniyeFark) > 4){
