@@ -54,7 +54,7 @@ class SellKontrol {
         this.StartWsData()
         await this.ortak.sleep(10)
         console.log('Web socket dataları hazır.')
-        this.GetPositions([]) // for fillig position. orderbooks
+        //if(!this.position) this.GetPositions([])
         this.PositionKontrol()
         this.OnDakika()
         this.BinanceBasla()
@@ -72,7 +72,8 @@ class SellKontrol {
         await this.ortak.sleep(4)
 
         bitmex.addStream('XBTUSD', 'orderBook10', (data, symbol, tableName) => {
-            this.orderBooks = data[data.length - 1]
+            const datam = data[data.length - 1]
+            this.orderBooks = { sells: datam.asks.map(e=> ({Price: e[0]})) , buys: datam.bids.map(e=> ({Price: e[0]}))}
         })
 
         await this.ortak.sleep(4)
@@ -138,12 +139,14 @@ class SellKontrol {
             })
             
             // Fazla Alım Kontrolü
-            const quantity = Math.abs(this.position.size)
-            const kacCarpiGeride = Math.round((quantity / this.amount) +1)
-            const fazlaAlimVar = kacCarpiGeride >= 6
-            if(this.position.orderedType == type && fazlaAlimVar){ // position typeı ile yeni order type aynı ve fazla alım varsa girme.
-                console.log("Binance: amountun 5 katı alış yaptı daha aynı işlemden alım yapma")
-                return 
+            if(this.position){ // posizyon varsa
+                const quantity = Math.abs(this.position.size)
+                const kacCarpiGeride = Math.round((quantity / this.amount) +1)
+                const fazlaAlimVar = kacCarpiGeride >= 6
+                if(fazlaAlimVar){ // position typeı ile yeni order type aynı ve fazla alım varsa girme.
+                    console.log("10dk: amountun 5 katı alış yaptı daha aynı işlemden alım yapma")
+                    return false
+                }
             }
             
             console.log(`!!!!!! İŞLEM YAPILIYOR. Fark 2 den büyük! Binance fark: ${binance5saniyeFark}, Bitmex fark: ${bitmex5saniyeFark} !!!!!!`)
@@ -153,7 +156,7 @@ class SellKontrol {
                 this.CreateOrder(type, newAmount, null, 'market')
             }else{
                 //this.CreateOrder(type, this.amount * Math.abs(binance5saniyeFark), null, 'market')
-                this.CreateOrder(type, newAmount, this.position[type+"s"][0].Price) // type ye sells için s takısı ekledim.
+                this.CreateOrder(type, newAmount, this.orderBooks[type+"s"][0].Price) // type ye sells için s takısı ekledim.
             }
 
         }
@@ -264,9 +267,9 @@ class SellKontrol {
         }
         */
         // BURAYA BALANCE KONTROL EKLENECEK
-        await this.CreateOrder('buy', this.yeniAmount, this.position.buys[0].Price)
+        await this.CreateOrder('buy', this.yeniAmount, this.orderBooks.buys[0].Price)
         await this.ortak.sleep(1)
-        await this.CreateOrder('sell', this.yeniAmount, this.position.sells[0].Price)
+        await this.CreateOrder('sell', this.yeniAmount, this.orderBooks.sells[0].Price)
     }
 
     async KontrollerUygun(){
@@ -274,11 +277,11 @@ class SellKontrol {
         //const openOrders = await this.GetOpenOrders()
         let buyYadaSellUstte = false
         for (const openOrder of this.openOrders.Data) {
-            if(openOrder.Rate == this.position.buys[0].Price){ // BUY
+            if(openOrder.Rate == this.orderBooks.buys[0].Price){ // BUY
                 buyYadaSellUstte = true
             }
 
-            if(openOrder.Rate == this.position.sells[0].Price){ // SELL
+            if(openOrder.Rate == this.orderBooks.sells[0].Price){ // SELL
                 buyYadaSellUstte = true
             }
         }
@@ -305,12 +308,12 @@ class SellKontrol {
         // BALANCE KONTROL
         
         const balances = await this.ortak.GetBalance()
-        const openOrdersBalance = this.amount / this.position.sells[0].Price / this.kaldirac
+        const openOrdersBalance = this.amount / this.orderBooks.sells[0].Price / this.kaldirac
         const balance = balances.find(e=> e.Symbol == 'XBT')
         const balanceValid = balance.Available > openOrdersBalance
         if(!balanceValid){
             console.log('Balance yeterli değil, güncelleniyor.', new Date())
-            this.yeniAmount = balance.Available * this.position.sells[0].Price * this.kaldirac
+            this.yeniAmount = balance.Available * this.orderBooks.sells[0].Price * this.kaldirac
             this.yeniAmount = this.amount - (this.amount * 0.05)
             this.yeniAmount = parseInt(this.amount)
             if(this.amount < 100){
@@ -327,8 +330,6 @@ class SellKontrol {
     GetPositions(position){
         //const ticker =  await this.ortak.ccx.exchange.fetchTicker(this.marketName) // awaitthis.ortak.ccx.GetMarket(marketName)
         //const orderBooks = await this.ortak.ccx.GetMarketOrders(this.marketName, 2)
-        const sells = this.orderBooks.asks.map(e=> ({Price: e[0]}))
-        const buys = this.orderBooks.bids.map(e=> ({Price: e[0]}))
 
         // Get Positions
         //const position = JSON.parse(await this.ortak.BitmexPositions())
@@ -341,12 +342,12 @@ class SellKontrol {
                 orderPrice = e.avgEntryPrice - this.marginAmount // ne kadara satacağım bilgisi eğer 3550 den aldıysam 3545 den satıcam. marginAmount 5$ ise
                 const sayiSonu5Yada0 = ['0','5'].includes(orderPrice.toString().split(".")[1])
                 orderPrice = sayiSonu5Yada0 ? orderPrice : parseInt(orderPrice)
-                orderPrice = orderPrice > buys[0].Price ? buys[0].Price : orderPrice
+                orderPrice = orderPrice > this.orderBooks.buys[0].Price ? this.orderBooks.buys[0].Price : orderPrice
             }else{
                 orderPrice = e.avgEntryPrice + this.marginAmount // ne kadara satacağım bilgisi eğer 3550 den aldıysam 3555 den satıcam. marginAmount 5$ ise
                 const sayiSonu5Yada0 = ['0','5'].includes(orderPrice.toString().split(".")[1])
                 orderPrice = sayiSonu5Yada0 ? orderPrice : parseInt(orderPrice)
-                orderPrice = orderPrice < sells[0].Price ? sells[0].Price : orderPrice
+                orderPrice = orderPrice < this.orderBooks.sells[0].Price ? this.orderBooks.sells[0].Price : orderPrice
             }
 
             return {
@@ -359,15 +360,13 @@ class SellKontrol {
                 nextOrderType,
                 orderPrice,
                 //ticker,
-                sells,
-                buys,
-                sellNowPrice: e.currentQty > 0 ? sells[0].Price : buys[0].Price // bir dahaki işlem yani yukarıdaki orderedType in tersini yaptık. almışsa yukarıda buy yazar, almış ve satacağı için burada sell yazar.
+                sellNowPrice: e.currentQty > 0 ? this.orderBooks.sells[0].Price : this.orderBooks.buys[0].Price // bir dahaki işlem yani yukarıdaki orderedType in tersini yaptık. almışsa yukarıda buy yazar, almış ve satacağı için burada sell yazar.
             }
         })[0]
 
-        this.position = positions || {buys, sells}
+        this.position = positions
         //this.PositionKontrol()
-        return positions || {buys, sells}
+        return positions
 
     }
 
