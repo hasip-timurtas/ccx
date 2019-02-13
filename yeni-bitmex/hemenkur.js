@@ -46,8 +46,11 @@ class SellKontrol {
         this.walletnData = {}
         this.onDakikaSayac = 0
         this.positionKontrolSayac = 0
+        this.firstSell = null
         this.oncekiSell = null
+        this.firstBuy = null
         this.oncekiBuy = null
+
     }
 
     async Basla(){
@@ -57,8 +60,8 @@ class SellKontrol {
         console.log('Web socket dataları hazırlanıyor...')
         //this.StartWsData()
         bitmex.addStream('XBTUSD', 'orderBook10', (data, symbol, tableName) => {
-            const datam = data[data.length - 1]
-            this.orderBooks = { sells: datam.asks.map(e=> ({Price: e[0]})) , buys: datam.bids.map(e=> ({Price: e[0]}))}
+            this.firstSell = data[0].asks[0][0]
+            this.firstBuy = data[0].bids[0][0]
             this.HemenOrderKur()
         })
 
@@ -76,38 +79,38 @@ class SellKontrol {
     async HemenOrderKur(){
         //this.orderBooks = { sells: datam.asks.map(e=> ({Price: e[0]})) , buys: datam.bids.map(e=> ({Price: e[0]}))}
         if(!this.oncekiSell){
-            this.oncekiSell = this.orderBooks.sells[0].Price
-        }else if(this.orderBooks.sells[0].Price < this.oncekiSell ){ // yeni sell price önceki sell den küçükse
+            this.oncekiSell = this.firstSell
+        }else if(this.firstSell < this.oncekiSell ){ // yeni sell price önceki sell den küçükse
             console.log('Sell Fiyat DÜŞTÜ')
             const tempOnceki = this.oncekiSell
-            this.oncekiSell = this.orderBooks.sells[0].Price // bunu başa koyuyorumki bir sonraki gelmesin.
+            this.oncekiSell = this.firstSell // bunu başa koyuyorumki bir sonraki gelmesin.
             // sell kur
-            const order = await this.CreateOrder('sell', this.amount, this.orderBooks.sells[0].Price)
+            const order = await this.CreateOrder('sell', this.amount, this.firstSell)
             setTimeout(() => { // 10 saniye sonra oluşturulan limit orderi iptal et eklendi
                 order.id && this.ortak.ccx.CancelTrade(order.id,this.marketName).catch(e=> console.log(e))
             }, 1000 * 60 * 2)
 
-            console.log(`Sell kuruldu. Önceki price: ${tempOnceki}, şimdiki price: ${this.orderBooks.sells[0].Price}`)
+            console.log(`Sell kuruldu. Önceki price: ${tempOnceki}, şimdiki price: ${this.firstSell}`)
             
         }else{
-            this.oncekiSell = this.orderBooks.sells[0].Price
+            this.oncekiSell = this.firstSell
         }
 
         if(!this.oncekiBuy){
-            this.oncekiBuy = this.orderBooks.buys[0].Price
-        }else if(this.orderBooks.buys[0].Price > this.oncekiBuy){ // yeni buy price önceki price den büyükse
+            this.oncekiBuy = this.firstBuy
+        }else if(this.firstBuy > this.oncekiBuy){ // yeni buy price önceki price den büyükse
             console.log('Buy Fiyat ÇIKTI')
             const tempOnceki = this.oncekiBuy
-            this.oncekiBuy = this.orderBooks.buys[0].Price // bunu başa koyuyorumki bir sonraki gelmesin.
+            this.oncekiBuy = this.firstBuy // bunu başa koyuyorumki bir sonraki gelmesin.
             // buy kur
-            const order = await this.CreateOrder('buy', this.amount, this.orderBooks.buys[0].Price)
+            const order = await this.CreateOrder('buy', this.amount, this.firstBuy)
             setTimeout(() => { // 10 saniye sonra oluşturulan limit orderi iptal et eklendi
                 order.id && this.ortak.ccx.CancelTrade(order.id,this.marketName).catch(e=> console.log(e))
             }, 1000 * 60 * 2)
-            console.log(`Buy kuruldu. Önceki price: ${tempOnceki}, şimdiki price: ${this.orderBooks.buys[0].Price}`)
+            console.log(`Buy kuruldu. Önceki price: ${tempOnceki}, şimdiki price: ${this.firstBuy}`)
            
         }else{
-            this.oncekiBuy = this.orderBooks.buys[0].Price 
+            this.oncekiBuy = this.firstBuy
         }
 
     }
