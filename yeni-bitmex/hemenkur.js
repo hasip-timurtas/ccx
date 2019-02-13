@@ -55,8 +55,14 @@ class SellKontrol {
         console.log('Bütün orderlar iptal ediliyor.')
         //await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
         console.log('Web socket dataları hazırlanıyor...')
-        this.StartWsData()
-        await this.ortak.sleep(10)
+        //this.StartWsData()
+        bitmex.addStream('XBTUSD', 'orderBook10', (data, symbol, tableName) => {
+            const datam = data[data.length - 1]
+            this.orderBooks = { sells: datam.asks.map(e=> ({Price: e[0]})) , buys: datam.bids.map(e=> ({Price: e[0]}))}
+            this.HemenOrderKur()
+        })
+
+        //await this.ortak.sleep(10)
         console.log('Web socket dataları hazır.')
         /*
         this.HemenOrderKur()
