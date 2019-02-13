@@ -49,9 +49,7 @@ def hemenOrderKur():
             
     else:
         oncekiSell = firstSell
-        
-    order = client.Order.Order_new(symbol='XBTUSD', side="Sell", orderQty=AMOUNT, price=firstSell).result()
-        
+          
     if oncekiBuy == 0:
         oncekiBuy = firstBuy
     elif firstBuy > oncekiBuy:
