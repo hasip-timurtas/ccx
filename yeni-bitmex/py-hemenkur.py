@@ -40,9 +40,11 @@ def hemenOrderKur():
         print('Sell Fiat Düştü')
         tempOnceki = oncekiSell
         oncekiSell = firstSell
+        # Oncekileri boz
+        client.Order.Order_cancelAll().result()
         #SELL KUR
         order = client.Order.Order_new(symbol='XBTUSD', side="Sell", orderQty=AMOUNT, price=firstSell).result()
-        print(order)
+        #print(order)
         print("Sell kuruldu. Önceki price: "+ str(tempOnceki)+", şimdiki price: "+ str(firstSell))
             
     else:
@@ -54,9 +56,11 @@ def hemenOrderKur():
         print('BUY Fiat ÇIKTI')
         tempOnceki = oncekiBuy
         oncekiBuy = firstBuy
+        #Oncekileri boz
+        client.Order.Order_cancelAll().result()
         #SELL KUR
         order = client.Order.Order_new(symbol='XBTUSD', side="Buy", orderQty=AMOUNT, price=firstBuy).result()
-        print(order)
+        #print(order)
         print("Buy kuruldu. Önceki price: "+str(tempOnceki)+", şimdiki price: "+ str(firstBuy))
     else:
         oncekiBuy = firstBuy
