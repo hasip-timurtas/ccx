@@ -22,7 +22,7 @@ class SellKontrol {
     async LoadVeriables(){
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables('MONGO')
-        this.amount = 50
+        this.amount = 10
         this.marginAmount = 0.5
         this.marketName = 'BTC/USD'
         this.kaldirac = 50
@@ -43,7 +43,7 @@ class SellKontrol {
         this.position = null
         this.orderBooks = null
         this.openOrders = {Data: []}
-        
+        this.walletnData = {}
 
     }
 
@@ -380,15 +380,19 @@ class SellKontrol {
         })
         
         bitmex.addStream('XBTUSD', 'margin', (data, symbol, tableName) => {
-            console.log(data)
+            for (const key in data[0]) {
+                if (data[0].hasOwnProperty(key)) {
+                    this.walletnData[key] = data[0][key];
+                }
+            }
         })
     }
 
     async BalanceYazdir(){
         while(true){
-            const balances = await this.ortak.GetBalance()
-            const balance = balances.find(e=> e.Symbol=='XBT') 
-            console.log('BALANCE Total: '+ balance.Total+ ' - Balance Available: '+ balance.Available);
+            const walletBalance = this.walletnData.walletBalance / 100000000
+            const marginBalance = this.walletnData.marginBalance / 100000000
+            console.log(`Wallet Balance: ${walletBalance}  | Margin Balance: ${marginBalance}`);
             await this.ortak.sleep(10)
         }
         
