@@ -464,7 +464,7 @@ class SellKontrol {
         while(true){
             const walletBalance = this.walletnData.walletBalance / 100000000
             const marginBalance = this.walletnData.marginBalance / 100000000
-            console.log(`Wallet Balance: ${walletBalance}  | Margin Balance: ${marginBalance} | ondk Sayac: ${this.onDakikaSayac} | positionKontrolSayac: ${this.positionKontrolSayac}`);
+            //console.log(`Wallet Balance: ${walletBalance}  | Margin Balance: ${marginBalance} | ondk Sayac: ${this.onDakikaSayac} | positionKontrolSayac: ${this.positionKontrolSayac}`);
             await this.ortak.sleep(5)
         }
         
