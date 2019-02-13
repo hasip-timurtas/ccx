@@ -2,6 +2,8 @@ from bitmex_websocket import BitMEXWebsocket
 import logging
 from time import sleep
 
+firstBuy = 0
+firstSell = 0
 
 # Basic use of websocket.
 def run():
@@ -11,8 +13,14 @@ def run():
     ws = BitMEXWebsocket(endpoint="wss://www.bitmex.com/realtime", symbol="XBTUSD",
                          api_key="9XeRFuMri_7VoF1Dtd-MT_aY", api_secret="DT4615ZUSR25CqoEyimai1EeK_U-hipSWoCsZREWIEQM9NVV")
 
-    logger.info("Instrument data: %s" % ws.get_instrument())
+    #logger.info("Instrument data: %s" % ws.get_instrument())
 
+    # Run forever
+    while(ws.ws.sock.connected):
+        orderBook = ws.market_depth()
+        logger.info(orderBook)
+
+'''
     # Run forever
     while(ws.ws.sock.connected):
         logger.info("Ticker: %s" % ws.get_ticker())
@@ -21,7 +29,7 @@ def run():
         logger.info("Market Depth: %s" % ws.market_depth())
         logger.info("Recent Trades: %s\n\n" % ws.recent_trades())
         sleep(10)
-
+'''
 
 def setup_logger():
     # Prints logger info to terminal
