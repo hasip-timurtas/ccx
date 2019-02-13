@@ -44,6 +44,8 @@ class SellKontrol {
         this.orderBooks = null
         this.openOrders = {Data: []}
         this.walletnData = {}
+        this.onDakikaSayac = 0
+        this.positionKontrolSayac = 0
 
     }
 
@@ -63,6 +65,7 @@ class SellKontrol {
     }
 
     async PositionKontrol(){
+        setInterval(() => this.positionKontrolSayac++, 1000)
         while(true){
             //this.position = await this.GetPositions()
             //const openOrders = await this.GetOpenOrders()
@@ -74,8 +77,9 @@ class SellKontrol {
             const type = this.position.orderedType == 'sell' ? OrderType.BUY : OrderType.SELL
             const openPositionVar = this.position && this.position.entryPrice
             const positionOpenOrderda = this.openOrders.Data.find(e=> e.Amount == quantity && e.Type == type)
-            const positionKardaVeUstte = positionOpenOrderda && this.position.positionKacinciSirada == 0
+            const positionKardaVeUstte = positionOpenOrderda //&& this.position.orderPrice > && this.position.positionKacinciSirada == 0
             if(!openPositionVar || positionKardaVeUstte){
+                this.positionKontrolSayac = 0
                 await this.ortak.sleep(10) // 10 saniye bir çalışır
                 continue
             }
@@ -84,13 +88,16 @@ class SellKontrol {
             //if(this.lastPositionOrderId) await this.ortak.ccx.CancelTrade(this.lastPositionOrderId, this.marketName)
             const result = await this.CreateOrder(type, quantity, this.position.orderPrice)// quantity + this.amount -> sattıktan sonra al
             //this.lastPositionOrderId = result.id
+            this.positionKontrolSayac = 0
             await this.ortak.sleep(10) // 10 saniye bir çalışır
         }
     }
 
     async OnDakika(){
+        setInterval(() => this.onDakikaSayac++, 1000)
         while(true){
             await this.Basla10Dakika().catch(e=> console.log(e))
+            this.onDakikaSayac = 0
             await this.ortak.sleep(60)
         }
     }
@@ -396,8 +403,8 @@ class SellKontrol {
         while(true){
             const walletBalance = this.walletnData.walletBalance / 100000000
             const marginBalance = this.walletnData.marginBalance / 100000000
-            console.log(`Wallet Balance: ${walletBalance}  | Margin Balance: ${marginBalance}`);
-            await this.ortak.sleep(60)
+            console.log(`Wallet Balance: ${walletBalance}  | Margin Balance: ${marginBalance} | ondk Sayac: ${this.onDakikaSayac} | positionKontrolSayac: ${this.positionKontrolSayac}`);
+            await this.ortak.sleep(5)
         }
         
     }
