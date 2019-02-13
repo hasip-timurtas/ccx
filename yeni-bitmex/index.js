@@ -79,9 +79,13 @@ class SellKontrol {
             const positionOpenOrderda = this.openOrders.Data.find(e=> e.Amount == quantity && e.Type == type)
             let bozVeKur = false
 
-            if(positionOpenOrderda){ 
-                if(this.position.positionKarda && this.position.positionKacinciSirada == 0){
-                    bozVeKur = true // boz
+            if(positionOpenOrderda){ // positionumuz open orderda mı
+                if(this.position.positionKarda){ // kârda mı?
+                    if(this.position.positionKacinciSirada == 0){ // 1. sıradamı?
+                        bozVeKur = false // bozma
+                    }else{
+                        bozVeKur = true // boz
+                    }
                 }else{
                     bozVeKur = false // bozma
                 }
