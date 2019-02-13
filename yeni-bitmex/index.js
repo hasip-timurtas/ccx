@@ -368,8 +368,8 @@ class SellKontrol {
         await this.ortak.sleep(4)
 
         bitmex.addStream('XBTUSD', 'position', (data, symbol, tableName) => {
-            const gercekPositions = data.filter(e=> e.avgEntryPrice)
-            if(gercekPositions.length == 0) return
+            //const gercekPositions = data.filter(e=> e.avgEntryPrice)
+            //if(gercekPositions.length == 0) return
             for (const key in data[0]) {
                 if (data[0].hasOwnProperty(key)) {
                     this.positionData[key] = data[0][key];
