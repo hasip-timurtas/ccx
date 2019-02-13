@@ -72,9 +72,10 @@ class SellKontrol {
             }
             const quantity = Math.abs(this.position.size)
             const type = this.position.orderedType == 'sell' ? OrderType.BUY : OrderType.SELL
-            const openOrderZatenVar = this.openOrders.Data.find(e=> e.Amount == quantity && e.Type == type)
             const openPositionVar = this.position && this.position.entryPrice
-            if(openOrderZatenVar || !openPositionVar){
+            const positionOpenOrderda = this.openOrders.Data.find(e=> e.Amount == quantity && e.Type == type)
+            const positionKardaVeUstte = positionOpenOrderda && this.position.positionKacinciSirada == 0
+            if(!openPositionVar || positionKardaVeUstte){
                 await this.ortak.sleep(10) // 10 saniye bir çalışır
                 continue
             }
@@ -82,7 +83,7 @@ class SellKontrol {
             await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
             //if(this.lastPositionOrderId) await this.ortak.ccx.CancelTrade(this.lastPositionOrderId, this.marketName)
             const result = await this.CreateOrder(type, quantity, this.position.orderPrice)// quantity + this.amount -> sattıktan sonra al
-            this.lastPositionOrderId = result.id
+            //this.lastPositionOrderId = result.id
             await this.ortak.sleep(10) // 10 saniye bir çalışır
         }
     }
@@ -296,6 +297,8 @@ class SellKontrol {
                 orderPrice = orderPrice < this.orderBooks.sells[0].Price ? this.orderBooks.sells[0].Price : orderPrice
             }
 
+            const positionKacinciSirada = this.orderBooks[nextOrderType+"s"].findIndex(e=> e.Price == orderPrice)
+
             return {
                 size: e.currentQty, 
                 entryPrice: e.avgEntryPrice, 
@@ -304,7 +307,8 @@ class SellKontrol {
                 orderedType,
                 nextOrderType,
                 orderPrice,
-                sellNowPrice: e.currentQty > 0 ? this.orderBooks.sells[0].Price : this.orderBooks.buys[0].Price // bir dahaki işlem yani yukarıdaki orderedType in tersini yaptık. almışsa yukarıda buy yazar, almış ve satacağı için burada sell yazar.
+                sellNowPrice: e.currentQty > 0 ? this.orderBooks.sells[0].Price : this.orderBooks.buys[0].Price, // bir dahaki işlem yani yukarıdaki orderedType in tersini yaptık. almışsa yukarıda buy yazar, almış ve satacağı için burada sell yazar.
+                positionKacinciSirada
             }
         })[0]
 
