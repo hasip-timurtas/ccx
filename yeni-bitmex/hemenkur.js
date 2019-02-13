@@ -71,7 +71,7 @@ class SellKontrol {
         //this.orderBooks = { sells: datam.asks.map(e=> ({Price: e[0]})) , buys: datam.bids.map(e=> ({Price: e[0]}))}
         if(!this.oncekiSell){
             this.oncekiSell = this.orderBooks.sells[0].Price
-        }else if(this.oncekiSell < this.orderBooks.sells[0].Price){
+        }else if(this.orderBooks.sells[0].Price < this.oncekiSell ){
             console.log('Sell Fiyat Değişti')
             const tempOnceki = this.oncekiSell
             this.oncekiSell = this.orderBooks.sells[0].Price // bunu başa koyuyorumki bir sonraki gelmesin.
@@ -83,11 +83,13 @@ class SellKontrol {
 
             console.log(`Sell kuruldu. Önceki price: ${tempOnceki}, şimdiki price: ${this.orderBooks.sells[0].Price}`)
             
+        }else{
+            this.oncekiSell = this.orderBooks.sells[0].Price
         }
 
         if(!this.oncekiBuy){
             this.oncekiBuy = this.orderBooks.buys[0].Price
-        }else if(this.oncekiBuy > this.orderBooks.buys[0].Price){
+        }else if(this.orderBooks.buys[0].Price > this.oncekiBuy){
             console.log('Buy Fiyat Değişti')
             const tempOnceki = this.oncekiBuy
             this.oncekiBuy = this.orderBooks.buys[0].Price // bunu başa koyuyorumki bir sonraki gelmesin.
@@ -98,6 +100,8 @@ class SellKontrol {
             }, 1000 * 60 * 2)
             console.log(`Buy kuruldu. Önceki price: ${tempOnceki}, şimdiki price: ${this.orderBooks.buys[0].Price}`)
            
+        }else{
+            this.oncekiBuy = this.orderBooks.buys[0].Price 
         }
 
     }
