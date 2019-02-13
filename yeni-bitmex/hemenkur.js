@@ -73,7 +73,11 @@ class SellKontrol {
             this.oncekiSell = this.orderBooks.sells[0].Price
         }else if(this.oncekiSell < this.orderBooks.sells[0].Price){
             // sell kur
-            await this.CreateOrder('sell', this.amount, this.orderBooks.sells[0].Price)
+            const order = await this.CreateOrder('sell', this.amount, this.orderBooks.sells[0].Price)
+            setTimeout(() => { // 10 saniye sonra oluşturulan limit orderi iptal et eklendi
+                order.id && this.ortak.ccx.CancelTrade(order.id,this.marketName).catch(e=> console.log(e))
+            }, 1000 * 60 * 2)
+
             console.log(`Sell kuruldu. Önceki price: ${this.oncekiSell}, şimdiki price: ${this.orderBooks.sells[0].Price}`)
         }
 
@@ -81,7 +85,10 @@ class SellKontrol {
             this.oncekiBuy = this.orderBooks.buys[0].Price
         }else if(this.oncekiBuy > this.orderBooks.buys[0].Price){
             // buy kur
-            await this.CreateOrder('buy', this.amount, this.orderBooks.buys[0].Price)
+            const order = await this.CreateOrder('buy', this.amount, this.orderBooks.buys[0].Price)
+            setTimeout(() => { // 10 saniye sonra oluşturulan limit orderi iptal et eklendi
+                order.id && this.ortak.ccx.CancelTrade(order.id,this.marketName).catch(e=> console.log(e))
+            }, 1000 * 60 * 2)
             console.log(`Buy kuruldu. Önceki price: ${this.oncekiBuy}, şimdiki price: ${this.orderBooks.buys[0].Price}`)
         }
 
