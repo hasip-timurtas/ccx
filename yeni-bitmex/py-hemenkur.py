@@ -41,7 +41,7 @@ def hemenOrderKur():
         tempOnceki = oncekiSell
         oncekiSell = firstSell
         # Oncekileri boz
-        client.Order.Order_cancelAll().result()
+        #client.Order.Order_cancelAll().result()
         #SELL KUR
         order = client.Order.Order_new(symbol='XBTUSD', side="Sell", orderQty=AMOUNT, price=firstSell).result()
         sonraOrderBoz(order.orderID)
@@ -57,7 +57,7 @@ def hemenOrderKur():
         tempOnceki = oncekiBuy
         oncekiBuy = firstBuy
         #Oncekileri boz
-        client.Order.Order_cancelAll().result()
+        #client.Order.Order_cancelAll().result()
         #SELL KUR
         order = client.Order.Order_new(symbol='XBTUSD', side="Buy", orderQty=AMOUNT, price=firstBuy).result()
         sonraOrderBoz(order.orderID)
