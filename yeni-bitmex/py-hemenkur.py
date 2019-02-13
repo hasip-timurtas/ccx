@@ -44,11 +44,13 @@ def hemenOrderKur():
         #client.Order.Order_cancelAll().result()
         #SELL KUR
         order = client.Order.Order_new(symbol='XBTUSD', side="Sell", orderQty=AMOUNT, price=firstSell).result()
-        sonraOrderBoz(order.orderID)
+        sonraOrderBoz(order['OrderId'])
         print("Sell kuruldu. Önceki price: "+ str(tempOnceki)+", şimdiki price: "+ str(firstSell))
             
     else:
         oncekiSell = firstSell
+        
+    order = client.Order.Order_new(symbol='XBTUSD', side="Sell", orderQty=AMOUNT, price=firstSell).result()
         
     if oncekiBuy == 0:
         oncekiBuy = firstBuy
@@ -60,7 +62,7 @@ def hemenOrderKur():
         #client.Order.Order_cancelAll().result()
         #SELL KUR
         order = client.Order.Order_new(symbol='XBTUSD', side="Buy", orderQty=AMOUNT, price=firstBuy).result()
-        sonraOrderBoz(order.orderID)
+        sonraOrderBoz(order['OrderId'])
         print("Buy kuruldu. Önceki price: "+str(tempOnceki)+", şimdiki price: "+ str(firstBuy))
     else:
         oncekiBuy = firstBuy
