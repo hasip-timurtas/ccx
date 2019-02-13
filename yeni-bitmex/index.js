@@ -77,7 +77,7 @@ class SellKontrol {
             const type = this.position.orderedType == 'sell' ? OrderType.BUY : OrderType.SELL
             const openPositionVar = this.position && this.position.entryPrice
             const positionOpenOrderda = this.openOrders.Data.find(e=> e.Amount == quantity && e.Type == type)
-            const positionKardaVeUstte = positionOpenOrderda //&& this.position.orderPrice > && this.position.positionKacinciSirada == 0
+            const positionKardaVeUstte = positionOpenOrderda && this.position.positionKarda &&  this.position.positionKacinciSirada == 0
             if(!openPositionVar || positionKardaVeUstte){
                 this.positionKontrolSayac = 0
                 await this.ortak.sleep(10) // 10 saniye bir çalışır
@@ -290,18 +290,26 @@ class SellKontrol {
         const positions =  position && position.map(e=>{
             const orderedType = e.currentQty < 0 ? 'sell' : 'buy' // size negatif ise sell yapılmış pozitif ise buy.
             const nextOrderType =  orderedType == 'sell' ? 'buy' : 'sell' // next order of the position
-            let orderPrice
+            let orderPrice, positionKarda = false
             
             if(orderedType == 'sell'){
                 orderPrice = e.avgEntryPrice - this.marginAmount // ne kadara satacağım bilgisi eğer 3550 den aldıysam 3545 den satıcam. marginAmount 5$ ise
                 const sayiSonu5Yada0 = ['0','5'].includes(orderPrice.toString().split(".")[1])
                 orderPrice = sayiSonu5Yada0 ? orderPrice : parseInt(orderPrice)
-                orderPrice = orderPrice > this.orderBooks.buys[0].Price ? this.orderBooks.buys[0].Price : orderPrice
+                if(orderPrice > this.orderBooks.buys[0].Price) { // position kârda
+                    orderPrice = this.orderBooks.buys[0].Price
+                    positionKarda = true
+                }
+               
             }else{
                 orderPrice = e.avgEntryPrice + this.marginAmount // ne kadara satacağım bilgisi eğer 3550 den aldıysam 3555 den satıcam. marginAmount 5$ ise
                 const sayiSonu5Yada0 = ['0','5'].includes(orderPrice.toString().split(".")[1])
                 orderPrice = sayiSonu5Yada0 ? orderPrice : parseInt(orderPrice)
-                orderPrice = orderPrice < this.orderBooks.sells[0].Price ? this.orderBooks.sells[0].Price : orderPrice
+                if(orderPrice < this.orderBooks.sells[0].Price) { // position kârda
+                    orderPrice = this.orderBooks.sells[0].Price
+                    positionKarda = true
+                }
+                
             }
 
             const positionKacinciSirada = this.orderBooks[nextOrderType+"s"].findIndex(e=> e.Price == orderPrice)
@@ -315,7 +323,8 @@ class SellKontrol {
                 nextOrderType,
                 orderPrice,
                 sellNowPrice: e.currentQty > 0 ? this.orderBooks.sells[0].Price : this.orderBooks.buys[0].Price, // bir dahaki işlem yani yukarıdaki orderedType in tersini yaptık. almışsa yukarıda buy yazar, almış ve satacağı için burada sell yazar.
-                positionKacinciSirada
+                positionKacinciSirada,
+                positionKarda
             }
         })[0]
 
