@@ -74,6 +74,7 @@ class SellKontrol {
         }else if(this.oncekiSell < this.orderBooks.sells[0].Price){
             // sell kur
             await this.CreateOrder('sell', this.amount, this.orderBooks.sells[0].Price)
+            console.log(`Sell kuruldu. Önceki price: ${this.oncekiSell}, şimdiki price: ${this.orderBooks.sells[0].Price}`)
         }
 
         if(!this.oncekiBuy){
@@ -81,6 +82,7 @@ class SellKontrol {
         }else if(this.oncekiBuy > this.orderBooks.buys[0].Price){
             // buy kur
             await this.CreateOrder('buy', this.amount, this.orderBooks.buys[0].Price)
+            console.log(`Buy kuruldu. Önceki price: ${this.oncekiBuy}, şimdiki price: ${this.orderBooks.buys[0].Price}`)
         }
 
     }
