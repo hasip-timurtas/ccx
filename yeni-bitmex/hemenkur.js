@@ -72,6 +72,7 @@ class SellKontrol {
         if(!this.oncekiSell){
             this.oncekiSell = this.orderBooks.sells[0].Price
         }else if(this.oncekiSell < this.orderBooks.sells[0].Price){
+            console.log('Sell Fiyat Değişti')
             const tempOnceki = this.oncekiSell
             this.oncekiSell = this.orderBooks.sells[0].Price // bunu başa koyuyorumki bir sonraki gelmesin.
             // sell kur
@@ -87,6 +88,7 @@ class SellKontrol {
         if(!this.oncekiBuy){
             this.oncekiBuy = this.orderBooks.buys[0].Price
         }else if(this.oncekiBuy > this.orderBooks.buys[0].Price){
+            console.log('Buy Fiyat Değişti')
             const tempOnceki = this.oncekiBuy
             this.oncekiBuy = this.orderBooks.buys[0].Price // bunu başa koyuyorumki bir sonraki gelmesin.
             // buy kur
