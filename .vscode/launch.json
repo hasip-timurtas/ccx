@@ -23,7 +23,7 @@
             "request": "launch",
             "stopOnEntry": false,
             "program": "${file}",
-            "pythonPath": "C:/Users/hasip/AppData/Local/Programs/Python/Python37-32/python.exe",
+            "pythonPath": "C:/Users/hasip/AppData/Local/Programs/Python/Python37/python.exe",
             "debugOptions": [
                 "WaitOnAbnormalExit",
                 "WaitOnNormalExit",
