@@ -2,6 +2,7 @@ from bitmex_websocket import BitMEXWebsocket
 import logging
 from time import sleep
 import bitmex
+import _thread
 
 client = bitmex.bitmex(test=False, api_key="WUi67Xl7EjE6A0iUq1RFVENw", api_secret="9alw1YOYGOlMrvW6N6AEC5ulmUl9ZKIP4a2RSdCQvs_xQCCn")
 AMOUNT = 10
@@ -27,7 +28,8 @@ def run():
         orderBook = ws.market_depth()
         firstSell = orderBook[0]["asks"][0][0]
         firstBuy = orderBook[0]["bids"][0][0]
-        hemenOrderKur()
+        _thread.start_new_thread( hemenOrderKur )
+        #hemenOrderKur()
        # logger.info(orderBook)
 
 def hemenOrderKur():
@@ -39,7 +41,7 @@ def hemenOrderKur():
         tempOnceki = oncekiSell
         oncekiSell = firstSell
         #SELL KUR
-        order = client.Order.Order_new(symbol='XBTUSD', side="Sell", orderQty=AMOUNT, price=firstSell).result()
+        order = "Sell" #client.Order.Order_new(symbol='XBTUSD', side="Sell", orderQty=AMOUNT, price=firstSell).result()
         print(order)
         print("Sell kuruldu. Önceki price: "+ str(tempOnceki)+", şimdiki price: "+ str(firstSell))
             
@@ -53,7 +55,7 @@ def hemenOrderKur():
         tempOnceki = oncekiBuy
         oncekiBuy = firstBuy
         #SELL KUR
-        order = client.Order.Order_new(symbol='XBTUSD', side="Buy", orderQty=AMOUNT, price=firstBuy).result()
+        order = "Buy"# client.Order.Order_new(symbol='XBTUSD', side="Buy", orderQty=AMOUNT, price=firstBuy).result()
         print(order)
         print("Buy kuruldu. Önceki price: "+str(tempOnceki)+", şimdiki price: "+ str(firstBuy))
     else:
