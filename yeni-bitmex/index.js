@@ -77,8 +77,19 @@ class SellKontrol {
             const type = this.position.orderedType == 'sell' ? OrderType.BUY : OrderType.SELL
             const openPositionVar = this.position && this.position.entryPrice
             const positionOpenOrderda = this.openOrders.Data.find(e=> e.Amount == quantity && e.Type == type)
-            const positionKardaVeUstte = positionOpenOrderda && this.position.positionKarda &&  this.position.positionKacinciSirada == 0
-            if(!openPositionVar || positionKardaVeUstte){
+            let bozVeKur = false
+
+            if(positionOpenOrderda){ 
+                if(this.position.positionKarda && this.position.positionKacinciSirada == 0){
+                    bozVeKur = true // boz
+                }else{
+                    bozVeKur = false // bozma
+                }
+            }else{ // position open değil
+                bozVeKur = true
+            }
+
+            if(!openPositionVar || !bozVeKur){
                 this.positionKontrolSayac = 0
                 await this.ortak.sleep(10) // 10 saniye bir çalışır
                 continue
