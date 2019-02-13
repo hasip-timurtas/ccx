@@ -137,7 +137,7 @@ class SellKontrol {
         // Fazla Alım Kontrolü
         if(this.position){ // posizyon varsa
             const quantity = Math.abs(this.position.size)
-            const kacCarpiGeride = Math.round((quantity / this.amount) +1)
+            const kacCarpiGeride = parseInt((quantity / this.amount) +1)
             const fazlaAlimVar = kacCarpiGeride >= 6
             if(fazlaAlimVar){ // position typeı ile yeni order type aynı ve fazla alım varsa girme.
                 console.log("10dk: position 5 katı, geç.")
@@ -206,7 +206,7 @@ class SellKontrol {
             // Fazla Alım Kontrolü
             if(this.position){ // posizyon varsa
                 const quantity = Math.abs(this.position.size)
-                const kacCarpiGeride = Math.round((quantity / this.amount) +1)
+                const kacCarpiGeride = parseInt((quantity / this.amount) +1)
                 const fazlaAlimVar = kacCarpiGeride >= 6
                 if(fazlaAlimVar && this.position.orderedType == type){ // position typeı ile yeni order type aynı ve fazla alım varsa girme.
                     console.log("BİNANCE: amountun 5 katı alış yaptı daha aynı işlemden alım yapma")
