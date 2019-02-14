@@ -10,7 +10,8 @@ from util.api_key import generate_nonce, generate_signature
 import bitmex
 import _thread
 
-client = bitmex.bitmex(test=False, api_key="WUi67Xl7EjE6A0iUq1RFVENw", api_secret="9alw1YOYGOlMrvW6N6AEC5ulmUl9ZKIP4a2RSdCQvs_xQCCn")
+#client = bitmex.bitmex(test=False, api_key="WUi67Xl7EjE6A0iUq1RFVENw", api_secret="9alw1YOYGOlMrvW6N6AEC5ulmUl9ZKIP4a2RSdCQvs_xQCCn")
+client = bitmex.bitmex(test=False, api_key="IJx_wvuEYxsrQNFsJQ6yEMXF", api_secret="TO5Sm0rmN0IHRpg_uXjRhVg54NlTWLiTIPvSQqYmP4RvfwZ9")
 AMOUNT = 10
 firstBuy = 0
 oncekiBuy = 0
@@ -24,10 +25,13 @@ def run():
     #logger = setup_logger()
 
     # Instantiating the WS will make it connect. Be sure to add your api_key/api_secret.
-    ws = BitMEXWebsocket(endpoint="wss://www.bitmex.com/realtime", symbol="XBTUSD",
-                         api_key="9XeRFuMri_7VoF1Dtd-MT_aY", api_secret="DT4615ZUSR25CqoEyimai1EeK_U-hipSWoCsZREWIEQM9NVV")
+    #ws = BitMEXWebsocket(endpoint="wss://www.bitmex.com/realtime", symbol="XBTUSD",
+    #                     api_key="9XeRFuMri_7VoF1Dtd-MT_aY", api_secret="DT4615ZUSR25CqoEyimai1EeK_U-hipSWoCsZREWIEQM9NVV")
 
-    print(ws.get_instrument())
+    ws = BitMEXWebsocket(endpoint="wss://www.bitmex.com/realtime", symbol="XBTUSD",
+                        api_key="5cDKr3LGznouKq2H_naxsSpW", api_secret="9vDZoohPe6yKdXcfpM5z8LgiGqwEpTXH9-y4KJonTZSkx_V1")
+
+    #print(ws.get_instrument())
 
     # Run forever
     while(ws.ws.sock.connected):
@@ -43,7 +47,8 @@ def run():
         
         firstSell = orderBook[0]["asks"][0][0]
         firstBuy = orderBook[0]["bids"][0][0]
-        _thread.start_new_thread( hemenOrderKur, () )
+        print(firstBuy)
+        #_thread.start_new_thread( hemenOrderKur, () )
         #hemenOrderKur()
         
 
@@ -230,7 +235,8 @@ class BitMEXWebsocket:
         '''
 
         # You can sub to orderBook10 for all levels, or orderBook10 for top 10 levels & save bandwidth
-        symbolSubs = ["execution", "instrument", "order", "orderBook10", "position", "quote", "trade"]
+        #symbolSubs = ["execution", "instrument", "order", "orderBook10", "position", "quote", "trade"]
+        symbolSubs = ["orderBook10", "quote"]
         genericSubs = ["margin"]
 
         subscriptions = [sub + ':' + self.symbol for sub in symbolSubs]
