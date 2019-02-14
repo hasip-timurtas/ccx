@@ -28,7 +28,7 @@ def run():
     #ws = BitMEXWebsocket(endpoint="wss://www.bitmex.com/realtime", symbol="XBTUSD",
     #                     api_key="9XeRFuMri_7VoF1Dtd-MT_aY", api_secret="DT4615ZUSR25CqoEyimai1EeK_U-hipSWoCsZREWIEQM9NVV")
 
-    ws = BitMEXWebsocket(endpoint="wss://www.bitmex.com/realtime", symbol="XBTUSD",
+    ws = BitMEXWebsocket(endpoint="https://www.bitmex.com/api/v1", symbol="XBTUSD",
                         api_key="5cDKr3LGznouKq2H_naxsSpW", api_secret="9vDZoohPe6yKdXcfpM5z8LgiGqwEpTXH9-y4KJonTZSkx_V1")
 
     #print(ws.get_instrument())
@@ -236,7 +236,7 @@ class BitMEXWebsocket:
 
         # You can sub to orderBook10 for all levels, or orderBook10 for top 10 levels & save bandwidth
         #symbolSubs = ["execution", "instrument", "order", "orderBook10", "position", "quote", "trade"]
-        symbolSubs = ["orderBook10", "quote"]
+        symbolSubs = ["orderBook10"]
         genericSubs = ["margin"]
 
         subscriptions = [sub + ':' + self.symbol for sub in symbolSubs]
