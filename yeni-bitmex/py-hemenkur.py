@@ -4,11 +4,11 @@ from time import sleep
 import bitmex
 import _thread
 client = bitmex.bitmex(test=False, api_key="WUi67Xl7EjE6A0iUq1RFVENw", api_secret="9alw1YOYGOlMrvW6N6AEC5ulmUl9ZKIP4a2RSdCQvs_xQCCn")
+AMOUNT = 10
 
 # Basic use of websocket.
 def run():
-    global client
-    AMOUNT = 10
+    global client, AMOUNT   
     firstBuy = 0
     oncekiBuy = 0
 
@@ -28,39 +28,44 @@ def run():
         orderBook = ws.market_depth()
         firstSell = orderBook[0]["asks"][0][0]
         firstBuy = orderBook[0]["bids"][0][0]
+        print(firstBuy, firstSell)
         #_thread.start_new_thread( hemenOrderKur, () )
         #hemenOrderKur()
        # logger.info(orderBook)
-        if oncekiSell == 0:
-            oncekiSell = firstSell
-        elif firstSell < oncekiSell:
-            print('Sell Fiat Düştü')
-            tempOnceki = oncekiSell
-            oncekiSell = firstSell
-            # Oncekileri boz
-            #client.Order.Order_cancelAll().result()
-            #SELL KUR
-            order = client.Order.Order_new(symbol='XBTUSD', side="Sell", orderQty=AMOUNT, price=firstSell).result()
-            print("Sell kuruldu. Önceki price: "+ str(tempOnceki)+", şimdiki price: "+ str(firstSell))
-            sonraOrderBoz(order['OrderId'])
-        else:
-            oncekiSell = firstSell
-            
-        if oncekiBuy == 0:
-            oncekiBuy = firstBuy
-        elif firstBuy > oncekiBuy:
-            print('BUY Fiat ÇIKTI')
-            tempOnceki = oncekiBuy
-            oncekiBuy = firstBuy
-            #Oncekileri boz
-            #client.Order.Order_cancelAll().result()
-            #SELL KUR
-            order = client.Order.Order_new(symbol='XBTUSD', side="Buy", orderQty=AMOUNT, price=firstBuy).result()
-            print("Buy kuruldu. Önceki price: "+str(tempOnceki)+", şimdiki price: "+ str(firstBuy))
-            sonraOrderBoz(order['OrderId'])
-        else:
-            oncekiBuy = firstBuy
+        
 
+
+def buyKontrol(firstSell, oncekiSell):
+    if oncekiSell == 0:
+        oncekiSell = firstSell
+    elif firstSell < oncekiSell:
+        print('Sell Fiat Düştü')
+        tempOnceki = oncekiSell
+        oncekiSell = firstSell
+        # Oncekileri boz
+        #client.Order.Order_cancelAll().result()
+        #SELL KUR
+        order = client.Order.Order_new(symbol='XBTUSD', side="Sell", orderQty=AMOUNT, price=firstSell).result()
+        print("Sell kuruldu. Önceki price: "+ str(tempOnceki)+", şimdiki price: "+ str(firstSell))
+        sonraOrderBoz(order['OrderId'])
+    else:
+        oncekiSell = firstSell
+
+def sellKontrol(firstSell, oncekiSell):
+    if oncekiSell == 0:
+        oncekiSell = firstSell
+    elif firstSell < oncekiSell:
+        print('Sell Fiat Düştü')
+        tempOnceki = oncekiSell
+        oncekiSell = firstSell
+        # Oncekileri boz
+        #client.Order.Order_cancelAll().result()
+        #SELL KUR
+        order = client.Order.Order_new(symbol='XBTUSD', side="Sell", orderQty=AMOUNT, price=firstSell).result()
+        print("Sell kuruldu. Önceki price: "+ str(tempOnceki)+", şimdiki price: "+ str(firstSell))
+        sonraOrderBoz(order['OrderId'])
+    else:
+        oncekiSell = firstSell
 
 def sonraOrderBoz(orderId):
     global client
