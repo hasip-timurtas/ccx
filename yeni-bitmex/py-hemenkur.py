@@ -27,11 +27,16 @@ def run():
     ws = BitMEXWebsocket(endpoint="wss://www.bitmex.com/realtime", symbol="XBTUSD",
                          api_key="5cDKr3LGznouKq2H_naxsSpW", api_secret="9vDZoohPe6yKdXcfpM5z8LgiGqwEpTXH9-y4KJonTZSkx_V1")
 
-    print(ws.get_instrument())
+    #print(ws.get_instrument())
 
     # Run forever
     while(ws.ws.sock.connected):
         orderBook = ws.market_depth()
+        firstSell = orderBook[0]["asks"][0][0]
+        firstBuy = orderBook[0]["bids"][0][0]
+        #_thread.start_new_thread( hemenOrderKur, () )
+        print(firstBuy)
+        hemenOrderKur()
         '''
         if orderBook[0]["asks"][0][1] < 1000:
             order = client.Order.Order_new(symbol='XBTUSD', side="Sell", orderQty=AMOUNT, price=orderBook[0]["asks"][0][0]).result()
@@ -41,11 +46,6 @@ def run():
             client.Order.Order_new(symbol='XBTUSD', side="Buy", orderQty=AMOUNT, price=orderBook[0]["bids"][0][0]).result()
         '''
         
-        firstSell = orderBook[0]["asks"][0][0]
-        firstBuy = orderBook[0]["bids"][0][0]
-        #_thread.start_new_thread( hemenOrderKur, () )
-        print(firstBuy)
-        hemenOrderKur()
         
 
 def hemenOrderKur():
