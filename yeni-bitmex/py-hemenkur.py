@@ -138,46 +138,9 @@ class BitMEXWebsocket:
         self.exited = True
         self.ws.close()
 
-    def get_instrument(self):
-        '''Get the raw instrument data for this symbol.'''
-        # Turn the 'tickSize' into 'tickLog' for use in rounding
-        instrument = self.data['instrument'][0]
-        instrument['tickLog'] = int(math.fabs(math.log10(instrument['tickSize'])))
-        return instrument
-
-    def get_ticker(self):
-        '''Return a ticker object. Generated from quote and trade.'''
-        lastQuote = self.data['quote'][-1]
-        lastTrade = self.data['trade'][-1]
-        ticker = {
-            "last": lastTrade['price'],
-            "buy": lastQuote['bidPrice'],
-            "sell": lastQuote['askPrice'],
-            "mid": (float(lastQuote['bidPrice'] or 0) + float(lastQuote['askPrice'] or 0)) / 2
-        }
-
-        # The instrument has a tickSize. Use it to round values.
-        instrument = self.data['instrument'][0]
-        return {k: round(float(v or 0), instrument['tickLog']) for k, v in ticker.items()}
-
-    def funds(self):
-        '''Get your margin details.'''
-        return self.data['margin'][0]
-
     def market_depth(self):
         '''Get market depth (orderbook). Returns all levels.'''
         return self.data['orderBook10']
-
-    def open_orders(self, clOrdIDPrefix):
-        '''Get all your open orders.'''
-        orders = self.data['order']
-        # Filter to only open orders (leavesQty > 0) and those that we actually placed
-        return [o for o in orders if str(o['clOrdID']).startswith(clOrdIDPrefix) and o['leavesQty'] > 0]
-
-    def recent_trades(self):
-        '''Get recent trades.'''
-        return self.data['trade']
-
     #
     # End Public Methods
     #
