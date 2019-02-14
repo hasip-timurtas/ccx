@@ -45,7 +45,7 @@ def run():
         
         firstSell = orderBook[0]["asks"][0][0]
         firstBuy = orderBook[0]["bids"][0][0]
-        t_thread.start_new_thread( hemenOrderKur, () )
+        _thread.start_new_thread( hemenOrderKur, () )
         #hemenOrderKur()
         
 
