@@ -7,6 +7,42 @@ import logging
 import urllib
 import math
 from util.api_key import generate_nonce, generate_signature
+import bitmex
+import _thread
+
+client = bitmex.bitmex(test=False, api_key="WUi67Xl7EjE6A0iUq1RFVENw", api_secret="9alw1YOYGOlMrvW6N6AEC5ulmUl9ZKIP4a2RSdCQvs_xQCCn")
+AMOUNT = 10
+
+# Basic use of websocket.
+def run():
+    global client, AMOUNT   
+    firstBuy = 0
+    oncekiBuy = 0
+
+    firstSell = 0
+    oncekiSell = 0
+    
+    #logger = setup_logger()
+
+    # Instantiating the WS will make it connect. Be sure to add your api_key/api_secret.
+    ws = BitMEXWebsocket(endpoint="wss://www.bitmex.com/realtime", symbol="XBTUSD",
+                         api_key="9XeRFuMri_7VoF1Dtd-MT_aY", api_secret="DT4615ZUSR25CqoEyimai1EeK_U-hipSWoCsZREWIEQM9NVV")
+
+    print(ws.get_instrument())
+
+    # Run forever
+    while(ws.ws.sock.connected):
+        print(ws.get_ticker())
+        '''
+        a = 1
+        orderBook = ws.market_depth()
+        firstSell = orderBook[0]["asks"][0][0]
+        firstBuy = orderBook[0]["bids"][0][0]
+        '''
+        #_thread.start_new_thread( hemenOrderKur, () )
+        #hemenOrderKur()
+       # logger.info(orderBook)
+        
 
 
 # Naive implementation of connecting to BitMEX websocket for streaming realtime data.
@@ -88,7 +124,7 @@ class BitMEXWebsocket:
 
     def market_depth(self):
         '''Get market depth (orderbook). Returns all levels.'''
-        return self.data['orderBookL2']
+        return self.data['orderBook10']
 
     def open_orders(self, clOrdIDPrefix):
         '''Get all your open orders.'''
@@ -136,10 +172,10 @@ class BitMEXWebsocket:
             self.logger.info("Authenticating with API Key.")
             # To auth to the WS using an API key, we generate a signature of a nonce and
             # the WS API endpoint.
-            expires = generate_nonce()
+            nonce = generate_nonce()
             return [
-                "api-expires: " + str(expires),
-                "api-signature: " + generate_signature(self.api_secret, 'GET', '/realtime', expires, ''),
+                "api-nonce: " + str(nonce),
+                "api-signature: " + generate_signature(self.api_secret, 'GET', '/realtime', nonce, ''),
                 "api-key:" + self.api_key
             ]
         else:
@@ -152,8 +188,8 @@ class BitMEXWebsocket:
         Most subscription topics are scoped by the symbol we're listening to.
         '''
 
-        # You can sub to orderBookL2 for all levels, or orderBook10 for top 10 levels & save bandwidth
-        symbolSubs = ["execution", "instrument", "order", "orderBookL2", "position", "quote", "trade"]
+        # You can sub to orderBook10 for all levels, or orderBook10 for top 10 levels & save bandwidth
+        symbolSubs = ["execution", "instrument", "order", "orderBook10", "position", "quote", "trade"]
         genericSubs = ["margin"]
 
         subscriptions = [sub + ':' + self.symbol for sub in symbolSubs]
@@ -167,7 +203,7 @@ class BitMEXWebsocket:
     def __wait_for_account(self):
         '''On subscribe, this data will come down. Wait for it.'''
         # Wait for the keys to show up from the ws
-        while not {'margin', 'position', 'order', 'orderBookL2'} <= set(self.data):
+        while not {'margin', 'position', 'order', 'orderBook10'} <= set(self.data):
             sleep(0.1)
 
     def __wait_for_symbol(self, symbol):
@@ -181,7 +217,7 @@ class BitMEXWebsocket:
             args = []
         self.ws.send(json.dumps({"op": command, "args": args}))
 
-    def __on_message(self, message):
+    def __on_message(self, ws, message):
         '''Handler for parsing WS messages.'''
         message = json.loads(message)
         self.logger.debug(json.dumps(message))
@@ -213,7 +249,7 @@ class BitMEXWebsocket:
 
                     # Limit the max length of the table to avoid excessive memory usage.
                     # Don't trim orders because we'll lose valuable state if we do.
-                    if table not in ['order', 'orderBookL2'] and len(self.data[table]) > BitMEXWebsocket.MAX_TABLE_LEN:
+                    if table not in ['order', 'orderBook10'] and len(self.data[table]) > BitMEXWebsocket.MAX_TABLE_LEN:
                         self.data[table] = self.data[table][int(BitMEXWebsocket.MAX_TABLE_LEN / 2):]
 
                 elif action == 'update':
@@ -238,17 +274,17 @@ class BitMEXWebsocket:
         except:
             self.logger.error(traceback.format_exc())
 
-    def __on_error(self, error):
+    def __on_error(self, ws, error):
         '''Called on fatal websocket errors. We exit on these.'''
         if not self.exited:
             self.logger.error("Error : %s" % error)
             raise websocket.WebSocketException(error)
 
-    def __on_open(self):
+    def __on_open(self, ws):
         '''Called when the WS opens.'''
         self.logger.debug("Websocket Opened.")
 
-    def __on_close(self):
+    def __on_close(self, ws):
         '''Called on websocket close.'''
         self.logger.info('Websocket Closed')
 
@@ -268,48 +304,6 @@ def findItemByKeys(keys, table, matchData):
                 matched = False
         if matched:
             return item
-
-firstBuy = 0
-firstSell = 0
-
-# Basic use of websocket.
-def run():
-    logger = setup_logger()
-
-    # Instantiating the WS will make it connect. Be sure to add your api_key/api_secret.
-    ws = BitMEXWebsocket(endpoint="wss://www.bitmex.com/realtime", symbol="XBTUSD",
-                         api_key="9XeRFuMri_7VoF1Dtd-MT_aY", api_secret="DT4615ZUSR25CqoEyimai1EeK_U-hipSWoCsZREWIEQM9NVV")
-
-    logger.info("Instrument data: %s" % ws.get_instrument())
-
-    # Run forever
-    while(ws.ws.sock.connected):
-        orderBook = ws.get_ticker()
-        abc = 1
-       # logger.info(orderBook)
-
-'''
-    # Run forever
-    while(ws.ws.sock.connected):
-        logger.info("Ticker: %s" % ws.get_ticker())
-        if ws.api_key:
-            logger.info("Funds: %s" % ws.funds())
-        logger.info("Market Depth: %s" % ws.market_depth())
-        logger.info("Recent Trades: %s\n\n" % ws.recent_trades())
-        sleep(10)
-'''
-
-def setup_logger():
-    # Prints logger info to terminal
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)  # Change this to DEBUG if you want a lot more info
-    ch = logging.StreamHandler()
-    # create formatter
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    # add formatter to ch
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
-    return logger
 
 
 if __name__ == "__main__":
