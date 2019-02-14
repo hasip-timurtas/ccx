@@ -39,7 +39,7 @@ def run():
         
 
         if orderBook[0]["bids"][0][1] < 1000 :
-            client.Order.Order_new(symbol='XBTUSD', side="Sell", orderQty=AMOUNT, price=orderBook[0]["bids"][0][0]).result()
+            client.Order.Order_new(symbol='XBTUSD', side="Buy", orderQty=AMOUNT, price=orderBook[0]["bids"][0][0]).result()
         
         '''
         firstSell = orderBook[0]["asks"][0][0]
