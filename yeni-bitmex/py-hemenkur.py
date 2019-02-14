@@ -28,7 +28,7 @@ def run():
     ws = BitMEXWebsocket(endpoint="wss://www.bitmex.com/realtime", symbol="XBTUSD",
                          api_key="9XeRFuMri_7VoF1Dtd-MT_aY", api_secret="DT4615ZUSR25CqoEyimai1EeK_U-hipSWoCsZREWIEQM9NVV")
 
-    print(ws.get_instrument())
+    #print(ws.get_instrument())
 
     # Run forever
     while(ws.ws.sock.connected):
