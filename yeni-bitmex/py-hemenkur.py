@@ -34,10 +34,19 @@ def run():
     # Run forever
     while(ws.ws.sock.connected):
         orderBook = ws.market_depth()
+        if orderBook[0]["asks"][0][1] < 1000:
+            order = client.Order.Order_new(symbol='XBTUSD', side="Sell", orderQty=AMOUNT, price=firstSell).result()
+        
+
+        if orderBook[0]["bids"][0][1] < 1000 :
+            client.Order.Order_new(symbol='XBTUSD', side="Sell", orderQty=AMOUNT, price=firstSell).result()
+        
+        '''
         firstSell = orderBook[0]["asks"][0][0]
         firstBuy = orderBook[0]["bids"][0][0]
         #_thread.start_new_thread( hemenOrderKur, () )
         hemenOrderKur()
+        '''
         
 def hemenOrderKur():
     global oncekiBuy, oncekiSell, AMOUNT, client, firstBuy, firstSell
