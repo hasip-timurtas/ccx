@@ -83,7 +83,7 @@ def hemenOrderKur():
 
 def sonraOrderBoz(orderId):
     global client
-    sleep(60)
+    sleep(120)
     client.Order.Order_cancel(orderID=orderId).result()
 
 # Naive implementation of connecting to BitMEX websocket for streaming realtime data.
