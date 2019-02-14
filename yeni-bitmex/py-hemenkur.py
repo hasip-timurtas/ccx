@@ -36,10 +36,9 @@ def run():
         orderBook = ws.market_depth()
         firstSell = orderBook[0]["asks"][0][0]
         firstBuy = orderBook[0]["bids"][0][0]
-        _thread.start_new_thread( hemenOrderKur, () )
-        #hemenOrderKur()
-       # logger.info(orderBook)
-
+        #_thread.start_new_thread( hemenOrderKur, () )
+        hemenOrderKur()
+        
 def hemenOrderKur():
     global oncekiBuy, oncekiSell, AMOUNT, client, firstBuy, firstSell
     if oncekiSell == 0:
@@ -75,6 +74,7 @@ def hemenOrderKur():
     
 
 def sonraOrderBoz(orderId):
+    global client
     sleep(60)
     client.Order.Order_cancel(orderID=orderId).result()
 
