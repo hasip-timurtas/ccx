@@ -48,7 +48,7 @@ def hemenOrderKur():
 
 def sonraOrderBoz(orderId):
     global client
-    sleep(300)
+    sleep(120)
     client.Order.Order_cancel(orderID=orderId).result()
 
 
