@@ -21,8 +21,6 @@ oncekiSell = 0
 # Basic use of websocket.
 def run():
     global client, AMOUNT, firstBuy, oncekiBuy, firstSell, oncekiSell
-    
-    
     #logger = setup_logger()
 
     # Instantiating the WS will make it connect. Be sure to add your api_key/api_secret.
@@ -61,7 +59,7 @@ def hemenOrderKur():
         #client.Order.Order_cancelAll().result()
         #SELL KUR
         order = client.Order.Order_new(symbol='XBTUSD', side="Sell", orderQty=AMOUNT, price=firstSell).result()
-        sonraOrderBoz(order['OrderId'])
+        sonraOrderBoz(order[0]['orderID'])
         print("Sell kuruldu. Önceki price: "+ str(tempOnceki)+", şimdiki price: "+ str(firstSell))
             
     else:
@@ -77,7 +75,7 @@ def hemenOrderKur():
         #client.Order.Order_cancelAll().result()
         #SELL KUR
         order = client.Order.Order_new(symbol='XBTUSD', side="Buy", orderQty=AMOUNT, price=firstBuy).result()
-        sonraOrderBoz(order['OrderId'])
+        sonraOrderBoz(order[0]['orderID'])
         print("Buy kuruldu. Önceki price: "+str(tempOnceki)+", şimdiki price: "+ str(firstBuy))
     else:
         oncekiBuy = firstBuy
