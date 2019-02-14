@@ -49,7 +49,7 @@ def hemenOrderKur():
 def sonraOrderBoz(orderId):
     global client
     sleep(300)
-    client.Order.Order_cancel(orderID=orderId).result()
+    client.Order.Order_cancel(orderID=str(orderId)).result()
 
 
 def on_message(ws, message):
