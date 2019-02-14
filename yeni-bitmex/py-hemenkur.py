@@ -5,7 +5,7 @@ import bitmex
 from time import sleep
 
 client = bitmex.bitmex(test=False, api_key="IJx_wvuEYxsrQNFsJQ6yEMXF", api_secret="TO5Sm0rmN0IHRpg_uXjRhVg54NlTWLiTIPvSQqYmP4RvfwZ9")
-AMOUNT = 100
+AMOUNT = 50
 firstBuy = 0
 oncekiBuy = 0
 
