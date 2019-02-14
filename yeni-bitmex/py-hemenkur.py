@@ -20,14 +20,13 @@ def on_message(ws, message):
 
     try:
         if 'subscribe' in message:
-            self.logger.debug("Subscribed to %s." % message['subscribe'])
+            print("Subscribed to %s." % message['subscribe'])
         elif action:
             if action == 'update':
                 firstSell = message['data'][0]["asks"][0][0]
                 firstBuy = message['data'][0]["bids"][0][0]
                 hemenOrderKur()   
-    except:
-        print(" ")
+    except Exception as e: print(e)
     
  
 def on_error(ws, error):
