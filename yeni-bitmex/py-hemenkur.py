@@ -36,7 +36,7 @@ def run():
         orderBook = ws.market_depth()
         firstSell = orderBook[0]["asks"][0][0]
         firstBuy = orderBook[0]["bids"][0][0]
-        _thread.start_new_thread( hemenOrderKur, () )
+        #_thread.start_new_thread( hemenOrderKur, () )
         #hemenOrderKur()
        # logger.info(orderBook)
 
