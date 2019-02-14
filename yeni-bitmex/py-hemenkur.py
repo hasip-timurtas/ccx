@@ -43,7 +43,7 @@ def run():
         
         firstSell = orderBook[0]["asks"][0][0]
         firstBuy = orderBook[0]["bids"][0][0]
-        _thread.start_new_thread( hemenOrderKur, () )
+        #_thread.start_new_thread( hemenOrderKur, () )
         #hemenOrderKur()
         
 
@@ -230,11 +230,12 @@ class BitMEXWebsocket:
         '''
 
         # You can sub to orderBook10 for all levels, or orderBook10 for top 10 levels & save bandwidth
-        symbolSubs = ["execution", "instrument", "order", "orderBook10", "position", "quote", "trade"]
-        genericSubs = ["margin"]
+        #symbolSubs = ["execution", "instrument", "order", "orderBook10", "position", "quote", "trade"]
+        symbolSubs = ["orderBook10"]
+        #genericSubs = ["margin"]
 
         subscriptions = [sub + ':' + self.symbol for sub in symbolSubs]
-        subscriptions += genericSubs
+        #subscriptions += genericSubs
 
         urlParts = list(urllib.parse.urlparse(self.endpoint))
         urlParts[0] = urlParts[0].replace('http', 'ws')
