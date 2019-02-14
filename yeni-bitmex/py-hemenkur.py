@@ -12,10 +12,10 @@ import _thread
 
 client = bitmex.bitmex(test=False, api_key="WUi67Xl7EjE6A0iUq1RFVENw", api_secret="9alw1YOYGOlMrvW6N6AEC5ulmUl9ZKIP4a2RSdCQvs_xQCCn")
 AMOUNT = 10
-
+orderBook = None
 # Basic use of websocket.
 def run():
-    global client, AMOUNT   
+    global client, AMOUNT, orderBook   
     firstBuy = 0
     oncekiBuy = 0
 
