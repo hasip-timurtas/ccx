@@ -112,7 +112,7 @@ class SellKontrol {
         while(true){
             await this.Basla10Dakika().catch(e=> console.log(e))
             this.onDakikaSayac = 0
-            await this.ortak.sleep(60)
+            await this.ortak.sleep(60 * 5)
         }
     }
     
