@@ -5,7 +5,7 @@ import bitmex
 from time import sleep
 
 client = bitmex.bitmex(test=False, api_key="IJx_wvuEYxsrQNFsJQ6yEMXF", api_secret="TO5Sm0rmN0IHRpg_uXjRhVg54NlTWLiTIPvSQqYmP4RvfwZ9")
-AMOUNT = 10
+AMOUNT = 100
 firstBuy = 0
 oncekiBuy = 0
 
@@ -48,7 +48,7 @@ def hemenOrderKur():
 
 def sonraOrderBoz(orderId):
     global client
-    sleep(120)
+    sleep(60)
     client.Order.Order_cancel(orderID=orderId).result()
 
 
