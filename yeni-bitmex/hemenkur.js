@@ -53,19 +53,39 @@ class SellKontrol {
 
     }
 
+    async LimitOrderAc(type, price){
+        return await this.CreateOrder(type, this.amount,  price, 'StopLimit',  {'stopPx': price})
+    }
+
     async Basla(){
         this.BalanceYazdir()
         console.log('Bütün orderlar iptal ediliyor.')
         //await this.ortak.BitmexCalcelAllOrders() // Open Ordersları iptal et.
         console.log('Web socket dataları hazırlanıyor...')
-        //this.StartWsData()
-        bitmex.addStream('XBTUSD', 'orderBook10', (data, symbol, tableName) => {
-            this.firstSell = data[0].asks[0][0]
-            this.firstBuy = data[0].bids[0][0]
-            this.HemenOrderKur()
-        })
+        this.StartWsData()
+        //const result = await this.LimitOrderAc('buy', 3900)
+        await this.ortak.sleep(10)
 
-        //await this.ortak.sleep(10)
+        
+        
+        while(true){
+            /*
+            - open ordersta stop limit varmı? yoksa
+            - first buy ile bitmex price eşit mi? değilse
+            - buy aç ama first sell ile.
+            */
+            if(this.firstBuy == this.bitmexPrice) continue
+            const limitOrder = this.openOrders.Data.find(e=> e.orderType == 'StopLimit' && e.type == 'buy')
+            if(limitOrder) continue
+            this.LimitOrderAc('buy', this.firstSell)
+            console.log(this.openOrders.Data.length)
+            await this.ortak.sleep(5)
+        }
+
+
+        
+
+       
         console.log('Web socket dataları hazır.')
         /*
         this.HemenOrderKur()
@@ -399,8 +419,8 @@ class SellKontrol {
 
     }
 
-    async CreateOrder(type, quantity, price, marketType = "limit"){
-        const orderParams = ['BTC/USD', marketType, type, quantity, price]
+    async CreateOrder(type, quantity, price, marketType = "limit", params){
+        const orderParams = ['BTC/USD', marketType, type, quantity, price, params]
         return await this.ortak.ccx.exchange.createOrder(...orderParams).catch(e => {
             console.log(e, 'BTC/USD')
         })
@@ -415,7 +435,8 @@ class SellKontrol {
                     Type: e.side.toLowerCase(),
                     Rate: e.price,
                     Amount: e.orderQty,
-                    entryDate: e.timestamp
+                    entryDate: e.timestamp,
+                    orderType: e.ordType
                 })
             }else{
                 this.openOrders.Data = this.openOrders.Data.filter(a => a.OrderId != e.orderID)
@@ -449,7 +470,9 @@ class SellKontrol {
         bitmex.addStream('XBTUSD', 'orderBook10', (data, symbol, tableName) => {
             const datam = data[data.length - 1]
             this.orderBooks = { sells: datam.asks.map(e=> ({Price: e[0]})) , buys: datam.bids.map(e=> ({Price: e[0]}))}
-            this.HemenOrderKur()
+            this.firstSell = data[0].asks[0][0]
+            this.firstBuy = data[0].bids[0][0]
+            //this.HemenOrderKur()
         })
 
         await this.ortak.sleep(4)
