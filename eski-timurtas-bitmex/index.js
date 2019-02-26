@@ -1,5 +1,5 @@
 const Ortak = require('./ortak')
-const waitTime = 5 // dakika
+const waitTime = 10 // dakika
 
 class SellKontrol {
     async LoadVeriables(){
@@ -48,28 +48,24 @@ class SellKontrol {
         
         // Positionlarda kâr varsa sat.
         if(openPositionVar) {
-            position.orderedType == 'sell' && this.SellYaptiBuyYap(position)
-            position.orderedType == 'buy' && this.BuyYaptiSellYap(position)
+            const quantity = Math.abs(position.size)
+            const kacCarpiGeride = Math.round((quantity / this.amount) +1)
+            const fazlaAlimVar = kacCarpiGeride == 3
+            const kacIslemYapmis = (quantity- 100) / 200 + 1
+            position.orderedType == 'sell' && this.SellYaptiBuyYap(position, fazlaAlimVar)
+            position.orderedType == 'buy' && this.BuyYaptiSellYap(position, fazlaAlimVar)
         }else{
            this.OrderYokBuySellYap(position) // price bilgisi bunun içinde
         }
     }
 
-    async SellYaptiBuyYap(position){
-        const quantity = Math.abs(position.size)
-        const kacCarpiGeride = Math.round((quantity / this.amount) +1)
-        const fazlaAlimVar = kacCarpiGeride == 3
-
+    async SellYaptiBuyYap(position, fazlaAlimVar){
         await this.CreateOrder('buy', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
         !fazlaAlimVar && await this.CreateOrder('sell', this.amount * 2, position.sells[0].Price + this.ikinciIslemFark)
         !fazlaAlimVar && await this.CreateOrder('sell', this.amount * 2, position.sells[0].Price + this.ikinciIslemFark * 3) // 3. işlem 3 katı aşşa insin
     }
 
-    async BuyYaptiSellYap(position){
-        const quantity = Math.abs(position.size)
-        const kacCarpiGeride = Math.round((quantity / this.amount) +1)
-        const fazlaAlimVar = kacCarpiGeride == 3
-
+    async BuyYaptiSellYap(position, fazlaAlimVar){
         await this.CreateOrder('sell', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al 
         !fazlaAlimVar && await this.CreateOrder('buy', this.amount * 2, position.buys[0].Price - this.ikinciIslemFark) // buy ise buy 2 katı arkada dursun + this.amount
         !fazlaAlimVar && await this.CreateOrder('buy', this.amount * 2, position.buys[0].Price - this.ikinciIslemFark * 3 ) // 3. işlem 3 katı aşşa insin
