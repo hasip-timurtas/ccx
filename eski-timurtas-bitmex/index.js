@@ -5,7 +5,7 @@ class SellKontrol {
     async LoadVeriables(){
         this.ortak = new Ortak()  // Ortak Yükle
         await this.ortak.LoadVeriables('MONGO')
-        this.amount = 150
+        this.amount = 300
         this.marginAmount = 0.5
         this.marketName = 'BTC/USD'
         this.lastPrice = null
