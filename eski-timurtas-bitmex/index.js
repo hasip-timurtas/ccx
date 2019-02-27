@@ -61,14 +61,14 @@ class SellKontrol {
 
     async SellYaptiBuyYap(position, quantity, fazlaAlimVar){
         await this.CreateOrder('buy', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
-        !fazlaAlimVar && await this.CreateOrder('sell', this.amount * 2, position.sells[0].Price + this.ikinciIslemFark)
-        !fazlaAlimVar && await this.CreateOrder('sell', this.amount * 2, position.sells[0].Price + this.ikinciIslemFark * 3) // 3. işlem 3 katı aşşa insin
+        await this.CreateOrder('sell', this.amount * 2, position.sells[0].Price + this.ikinciIslemFark)
+        await this.CreateOrder('sell', this.amount * 2, position.sells[0].Price + this.ikinciIslemFark * 3) // 3. işlem 3 katı aşşa insin
     }
 
     async BuyYaptiSellYap(position, quantity, fazlaAlimVar){
         await this.CreateOrder('sell', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al 
-        !fazlaAlimVar && await this.CreateOrder('buy', this.amount * 2, position.buys[0].Price - this.ikinciIslemFark) // buy ise buy 2 katı arkada dursun + this.amount
-        !fazlaAlimVar && await this.CreateOrder('buy', this.amount * 2, position.buys[0].Price - this.ikinciIslemFark * 3 ) // 3. işlem 3 katı aşşa insin
+        await this.CreateOrder('buy', this.amount * 2, position.buys[0].Price - this.ikinciIslemFark) // buy ise buy 2 katı arkada dursun + this.amount
+        await this.CreateOrder('buy', this.amount * 2, position.buys[0].Price - this.ikinciIslemFark * 3 ) // 3. işlem 3 katı aşşa insin
     }
 
     async OrderYokBuySellYap(position){
