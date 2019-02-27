@@ -50,7 +50,10 @@ class SellKontrol {
         if(openPositionVar) {
             const quantity = Math.abs(position.size)
             const kacIslemYapmis = ((quantity- this.amount) / this.amount * 2) + 1
-            if(kacIslemYapmis == 1) await this.OrderYokBuySellYap(position) // eğer sadece 1 işlem yapmışsa buy seli tekrar kur
+            const farkAcildiBekleyecek = position.sellNowPrice - position.entryPrice >= 5 // eğerki buy ve sell aralarında çok fark varsa bekleme oluyır. o bekyeleceğine sadece 1 işlem yapmışsa 2. buy selli girsin.
+            if(kacIslemYapmis == 1 && farkAcildiBekleyecek){
+                await this.OrderYokBuySellYap(position) // eğer sadece 1 işlem yapmışsa buy seli tekrar kur
+            } 
             position.orderedType == 'sell' && this.SellYaptiBuyYap(position, quantity, kacIslemYapmis)
             position.orderedType == 'buy' && this.BuyYaptiSellYap(position, quantity, kacIslemYapmis)
         }else{
