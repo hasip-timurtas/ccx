@@ -50,7 +50,7 @@ class SellKontrol {
         if(openPositionVar) {
             const quantity = Math.abs(position.size)
             const kacCarpiGeride = Math.round((quantity / this.amount) +1)
-            const fazlaAlimVar = kacCarpiGeride == 3
+            const fazlaAlimVar = kacCarpiGeride > 3
             const kacIslemYapmis = (quantity- 100) / 200 + 1
             position.orderedType == 'sell' && this.SellYaptiBuyYap(position, quantity, fazlaAlimVar)
             position.orderedType == 'buy' && this.BuyYaptiSellYap(position, quantity, fazlaAlimVar)
@@ -63,12 +63,14 @@ class SellKontrol {
         await this.CreateOrder('buy', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al
         await this.CreateOrder('sell', this.amount * 2, position.sells[0].Price + this.ikinciIslemFark)
         await this.CreateOrder('sell', this.amount * 2, position.sells[0].Price + this.ikinciIslemFark * 3) // 3. işlem 3 katı aşşa insin
+        await this.CreateOrder('sell', this.amount * 2, position.sells[0].Price + this.ikinciIslemFark * 10) // 4. işlem 10 katı aşşa insin yani 35 dolar
     }
 
     async BuyYaptiSellYap(position, quantity, fazlaAlimVar){
         await this.CreateOrder('sell', quantity, position.orderPrice)// quantity + this.amount -> sattıktan sonra al 
         await this.CreateOrder('buy', this.amount * 2, position.buys[0].Price - this.ikinciIslemFark) // buy ise buy 2 katı arkada dursun + this.amount
         await this.CreateOrder('buy', this.amount * 2, position.buys[0].Price - this.ikinciIslemFark * 3 ) // 3. işlem 3 katı aşşa insin
+        await this.CreateOrder('buy', this.amount * 2, position.buys[0].Price - this.ikinciIslemFark * 10 ) // 4. işlem 10 katı aşşa insin yani 35 dolar
     }
 
     async OrderYokBuySellYap(position){
