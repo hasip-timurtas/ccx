@@ -49,12 +49,8 @@ class SellKontrol {
         // Positionlarda kâr varsa sat.
         if(openPositionVar) {
             const quantity = Math.abs(position.size)
-            const kacCarpiGeride = Math.round((quantity / this.amount) +1)
-            const fazlaAlimVar = kacCarpiGeride > 3
             const kacIslemYapmis = ((quantity- this.amount) / this.amount * 2) + 1
-            if(kacIslemYapmis == 1){ // eğer sadece 1 işlem yapmışsa buy seli tekrar kur
-                await this.OrderYokBuySellYap(position)
-            }
+            if(kacIslemYapmis == 1) await this.OrderYokBuySellYap(position) // eğer sadece 1 işlem yapmışsa buy seli tekrar kur
             position.orderedType == 'sell' && this.SellYaptiBuyYap(position, quantity, kacIslemYapmis)
             position.orderedType == 'buy' && this.BuyYaptiSellYap(position, quantity, kacIslemYapmis)
         }else{
