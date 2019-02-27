@@ -49,7 +49,7 @@ class SellKontrol {
         // Positionlarda kâr varsa sat.
         if(openPositionVar) {
             const quantity = Math.abs(position.size)
-            const kacIslemYapmis = ((quantity- this.amount) / this.amount * 2) + 1
+            const kacIslemYapmis = (quantity- this.amount) / (this.amount * 2) + 1
             const farkAcildiBekleyecek = position.sellNowPrice - position.entryPrice >= 5 // eğerki buy ve sell aralarında çok fark varsa bekleme oluyır. o bekyeleceğine sadece 1 işlem yapmışsa 2. buy selli girsin.
             if(kacIslemYapmis == 1 && farkAcildiBekleyecek){
                 await this.OrderYokBuySellYap(position) // eğer sadece 1 işlem yapmışsa buy seli tekrar kur
