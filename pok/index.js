@@ -4,7 +4,7 @@ var account_key = '8aa990cd650742d303fec831a8dbb17c'
 var baslangicBet = 50000
 var bet = 50000
 var games = ['E', 'O', 'R', 'B', 'L18', 'H18']
-var options = {
+var options = { 
     headers: {
         'Cookie': "account_key=" + account_key 
     },
