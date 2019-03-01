@@ -1,6 +1,6 @@
 const rp = require('request-promise').defaults({maxRedirects:20})
 const crypto = require('crypto')
-var account_key = '49f31a45fc611afa1557513ebb1ddaa0'
+var account_key = 'efc69a02cd515037e098a32ccc7b73e4'
 var betCredit = 1
 var games = ['E', 'O', 'R', 'B', 'L18', 'H18']
 var options = { 
@@ -37,7 +37,7 @@ async function BetBaslat(){
             console.log("YENDİ bet: ", bet / 10000)
         }else{
 
-            if(bet / baslangicBet >= 16){
+            if(bet / baslangicBet >= 32){
                 console.log("Çok Kaybetti. bet başa dön bet: ", bet / 10000)
                 bet = baslangicBet
             }else{
@@ -92,6 +92,6 @@ function sleep (saniye) {
 }
 
 AradaBirRandom()
-for (let index = 0; index < 1; index++) {
-    BetBaslat()
+for (let index = 0; index < 5; index++) {
+    BetBaslat().catch(e=> e)
 }

@@ -1,6 +1,6 @@
 const rp = require('request-promise').defaults({maxRedirects:20})
 const crypto = require('crypto')
-var account_key = 'a822a565228d564623a5235fe0262211'
+var account_key = '8f3b41131e6a7e2c82d2205ed338fbba'
 var betCredit = 1
 var games = ['E', 'O', 'R', 'B', 'L18', 'H18']
 var options = { 
@@ -10,6 +10,8 @@ var options = {
     json: true, // Automatically parses the JSON string in the response
     jar: true
 }
+
+// LİNK : https://cashgames.bitcoin.com/?account_key=8f3b41131e6a7e2c82d2205ed338fbba
 
 async function BetBaslat(){
     var baslangicBet = betCredit * 10000
@@ -27,30 +29,32 @@ async function BetBaslat(){
         var randomNumber = Math.floor(Math.random() * 6)
         var game = games[randomNumber]
         var client_seed = crypto.randomBytes(32).toString('hex')
-        options.url = `https://cashgames.bitcoin.com/roulette/spin?server_seed_hash=${seedHash}&client_seed=${client_seed}&progressive_bet=0&${game}=${bet}&use_fake_credits=true`
+        options.url = `https://cashgames.bitcoin.com/roulette/spin?server_seed_hash=${seedHash}&client_seed=${client_seed}&progressive_bet=0&${game}=${bet}&use_fake_credits=false`
         var result = await rp(options).catch(e=> console.log(e))
         if(result.error== 'insufficient_funds') return console.log('Balance Bitti Çıkıyor.')
-        balance = result.fake_intbalance
+        balance = result.intbalance
         seedHash = result.server_seed_hash
         if(result.intwinnings > 0){
             bet = baslangicBet
             console.log("YENDİ bet: ", bet / 10000)
         }else{
-            bet = bet * 2
-            if(bet > balance){
+
+            if(bet / baslangicBet >= 32){
+                console.log("Çok Kaybetti. bet başa dön bet: ", bet / 10000)
                 bet = baslangicBet
-                console.log('Balance bitti, bet sıfırlanıyor. bet: ', bet / 10000);
-            }
-            console.log("Kaybetti. bet: ", bet / 10000)
-            /*
-            if(bet / baslangicBet > 3){
-                bet = baslangicBet
-                console.log("Çok Kaybetti. bet başa dön: ", bet)
             }else{
                 bet = bet * 2
-                console.log("Kaybetti. bet: ", bet)
+                console.log("Kaybetti. yeni bet: ", bet / 10000)
             }
-            */
+            
+            if(bet > balance){
+                console.log('Balance bitti, bet sıfırlanıyor. bet: ', bet / 10000)
+                bet = baslangicBet
+                continue
+            }
+
+            //console.log("Kaybetti. bet: ", bet / 10000)
+            
         }
     }
    
@@ -90,6 +94,6 @@ function sleep (saniye) {
 }
 
 AradaBirRandom()
-for (let index = 0; index < 10; index++) {
-    BetBaslat()
+for (let index = 0; index < 1; index++) {
+    BetBaslat().catch(e=> e)
 }
