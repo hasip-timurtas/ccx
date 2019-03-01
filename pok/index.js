@@ -36,6 +36,8 @@ async function BetBaslat(){
         var result = await rp(options).catch(e=> console.log(e))
         if(result.error== 'insufficient_funds') return console.log('Balance Bitti Çıkıyor.')
         balance = result.fake_intbalance
+        console.log("###################    BALANCE :  "+ result.fake_intbalance);
+        
         seedHash = result.server_seed_hash
         if(result.intwinnings > 0){
             bet = baslangicBet
@@ -59,6 +61,7 @@ async function BetBaslat(){
             //console.log("Kaybetti. bet: ", bet / 10000)
             
         }
+       
     }
    
 }
