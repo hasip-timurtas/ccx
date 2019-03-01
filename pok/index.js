@@ -30,6 +30,7 @@ async function BetBaslat(){
             console.log("YENDİ bet: ", bet)
         }else{
             bet = bet * 2
+            console.log("Kaybetti. bet: ", bet)
             /*
             if(bet / baslangicBet > 3){
                 bet = baslangicBet
