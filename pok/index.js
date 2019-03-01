@@ -40,7 +40,6 @@ async function BetBaslat(){
             }
             */
         }
-        var a = 1
     }
    
 }
