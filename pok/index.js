@@ -29,6 +29,8 @@ async function BetBaslat(){
             bet = baslangicBet
             console.log("YENDİ bet: ", bet)
         }else{
+            bet = bet * 2
+            /*
             if(bet / baslangicBet > 3){
                 bet = baslangicBet
                 console.log("Çok Kaybetti. bet başa dön: ", bet)
@@ -36,6 +38,7 @@ async function BetBaslat(){
                 bet = bet * 2
                 console.log("Kaybetti. bet: ", bet)
             }
+            */
         }
         var a = 1
     }
