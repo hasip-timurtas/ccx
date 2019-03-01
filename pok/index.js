@@ -13,6 +13,7 @@ var options = {
 
 if(process.argv[2]){
     account_key = process.argv[2]
+    console.log("Yeni account key girildi key: "+ account_key);
 }
 
 async function BetBaslat(){
