@@ -1,8 +1,9 @@
 const rp = require('request-promise').defaults({maxRedirects:20})
 const crypto = require('crypto')
-var account_key = '8aa990cd650742d303fec831a8dbb17c'
-var baslangicBet = 50000
-var bet = 50000
+var account_key = '41544ae460af6f728a66855990f9305b'
+var betCredit = 1
+var baslangicBet = betCredit * 10000
+var bet = betCredit * 10000
 var games = ['E', 'O', 'R', 'B', 'L18', 'H18']
 var options = { 
     headers: {
@@ -34,14 +35,14 @@ async function BetBaslat(){
         seedHash = result.server_seed_hash
         if(result.intwinnings > 0){
             bet = baslangicBet
-            console.log("YENDİ bet: ", bet)
+            console.log("YENDİ bet: ", bet / 10000)
         }else{
             bet = bet * 2
             if(bet > balance){
                 bet = baslangicBet
-                console.log('Balance bitti, bet sıfırlanıyor. bet: ', bet);
+                console.log('Balance bitti, bet sıfırlanıyor. bet: ', bet / 10000);
             }
-            console.log("Kaybetti. bet: ", bet)
+            console.log("Kaybetti. bet: ", bet / 10000)
             /*
             if(bet / baslangicBet > 3){
                 bet = baslangicBet
