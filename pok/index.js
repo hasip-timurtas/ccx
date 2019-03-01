@@ -1,6 +1,6 @@
 const rp = require('request-promise').defaults({maxRedirects:20})
 const crypto = require('crypto')
-var account_key = '41544ae460af6f728a66855990f9305b'
+var account_key = 'a822a565228d564623a5235fe0262211'
 var betCredit = 1
 var baslangicBet = betCredit * 10000
 var bet = betCredit * 10000
@@ -31,6 +31,7 @@ async function BetBaslat(){
         var client_seed = crypto.randomBytes(32).toString('hex')
         options.url = `https://cashgames.bitcoin.com/roulette/spin?server_seed_hash=${seedHash}&client_seed=${client_seed}&progressive_bet=0&${game}=${bet}&use_fake_credits=true`
         var result = await rp(options).catch(e=> console.log(e))
+        if(result.error== 'insufficient_funds') return console.log('Balance Bitti Çıkıyor.')
         balance = result.fake_intbalance
         seedHash = result.server_seed_hash
         if(result.intwinnings > 0){
@@ -72,7 +73,7 @@ async function AradaBirRandom(){
         var client_seed = crypto.randomBytes(32).toString('hex')
         options.url = `https://cashgames.bitcoin.com/roulette/spin?server_seed_hash=${seedHash}&client_seed=${client_seed}&progressive_bet=0&${game}=${bet}&use_fake_credits=true`
         var result = await rp(options).catch(e=> console.log(e))
-        balance = result.fake_intbalance
+        if(result.error== 'insufficient_funds') return console.log('Balance Bitti Çıkıyor.')
         seedHash = result.server_seed_hash
         if(result.intwinnings > 0){
             console.log("Aradabir kazandı 1")
