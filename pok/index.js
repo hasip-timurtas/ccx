@@ -11,6 +11,10 @@ var options = {
     jar: true
 }
 
+if(process.argv[2]){
+    account_key = process.argv[2]
+}
+
 async function BetBaslat(){
     var baslangicBet = betCredit * 10000
     var bet = betCredit * 10000
