@@ -1,6 +1,6 @@
 const rp = require('request-promise').defaults({maxRedirects:20})
 const crypto = require('crypto')
-var account_key = '1b1bbf01f7593f284ebcaeac52259ec2'
+var account_key = '145f4a0aac17e1e8bdfd2bc8a4fb7226'
 var baslangicBet = 10000
 var bet = 10000
 var games = ['E', 'O', 'R', 'B', 'L18', 'H18']
