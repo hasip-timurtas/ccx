@@ -1,6 +1,6 @@
 const rp = require('request-promise').defaults({maxRedirects:20})
 const crypto = require('crypto')
-var account_key = 'a822a565228d564623a5235fe0262211'
+var account_key = '49f31a45fc611afa1557513ebb1ddaa0'
 var betCredit = 1
 var games = ['E', 'O', 'R', 'B', 'L18', 'H18']
 var options = { 
@@ -36,21 +36,23 @@ async function BetBaslat(){
             bet = baslangicBet
             console.log("YENDİ bet: ", bet / 10000)
         }else{
-            bet = bet * 2
-            if(bet > balance){
+
+            if(bet / baslangicBet >= 16){
+                console.log("Çok Kaybetti. bet başa dön bet: ", bet / 10000)
                 bet = baslangicBet
-                console.log('Balance bitti, bet sıfırlanıyor. bet: ', bet / 10000);
-            }
-            console.log("Kaybetti. bet: ", bet / 10000)
-            /*
-            if(bet / baslangicBet > 3){
-                bet = baslangicBet
-                console.log("Çok Kaybetti. bet başa dön: ", bet)
             }else{
                 bet = bet * 2
-                console.log("Kaybetti. bet: ", bet)
+                console.log("Kaybetti. yeni bet: ", bet / 10000)
             }
-            */
+            
+            if(bet > balance){
+                console.log('Balance bitti, bet sıfırlanıyor. bet: ', bet / 10000)
+                bet = baslangicBet
+                continue
+            }
+
+            //console.log("Kaybetti. bet: ", bet / 10000)
+            
         }
     }
    
@@ -90,6 +92,6 @@ function sleep (saniye) {
 }
 
 AradaBirRandom()
-for (let index = 0; index < 10; index++) {
+for (let index = 0; index < 1; index++) {
     BetBaslat()
 }
