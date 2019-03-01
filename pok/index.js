@@ -52,6 +52,7 @@ async function BetBaslat(){
                 console.log("Kaybetti. yeni bet: ", bet / 10000)
             }
             */
+            bet = bet * 2
             if(bet > balance){
                 console.log('Balance bitti, bet sıfırlanıyor. bet: ', bet / 10000)
                 bet = baslangicBet
