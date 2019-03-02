@@ -26,6 +26,7 @@ class SellKontrol {
         const openOrders = await this.GetOpenOrders()
         const position = await this.GetPositions()
         const openBuyVeSellVar = openOrders.buy && openOrders.sell
+        const sadeceBuyYadaSadeceSellVar = openOrders.buy || openOrders.sell
         const openPositionVar = position && position.entryPrice
         if(openBuyVeSellVar){
             if(openPositionVar){
@@ -39,6 +40,9 @@ class SellKontrol {
                     return
                 }
             }
+        }else if(!openPositionVar && sadeceBuyYadaSadeceSellVar){
+            const orderBiriciSirada = sadeceBuyYadaSadeceSellVar.Rate == position[sadeceBuyYadaSadeceSellVar.type+'s'][0]
+            if(orderBiriciSirada) return  // open position yoksa ve order 1. sıradaysa boşuna restart edip aynı yere koyma geç.
         }
         
         
