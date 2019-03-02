@@ -41,7 +41,7 @@ class SellKontrol {
                 }
             }
         }else if(!openPositionVar && sadeceBuyYadaSadeceSellVar){
-            const orderBiriciSirada = sadeceBuyYadaSadeceSellVar.Rate == position[sadeceBuyYadaSadeceSellVar.type+'s'][0]
+            const orderBiriciSirada = sadeceBuyYadaSadeceSellVar.Rate == position[sadeceBuyYadaSadeceSellVar.type+'s'][0].Price
             if(orderBiriciSirada) return  // open position yoksa ve order 1. sıradaysa boşuna restart edip aynı yere koyma geç.
         }
         
