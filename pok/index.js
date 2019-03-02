@@ -13,22 +13,37 @@ var options = {
 var functionAdet = 1
 var betCredit = 1
 
-if(process.argv[2]){
-    account_key = process.argv[2]
-    console.log("Yeni account key girildi key: "+ account_key);
+
+async function Basla(){
+    if(process.argv[2]){
+        if(process.argv[2] == "yeni"){
+            var accountKeyResult = await rp({jar:true, json:true, url: 'hhttps://cashgames.bitcoin.com/account/new'}).catch(e=> console.log(e))
+            account_key = accountKeyResult.account_key
+            console.log("Yeni oluşturulan account_key: ", account_key)
+        }else{
+            account_key = process.argv[2]
+            console.log("Yeni account key girildi key: "+ account_key)
+        }
+        
+    }
+    
+    if(process.argv[3]){
+        betCredit = process.argv[3]
+        console.log("Yeni betCredit girildi betCredit: "+ betCredit);
+    }
+    
+    
+    if(process.argv[4]){
+        functionAdet = process.argv[4]
+        console.log("Yeni functionAdet girildi adet: "+ functionAdet);
+    }
+    
+
+    AradaBirRandom()
+    for (let index = 0; index < functionAdet; index++) {
+        BetBaslat().catch(e=> e)
+    }
 }
-
-if(process.argv[3]){
-    betCredit = process.argv[3]
-    console.log("Yeni betCredit girildi betCredit: "+ betCredit);
-}
-
-
-if(process.argv[4]){
-    functionAdet = process.argv[4]
-    console.log("Yeni functionAdet girildi adet: "+ functionAdet);
-}
-
 
 async function BetBaslat(){
     var baslangicBet = betCredit * 10000
@@ -119,7 +134,5 @@ function sleep (saniye) {
     return new Promise(resolve => setTimeout(resolve, saniye * 1000))
 }
 
-AradaBirRandom()
-for (let index = 0; index < functionAdet; index++) {
-    BetBaslat().catch(e=> e)
-}
+
+Basla()
