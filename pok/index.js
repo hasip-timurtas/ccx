@@ -11,7 +11,7 @@ var options = {
 }
 
 var functionAdet = 1
-var betCredit = 5000
+var betCredit = 1
 
 if(process.argv[2]){
     account_key = process.argv[2]
