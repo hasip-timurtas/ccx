@@ -11,10 +11,18 @@ var options = {
     jar: true
 }
 
+var functionAdet = 1
+
 if(process.argv[2]){
     account_key = process.argv[2]
     console.log("Yeni account key girildi key: "+ account_key);
 }
+
+if(process.argv[3]){
+    account_key = process.argv[3]
+    console.log("Yeni functionAdet girildi adet: "+ functionAdet);
+}
+
 
 async function BetBaslat(){
     var baslangicBet = betCredit * 10000
@@ -101,6 +109,6 @@ function sleep (saniye) {
 }
 
 AradaBirRandom()
-for (let index = 0; index < 5; index++) {
+for (let index = 0; index < functionAdet; index++) {
     BetBaslat().catch(e=> e)
 }
