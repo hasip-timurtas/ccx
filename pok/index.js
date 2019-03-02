@@ -67,7 +67,7 @@ async function BetBaslat(){
                 continue
             }
 
-            //console.log("Kaybetti. bet: ", bet / 10000)
+            console.log("Kaybetti. bet: ", bet / 10000)
             
         }
        
