@@ -1,6 +1,6 @@
 const rp = require('request-promise').defaults({maxRedirects:20})
 const crypto = require('crypto')
-var account_key = 'cb2a80f89fd93c89a132dc692a890f46'
+var account_key = '608ee3c9c194a48f5e8494f68b89c063'
 var games = ['E', 'O', 'R', 'B', 'L18', 'H18']
 var options = { 
     headers: {
@@ -11,7 +11,7 @@ var options = {
 }
 
 var functionAdet = 1
-var betCredit = 1
+var betCredit = 5000
 
 if(process.argv[2]){
     account_key = process.argv[2]
@@ -49,6 +49,11 @@ async function BetBaslat(){
         options.url = `https://cashgames.bitcoin.com/roulette/spin?server_seed_hash=${seedHash}&client_seed=${client_seed}&progressive_bet=0&${game}=${bet}&use_fake_credits=true`
         var result = await rp(options).catch(e=> console.log(e))
         if(result.error== 'insufficient_funds') return console.log('Balance Bitti Çıkıyor.')
+        if(result.error == 'invalid bet'){
+            console.log(result.error)
+            bet = baslangicBet
+            continue
+        }
         balance = result.fake_intbalance
         console.log("###################    BALANCE :  "+ result.fake_intbalance / 10000);
         
