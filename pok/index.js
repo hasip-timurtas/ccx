@@ -17,7 +17,7 @@ var betCredit = 1
 async function Basla(){
     if(process.argv[2]){
         if(process.argv[2] == "yeni"){
-            var accountKeyResult = await rp({jar:true, json:true, url: 'hhttps://cashgames.bitcoin.com/account/new'}).catch(e=> console.log(e))
+            var accountKeyResult = await rp({jar:true, json:true, url: 'https://cashgames.bitcoin.com/account/new'}).catch(e=> console.log(e))
             account_key = accountKeyResult.account_key
             console.log("Yeni oluşturulan account_key: ", account_key)
         }else{
