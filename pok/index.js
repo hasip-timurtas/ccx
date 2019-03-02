@@ -1,6 +1,6 @@
 const rp = require('request-promise').defaults({maxRedirects:20})
 const crypto = require('crypto')
-var account_key = 'efc69a02cd515037e098a32ccc7b73e4'
+var account_key = 'cb2a80f89fd93c89a132dc692a890f46'
 var betCredit = 1
 var games = ['E', 'O', 'R', 'B', 'L18', 'H18']
 var options = { 
@@ -19,7 +19,7 @@ if(process.argv[2]){
 }
 
 if(process.argv[3]){
-    account_key = process.argv[3]
+    functionAdet = process.argv[3]
     console.log("Yeni functionAdet girildi adet: "+ functionAdet);
 }
 
