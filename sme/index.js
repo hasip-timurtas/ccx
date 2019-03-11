@@ -14,7 +14,7 @@ class IgAutoUpload {
             const caption = 'DM US FOR MORE INFORMATION! ' + hashTags
             const result = await client.uploadPhoto({ photo, caption })
             var a = 1
-            this.sleep(60 * 60 * 3) // 3 saatte bir 
+            await this.sleep(60 * 60 * 3) // 3 saatte bir 
         }
         
     }
