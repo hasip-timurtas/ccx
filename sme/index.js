@@ -19,6 +19,11 @@ class IgAutoUpload {
             const photo = `http://keskinmedia.com/ig/${randomNumber}.jpg`
             const caption = 'DM US FOR MORE INFORMATION! ' + hashTags
             const result = await client.uploadPhoto({ photo, caption })
+            if(result.status == "ok"){
+                console.log("Resim Yüklendi");
+            }else{
+                console.log("Resim yüklerken hata oluştu. tekrar deneyecek");
+            }
             var a = 1
             await this.sleep(60 * 60 * 3) // 3 saatte bir 
         }
