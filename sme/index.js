@@ -4,11 +4,12 @@ const randomWords = require('random-words')
 const FileCookieStore = require('tough-cookie-filestore2')
 const cookieStore = new FileCookieStore('./cookies.json')
 
-const client = new Instagram({ username: 'sosyal.bayii', password: 'karina3434+', cookieStore  })
+
 
 class IgAutoUpload {
     async Basla(){
         while(true){
+            const client = new Instagram({ username: 'sosyal.bayii', password: 'karina3434+', cookieStore  })
             await client.login()
             const profile = await client.getProfile()
             console.log(profile.email);
