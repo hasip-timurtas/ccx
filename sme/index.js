@@ -1,13 +1,18 @@
 const Instagram = require('instagram-web-api')
 const rp = require('request-promise')
 const randomWords = require('random-words')
+const FileCookieStore = require('tough-cookie-filestore2')
+const cookieStore = new FileCookieStore('./cookies.json')
 
-const client = new Instagram({ username: 'sosyal.bayii', password: 'karina3434+' })
+const client = new Instagram({ username: 'sosyal.bayii', password: 'karina3434+', cookieStore  })
 
 class IgAutoUpload {
     async Basla(){
         while(true){
             await client.login()
+            const profile = await client.getProfile()
+            console.log(profile.email);
+            
             const hashTags = await this.GetHashTags()
             const randomNumber = Math.floor(Math.random() * 6) + 1 // 1-6 arası random sayı
             const photo = `http://keskinmedia.com/ig/${randomNumber}.jpg`
