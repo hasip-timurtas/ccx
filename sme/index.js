@@ -15,7 +15,7 @@ class IgAutoUpload {
             console.log(profile.email);
             
             const hashTags = await this.GetHashTags()
-            const randomNumber = Math.floor(Math.random() * 6) + 1 // 1-6 arası random sayı
+            const randomNumber = Math.floor(Math.random() * 16)  // 1-6 arası random sayı
             const photo = `http://keskinmedia.com/ig/${randomNumber}.jpg`
             const caption = 'DM US FOR MORE INFORMATION! ' + hashTags
             const result = await client.uploadPhoto({ photo, caption })
