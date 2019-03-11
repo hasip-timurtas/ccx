@@ -20,10 +20,11 @@ class IgAutoUpload {
             await client.login()
             const profile = await client.getProfile()
             console.log(profile.email);
-            const hashTags = this.GetRamdom30Tags() //await this.GetHashTags()
+            const hashTagList = this.GetRamdom30Tags() //await this.GetHashTags()
+            const hashTags = hashTagList.join(" #")
             const randomNumber = Math.floor(Math.random() * 16)  // 1-6 arası random sayı
             const photo = `http://keskinmedia.com/ig/${randomNumber}.jpg`
-            const caption = 'DM US FOR MORE INFORMATION! ' + hashTags
+            const caption = 'DM US FOR MORE INFORMATION! #' + hashTags
             const result = await client.uploadPhoto({ photo, caption })
             if(result.status == "ok"){
                 console.log(sayac + " defa resim Yüklendi")
