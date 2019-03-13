@@ -9,6 +9,7 @@ const kariHashTags = `
 #nycmodel #nycactress #newyorkinfluencers #miamiinfluencer #miamimodel #springseason #newarrivalsdaily #fashionphotographerdubai #dubaimodel #dubaiinfluencers #abudhabiinfluencer #dubailifestyle #dubaihorses #dubaiwriters #dubaiphotography #photographer_pics #nycphotographers #washington_ig #nycmodels
 #disoverysection #nychairdresser #makeupnyc #newjerseybraider #newjerseymodel #newjerseyfitness #ohiobarbers #minnesotabarbers #ohiofitness #ohiomakeupartist #arizonabarbers #arkansasfitness #coloradobarber #mainemodel #mainemakeupartist #massachusettsphotography #hampshiremakeupartist #michiganfitness #carolinabarber #nycbridalmarket
 #alabamabarker #alabamaweddingplanner #alabamashop #alaskaphotography #alaskabarbershop #alaskashop #arizonabarber #arizonagardening #arizonatattooshop #yogaarizona #arkansasyoga #nycyoga #nebraskacornhuskers #njyoga #arkansasbarber #arkansasstyle #arizonastyle #delawarestateuniversity #delawareyoga #fitnessusa #usafitness #nutricionistasp #healthcoachnyc #healthcoachinstitute #youthcoaching #topmodelschool #plasticsurgerykorea #plasticsurgerycolombia #plasticsurgerybeforeandafter #sellinghomes
+#newbornphotographerargentina #newbornphotographersydney #newbornphotographermelbourne #newbornphotographerdubai #weddingplannerdubai #partyplannerdubai #dubaibar #hawaiibar #hawaiinightclubs #surfschoolbali #surfschoollanzarote #surfschooltenerife #healthysmoothies #cookeryschool #njchef #louisianarestaurant #missourirestaurants #nevadashoes #nevadajeans #newmexicoart
 `.replace(/\s/g, '').split('#')
 kariHashTags.shift()
 
@@ -17,7 +18,9 @@ class IgAutoUpload {
     async Basla(){
         let sayac = 1
         while(true){
-            const client = new Instagram({ username: 'sosyal.bayii', password: 'karina3434+', cookieStore  })
+            //const client = new Instagram({ username: 'sosyal.bayii', password: 'karina3434+', cookieStore  })
+            //const client = new Instagram({ username: 'social.media.tips_', password: 'hello560', cookieStore  })
+            const client = new Instagram({ username: 'social.media.improvment', password: 'hasip3535', cookieStore  })
             await client.login()
             const profile = await client.getProfile()
             console.log(profile.email);
