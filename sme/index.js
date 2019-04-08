@@ -2,7 +2,7 @@ const Instagram = require('instagram-web-api')
 const rp = require('request-promise')
 const randomWords = require('random-words')
 const FileCookieStore = require('tough-cookie-filestore2')
-const cookieStore = new FileCookieStore('./cookies.json')
+//const cookieStore = new FileCookieStore('./cookies.json')
 const kariHashTags = `
 #nycnewbornphotographer #nyctattoo #nycbrides #nycrealestate #nycbarber #nychotel #nycstore #nycbrand #nycrestaurants #nycbars #nycphotoshoot #nycnews #nycextensions #plasticsurgerynyc #nycsinger #nycfitness #nycpainters #nycdancers #nycweddings #nycweddingphotography
 #neworleansnails #delawarehairstylist #delawarebraider #ohiomakeupartist #ohiophotographer #georgiarealestate #ohiorealestate #nycrealestate #miamirealestate #miamibraider #washingtonrealestate #ukrealestate #ukbride #nycbrides #makeupturorial #beautybloggerlife #professionalorganizer #luxuryweddingplanner #weddingplannermalaysia #weddingplannermadrid #personaltrainerdubai
@@ -18,9 +18,9 @@ class IgAutoUpload {
     async Basla(){
         let sayac = 1
         while(true){
-            //const client = new Instagram({ username: 'sosyal.bayii', password: 'karina3434+', cookieStore  })
-            //const client = new Instagram({ username: 'social.media.tips_', password: 'hello560', cookieStore  })
-            const client = new Instagram({ username: 'social.media.improvment', password: 'hasip3535', cookieStore  })
+            //const client = new Instagram({ username: 'sosyal.bayii', password: 'karina3434+'  })
+            //const client = new Instagram({ username: 'social.media.tips_', password: 'hello560'  })
+            const client = new Instagram({ username: 'social.media.improvement', password: 'hasip3535'  })
             await client.login()
             const profile = await client.getProfile()
             console.log(profile.email);
