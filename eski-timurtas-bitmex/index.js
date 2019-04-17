@@ -253,7 +253,7 @@ async function CheckPositions(){
 Basla()
 
 /*
-    investingSignal(){
+    async investingSignal(){
     
         const options = {
             method: 'POST',
