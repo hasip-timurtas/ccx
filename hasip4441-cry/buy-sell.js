@@ -90,7 +90,7 @@ class WsMongo {
         }
 
         if(!altiTickers || !check){
-            this.FdbCoiniSil(coin)
+            //this.FdbCoiniSil(coin)
             this.IslemdekilerCikar(coin)
             return false
         }
@@ -124,14 +124,14 @@ class WsMongo {
             to = to.replace(/^\w/, c => c.toUpperCase())
             const first = altiTickers['coin'+from]
             const second = altiTickers['coin'+to]
-            this.FdbIslemleri(coin, first, second, fark)
+            //this.FdbIslemleri(coin, first, second, fark)
             const volumeUygun = this.ortak.marketVolumes[second.market] >=  this.ortak.volumeLimtis[to.toUpperCase()]
             if(!volumeUygun) return
             const checkTamUygun = first.ask.total >= this.ortak.limits[from.toUpperCase()] && second.bid.total >= this.ortak.limits[to.toUpperCase()] // CHECK TAM UYGUN
             if(!checkTamUygun) return
             console.log(coin + ` - ${from} > ${to} KOŞUL UYUYOR`)
             const marketFrmt = this.GetUygunMarketFormat(first, second, fark, coinBtc)
-            this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(coin).set(marketFrmt)
+            //this.ortak.db.ref(this.fdbRoot+"-uygunlar").child(coin).set(marketFrmt)
             uygunMarkets.push(marketFrmt)
         }
         
