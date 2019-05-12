@@ -6,7 +6,7 @@ class WsMongo {
         this.minFark = 1.5
         this.islemdekiler = []
         this.ortak = new Ortak()
-        await this.ortak.LoadVeriables('MONGO')
+        await this.ortak.LoadVeriables('RAM')
         this.SellKontrolForBuy = new SellKontrolForBuy()
         this.SellKontrolForBuy.LoadVeriables(this.ortak) 
         //await this.ortak.LoadVeriables()
