@@ -49,7 +49,7 @@ class WsMongo {
             }
             await Promise.all(promises).catch(e=> console.log(e))
             this.RunForAllCoinsPromiseSayac++
-            await this.ortak.sleep(1)
+            await this.ortak.sleep(0.1)
         }
     }
 
