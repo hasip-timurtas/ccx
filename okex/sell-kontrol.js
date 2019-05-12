@@ -111,7 +111,7 @@ class SellKontrol {
     }
 
     async SellKurKontrol(balance){
-        if(balance.Symbol == 'BON'){
+        if(balance.Symbol == 'ORS'){
             this.dur = 1
         }
         let market
@@ -132,7 +132,7 @@ class SellKontrol {
     async SellKur(market){
         const baseMarket = market.market.split('/')[1]
         const ondalikliSayi = this.ortak.SetPrices(market.market)
-        const limit = this.ortak.sellLimits[baseMarket]
+        const limit = this.ortak.sellLimits[baseMarket] / 2
         const total = market.balance.Available * market[market.type][0]['rate']
         //const totalBuy = balance.Available * market.sell
         if(total < limit) return
