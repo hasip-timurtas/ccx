@@ -43,7 +43,6 @@ class SellKontrol {
         const promise1 = this.BalanceIslemdeOlanlar(islemdeBalances, openOrders)
         const promise2 = this.BalanceAvilableOlanlar(availableBalances)
         await Promise.all([promise1, promise2]).catch(e=> console.log(e))
-        await this.ortak.sleep(2)
     }
 
     async CancelAllOrders(openOrders){
@@ -67,12 +66,18 @@ class SellKontrol {
     }
 
     async BalanceIslemdeOlanlar(balances, openOrders){
+        for (const openOrder of openOrders) {
+            const balance = balances.find(e => e.Symbol == openOrder.market.split('/')[0])
+            await this.SelleKoyKontrol(balance, openOrder)
+        }
+        /*
         for (const balance of balances) {
             if(!this.BalanceKontroller(balance)) continue
             const openOrder = openOrders && openOrders.find(e=> e.market.split('/')[0] == balance.Symbol)
             if(!openOrder) continue // TODO: balanceler eşit değilse ve open ordersta yoksa dbde yok demek. ordersi bi şekilde iptal et.
             await this.SelleKoyKontrol(balance, openOrder)
         }
+        */
     }
 
     BalanceKontroller(balance){
@@ -164,11 +169,10 @@ class SellKontrol {
             balance.Available = openOrder.amount
             //await this.SellKurKontrol(balance)
         }).catch(async (e) => {
+            console.log(e, openOrder.market)
             if(e.message.includes('No matching trades found')){
                 await this.ortak.DeleteOrderFb(openOrder.orderId)
-            }else{
-                console.log(e, openOrder.market)
-            }  
+            }
         })
     }
 
@@ -214,8 +218,8 @@ class SellKontrol {
         }
 
         // DOGE
-        if(dogeBalance > 100000 ){  // SELL
-            const satilacakBalance = dogeBalance - 100000
+        if(dogeBalance > 50000 ){  // SELL
+            const satilacakBalance = dogeBalance - 50000
             if(satilacakBalance >= this.ortak.limits['DOGE']){
                 const marketOrders = await this.ortak.GetOrderBook('DOGE/LTC')
                 const sellPrice = marketOrders.asks[0]['rate'] - ondalikliSayi
@@ -242,6 +246,7 @@ async function Basla(){
     //await sellKontrol.ortak.sleep(60)
     while(true){
         await sellKontrol.BaslaSell().catch(e=> console.log(e))
+        await sellKontrol.ortak.sleep(5)
     }
 }
 
