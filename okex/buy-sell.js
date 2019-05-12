@@ -6,7 +6,7 @@ class WsMongo {
         this.minFark = 1.5
         this.islemdekiler = []
         this.ortak = new Ortak()
-        await this.ortak.LoadVeriables('RAM')
+        await this.ortak.LoadVeriables('MONGO')
         this.SellKontrolForBuy = new SellKontrolForBuy()
         this.SellKontrolForBuy.LoadVeriables(this.ortak) 
         //await this.ortak.LoadVeriables()
@@ -49,6 +49,7 @@ class WsMongo {
             }
             await Promise.all(promises).catch(e=> console.log(e))
             this.RunForAllCoinsPromiseSayac++
+            await this.ortak.sleep(1)
         }
     }
 
