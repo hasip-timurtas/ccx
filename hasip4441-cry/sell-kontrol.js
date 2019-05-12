@@ -214,8 +214,8 @@ class SellKontrol {
         }
 
         // DOGE
-        if(dogeBalance > 100000 ){  // SELL
-            const satilacakBalance = dogeBalance - 100000
+        if(dogeBalance > 50000 ){  // SELL
+            const satilacakBalance = dogeBalance - 50000
             if(satilacakBalance >= this.ortak.limits['DOGE']){
                 const marketOrders = await this.ortak.GetOrderBook('DOGE/LTC')
                 const sellPrice = marketOrders.asks[0]['rate'] - ondalikliSayi
