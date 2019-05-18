@@ -2,7 +2,7 @@ const Ortak = require('./ortak')
 const SellKontrolForBuy = require('./sell-kontrol-for-buy')
 class WsMongo {
     async LoadVeriables() {
-        this.islemKati = 10 // 15
+        this.islemKati = 20 // 15
         this.minFark = 2
         this.islemdekiler = []
         this.ortak = new Ortak()
