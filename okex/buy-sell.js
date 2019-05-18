@@ -3,7 +3,7 @@ const SellKontrolForBuy = require('./sell-kontrol-for-buy')
 class WsMongo {
     async LoadVeriables() {
         this.islemKati = 20 // 15
-        this.minFark = 2
+        this.minFark = 1.75
         this.islemdekiler = []
         this.ortak = new Ortak()
         await this.ortak.LoadVeriables('MONGO')
