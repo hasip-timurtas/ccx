@@ -1,0 +1,3 @@
+# ccx
+
+Bitcoin Trading Bot
